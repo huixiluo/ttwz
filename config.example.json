@@ -1,0 +1,7 @@
+{
+  "api_key": "YOUR_API_KEY_HERE",
+  "api_url": "https://api.deepseek.com/v1/chat/completions",
+  "model": "deepseek-chat",
+  "output_dir": "./output",
+  "image_count": 3
+}
