@@ -91,7 +91,8 @@ Then open `http://localhost:8000/` in a browser to see the file list, or directl
 
 ### Images
 
-- 3 images, one every two paragraphs;
+- 5 images total;
+- Layout: 1 image after the first paragraph, then 2 images every two paragraphs (after paragraph 3, 5, 7, ...);
 - 16:9 center crop with filters applied (contrast +12%, sharpness +25%, color +8%, unsharp mask);
 - Clear and visible, max width 800px, JPEG quality 88.
 

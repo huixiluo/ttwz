@@ -374,18 +374,33 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 
 def build_html(title, article_text, images):
-    """生成HTML内容"""
+    """生成HTML内容
+
+    图片布局：第一段后插1张图，之后每两段插2张图。
+    """
     paragraphs = [p.strip() for p in article_text.split("\n") if p.strip()]
     body_parts = []
     img_idx = 0
+
+    def add_images(count):
+        nonlocal img_idx
+        for _ in range(count):
+            if img_idx < len(images):
+                body_parts.append(
+                    f'<div class="img-wrap"><img src="data:image/jpeg;base64,{images[img_idx]}" /></div>'
+                )
+                img_idx += 1
+
     for i, para in enumerate(paragraphs):
         body_parts.append(f"<p>{para}</p>")
-        # 每两段插一张图
-        if (i + 1) % 2 == 0 and img_idx < len(images):
-            body_parts.append(
-                f'<div class="img-wrap"><img src="data:image/jpeg;base64,{images[img_idx]}" /></div>'
-            )
-            img_idx += 1
+        para_num = i + 1
+        if para_num == 1:
+            # 第一段后插1张图
+            add_images(1)
+        elif para_num % 2 == 1:
+            # 之后每两段（第3、5、7...段后）插2张图
+            add_images(2)
+
     body = "\n".join(body_parts)
     date_str = datetime.now().strftime("%Y年%m月%d日")
     return HTML_TEMPLATE.format(title=title, date=date_str, body=body)
@@ -398,7 +413,7 @@ def main(category="娱乐"):
     model = config.get("model", "deepseek-chat")
     api_url = config.get("api_url", "https://api.deepseek.com/v1/chat/completions")
     output_dir = os.path.join(BASE_DIR, config.get("output_dir", "./output"))
-    image_count = config.get("image_count", 3)
+    image_count = config.get("image_count", 5)
     os.makedirs(output_dir, exist_ok=True)
 
     if not api_key or api_key == "YOUR_API_KEY_HERE":
