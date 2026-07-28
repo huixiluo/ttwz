@@ -60,17 +60,17 @@ Then open `http://localhost:8000/` in a browser to see the file list, or directl
 
 ## Output Requirements (enforced in prompt)
 
-### Title (≤25 chars, click-worthy)
+### Title (3-segment style, 鈮?5 chars)
 
-1. Must be a click-worthy title, ≤25 chars (including punctuation);
-2. Create suspense, conflict or contrast to make people want to click;
-3. Can use questions, numbers, contrast, emotional words, but no clickbait scam;
-4. Colloquial, like something a friend would say, no written-style tone;
-5. Do not use low-quality clickbait words like "震惊！""速看！""突发！";
-6. Title must match article content, no mismatch;
-7. No fabricating or implying unverified facts, no misleading hypothetical statements (e.g. "某某没拿奖？" "某某要退出？"), questions must be based on publicly verified facts only;
-8. Title must not favor or name a specific person — if the article doesn't favor one person, the title shouldn't focus on one person either. Cut in from the event as a whole or from a group perspective, stay neutral and objective.
-
+1. Must be a **3-segment click-worthy title**, 鈮?5 chars (including punctuation);
+2. Three-segment structure: the title consists of three short phrases separated by commas, forming a rhythmic "event + detail + suspense" or "phenomenon + conflict + question" structure. Examples: "绁ㄦ埧鐮村崄浜匡紝鍙ｇ鍗翠袱鏋侊紝杩欑墖鍒板簳鍊间笉鍊?, "鎻愬悕鍚嶅崟涓€鍑猴紝鑰佹垙楠ㄩ綈鑱氾紝璋佽兘绗戝埌鏈€鍚?;
+3. Each segment short and punchy, three segments build up progressively, the last segment creates suspense or poses a question to make people want to click;
+4. Can use numbers, contrast, emotional words, but no clickbait scam;
+5. Colloquial, like something a friend would say, no written-style tone;
+6. Do not use low-quality clickbait words like "闇囨儕锛?"閫熺湅锛?"绐佸彂锛?;
+7. Title must match article content, no mismatch;
+8. No fabricating or implying unverified facts, no misleading hypothetical statements (e.g. "鏌愭煇娌℃嬁濂栵紵" "鏌愭煇瑕侀€€鍑猴紵"), questions must be based on publicly verified facts only;
+9. Title must not favor or name a specific person 鈥?if the article doesn't favor one person, the title shouldn't focus on one person either. Cut in from the event as a whole or from a group perspective, stay neutral and objective.
 ### Article (~600 words)
 
 - ~600 words, 4-5 paragraphs (each ≤150 chars);
