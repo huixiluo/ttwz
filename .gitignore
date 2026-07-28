@@ -42,3 +42,8 @@ desktop.ini
 
 # 日志
 *.log
+
+# 临时二维码图片
+toutiao_qr.png
+output/qr_login.html
+output/toutiao_qr.html
