@@ -32,6 +32,21 @@ def save_cover_images(images_b64, output_dir, prefix):
     return saved_paths
 
 
+def save_body_images(images_b64, output_dir, prefix):
+    """保存全部正文配图到磁盘（JPEG），供上传脚本按 1+2+2 布局插入正文使用"""
+    body_dir = os.path.join(output_dir, "body_images")
+    os.makedirs(body_dir, exist_ok=True)
+    saved_paths = []
+    for i, b64 in enumerate(images_b64):
+        img_bytes = base64.b64decode(b64)
+        filename = f"{prefix}_body_{i+1}.jpg"
+        filepath = os.path.join(body_dir, filename)
+        with open(filepath, "wb") as f:
+            f.write(img_bytes)
+        saved_paths.append(filepath)
+    return saved_paths
+
+
 def batch_generate():
     config = hnw.load_config()
     api_key = config["api_key"]
@@ -116,6 +131,9 @@ def batch_generate():
             cover_paths = save_cover_images(images, output_dir, prefix)
             print(f"  封面图：{len(cover_paths)} 张已保存到 covers/")
 
+            body_paths = save_body_images(images, output_dir, prefix)
+            print(f"  正文图：{len(body_paths)} 张已保存到 body_images/")
+
             results.append({
                 "category": cat,
                 "keyword": keyword,
@@ -123,6 +141,7 @@ def batch_generate():
                 "article": article,
                 "html_file": html_filepath,
                 "cover_files": cover_paths,
+                "body_images": body_paths,
             })
 
             time.sleep(2)
@@ -137,6 +156,7 @@ def batch_generate():
             "article": r["article"],
             "html_file": r["html_file"],
             "cover_files": r["cover_files"],
+            "body_images": r["body_images"],
         })
     with open(manifest_path, "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=2)

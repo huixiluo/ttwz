@@ -61,11 +61,41 @@ def fill_title(page, title):
     return False
 
 
-def fill_content(page, article_text):
-    """填写正文内容（ProseMirror编辑器）"""
+def fill_content(page, article_text, image_urls=None):
+    """填写正文内容（ProseMirror编辑器）
+
+    图片布局与生成HTML保持一致：
+    - 第1段后插1张图
+    - 之后每两段（第3、5、7...段后）插2张图
+    图片以 <img> 形式插入段落之间。
+    """
     paragraphs = [p.strip() for p in article_text.split("\n") if p.strip()]
-    # 构建HTML
-    html_parts = "".join(f"<p>{p}</p>" for p in paragraphs)
+    image_urls = image_urls or []
+
+    body_parts = []
+    img_idx = 0
+
+    def add_images(count):
+        nonlocal img_idx
+        for _ in range(count):
+            if img_idx < len(image_urls):
+                url = image_urls[img_idx]
+                body_parts.append(
+                    f'<p><img src="{url}" alt="" /></p>'
+                )
+                img_idx += 1
+
+    for i, para in enumerate(paragraphs):
+        body_parts.append(f"<p>{para}</p>")
+        para_num = i + 1
+        if para_num == 1:
+            # 第一段后插1张图
+            add_images(1)
+        elif para_num % 2 == 1:
+            # 之后每两段（第3、5、7...段后）插2张图
+            add_images(2)
+
+    html_parts = "".join(body_parts)
 
     # 用JS设置ProseMirror编辑器内容并触发input事件
     js_code = f"""
@@ -82,10 +112,65 @@ def fill_content(page, article_text):
     if result == "ok":
         # 获取字数
         text = page.run_js("return document.querySelector('.ProseMirror').innerText.length;")
-        print(f"  正文已填写: 约{text}字")
+        print(f"  正文已填写: 约{text}字（含{img_idx}张配图）")
         return True
     print(f"  [错误] 找不到正文编辑器: {result}")
     return False
+
+
+def upload_image_via_toolbar(page, image_path, timeout=20):
+    """通过正文编辑器工具栏上传单张图片，返回上传后图片URL
+
+    流程：点击工具栏图片按钮 → DrissionPage 处理文件选择 → 等待上传完成 → 读取最新img的src
+    """
+    # 记录上传前编辑器中已有图片数量，用于判断新图是否插入完成
+    before_count = page.run_js(
+        "return (document.querySelectorAll('.ProseMirror img') || []).length;"
+    ) or 0
+
+    # 查找工具栏图片按钮（多套选择器兜底）
+    img_btn = (
+        page.ele('tag:button@@text():图片', timeout=3) or
+        page.ele('tag:span@@text():图片', timeout=2) or
+        page.ele('@aria-label:插入图片', timeout=2) or
+        page.ele('@title:图片', timeout=2) or
+        page.ele('@class:image', timeout=2) or
+        page.ele('@class:prose-image', timeout=2)
+    )
+    if not img_btn:
+        print(f"  [正文图] 找不到工具栏图片按钮: {os.path.basename(image_path)}")
+        return None
+
+    img_btn.click()
+    time.sleep(0.5)
+
+    # DrissionPage 自动处理文件选择对话框
+    page.upload(image_path)
+
+    # 等待图片插入（图片数量增加视为成功）
+    start = time.time()
+    after_count = before_count
+    while time.time() - start < timeout:
+        time.sleep(1)
+        after_count = page.run_js(
+            "return (document.querySelectorAll('.ProseMirror img') || []).length;"
+        ) or 0
+        if after_count > before_count:
+            break
+
+    if after_count <= before_count:
+        print(f"  [正文图] 上传超时未插入: {os.path.basename(image_path)}")
+        return None
+
+    # 读取最新插入图片的src
+    url = page.run_js("""
+        const imgs = document.querySelectorAll('.ProseMirror img');
+        if (imgs.length === 0) return null;
+        return imgs[imgs.length - 1].getAttribute('src') || imgs[imgs.length - 1].src;
+    """)
+    if url:
+        print(f"  [正文图] 已上传: {os.path.basename(image_path)} -> {url[:60]}...")
+    return url
 
 
 def upload_cover(page, cover_files):
@@ -154,8 +239,53 @@ def wait_auto_save(page, timeout=15):
     return True
 
 
-def publish_one_article(page, title, article, cover_files, category, idx, total):
-    """发布单篇文章到草稿箱"""
+def upload_body_images(page, body_image_files):
+    """依次上传正文配图，返回按上传顺序的图片URL列表
+
+    上传时图片会被插入到编辑器末尾，因此需要先上传拿URL，
+    再由 fill_content 统一重排正文HTML（按 1+2+2 布局插入）。
+    """
+    if not body_image_files:
+        return []
+
+    # 先把编辑器清空，避免已有内容干扰图片数量判断
+    page.run_js("""
+        const editor = document.querySelector('.ProseMirror');
+        if (editor) {
+            editor.innerHTML = '<p></p>';
+            editor.dispatchEvent(new Event('input', {bubbles: true}));
+        }
+    """)
+    time.sleep(0.5)
+
+    urls = []
+    for fp in body_image_files:
+        if not os.path.exists(fp):
+            print(f"  [正文图] 文件不存在: {fp}")
+            urls.append(None)
+            continue
+        url = upload_image_via_toolbar(page, fp)
+        urls.append(url)
+        time.sleep(1)
+
+    # 过滤掉上传失败的
+    valid_urls = [u for u in urls if u]
+    print(f"  [正文图] 共上传成功 {len(valid_urls)}/{len(body_image_files)} 张")
+    return valid_urls
+
+
+def publish_one_article(page, title, article, cover_files, body_image_files,
+                        category, idx, total):
+    """发布单篇文章到草稿箱
+
+    流程：
+    1. 打开发布页
+    2. 填写标题
+    3. 上传正文配图（拿到URL列表）
+    4. 填写正文：按 1+2+2 布局把图片URL插入到段落之间
+    5. 上传封面图（封面位三图）
+    6. 等待草稿自动保存
+    """
     print(f"\n[{idx}/{total}] {category} | {title}")
 
     # 访问发布页（每篇文章都需要新页面）
@@ -168,8 +298,15 @@ def publish_one_article(page, title, article, cover_files, category, idx, total)
 
     time.sleep(1)
 
-    # 填写正文
-    if not fill_content(page, article):
+    # 上传正文配图，拿到URL列表
+    image_urls = []
+    if body_image_files:
+        image_urls = upload_body_images(page, body_image_files)
+
+    time.sleep(1)
+
+    # 填写正文（按 1+2+2 布局插入图片）
+    if not fill_content(page, article, image_urls=image_urls):
         return False
 
     time.sleep(1)
@@ -201,11 +338,12 @@ def main():
         title = art.get("title", "")
         article = art.get("article", "")
         cover_files = art.get("cover_files", [])
+        body_image_files = art.get("body_images", [])
         category = art.get("category", "")
 
         try:
             ok = publish_one_article(page, title, article, cover_files,
-                                     category, idx, len(articles))
+                                     body_image_files, category, idx, len(articles))
             if ok:
                 success += 1
         except Exception as e:
