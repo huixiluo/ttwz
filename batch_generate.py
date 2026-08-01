@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-批量生成9篇文章（3娱乐+3体育+3社会）
-每篇600-1000字，5张配图，选3张作为封面图单独保存
+批量生成6篇文章（2娱乐+2体育+2社会）
+每篇600-1000字，5张配图（优先微博原帖，回退百度），选3张作为封面图单独保存
 用法：python batch_generate.py
 """
 
@@ -45,7 +45,7 @@ def batch_generate():
         raise RuntimeError("请在 config.json 中填写API Key")
 
     print("=" * 60)
-    print("批量生成9篇文章（3娱乐+3体育+3社会）")
+    print("批量生成6篇文章（2娱乐+2体育+2社会）")
     print("=" * 60)
 
     print("\n[准备] 获取微博热搜列表...")
@@ -54,7 +54,7 @@ def batch_generate():
     print(f"  共获取 {len(hot_list)} 条热搜")
 
     categories = ["娱乐", "体育", "社会"]
-    per_category = 3
+    per_category = 2
     results = []
     used_titles = set()  # 跨类别去重，确保9条热搜不重复
 
@@ -97,9 +97,16 @@ def batch_generate():
             print(f"  标题：{title}（{len(title)}字）")
             print(f"  正文：共 {len(article)} 字")
 
-            print("  [2/4] 百度图片搜索获取配图...")
-            images = hnw.fetch_images_baidu(keyword, count=image_count)
-            print(f"  成功处理 {len(images)} 张配图")
+            print("  [2/4] 获取配图（优先微博原帖素材，回退百度）...")
+            images = hnw.fetch_images_from_weibo(session, keyword, count=image_count)
+            source = "微博原帖"
+            if len(images) < image_count:
+                remaining = image_count - len(images)
+                fallback = hnw.fetch_images_baidu(keyword, count=remaining)
+                images.extend(fallback)
+                if fallback:
+                    source = f"微博原帖({len(images)-len(fallback)}张) + 百度({len(fallback)}张)"
+            print(f"  成功处理 {len(images)} 张配图（来源：{source}）")
 
             print("  [3/4] 生成HTML...")
             html = hnw.build_html(title, article, images)

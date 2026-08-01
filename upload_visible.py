@@ -940,11 +940,15 @@ return JSON.stringify({pmImgs:pmImgs,pmChars:pmChars,domImgs:domImgs,hasView:!!v
     except Exception as e:
         dlog(f"保存请求解析失败: {e}")
 
-    # === 第3步：上传封面 ===
-    print("\n[4] 上传封面...")
-    dlog("上传封面开始")
-    upload_cover(page, cover_files)
-    dlog("上传封面结束")
+    # === 第3步：上传封面（可通过环境变量 SKIP_COVER=1 跳过）===
+    if os.environ.get("SKIP_COVER") == "1":
+        print("\n[4] 跳过封面上传（SKIP_COVER=1）")
+        dlog("跳过封面上传（SKIP_COVER=1）")
+    else:
+        print("\n[4] 上传封面...")
+        dlog("上传封面开始")
+        upload_cover(page, cover_files)
+        dlog("上传封面结束")
 
     trigger_save(page)
     dlog("封面保存等待开始")
