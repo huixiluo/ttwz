@@ -172,15 +172,23 @@ REWRITE_PROMPT = """你是一位有十年经验的媒体编辑，文风接地气
 【热搜话题】{keyword}
 【热搜排名】第{rank}位
 
-【标题要求——非常重要】
-1. 必须是爆款标题，字数不超过25个字（含标点），且必须是一句语义完整的话，不能半截话戛然而止；
-2. 制造悬念、冲突或反差，让人忍不住想点开看；
-3. 可用疑问句、数字、对比、情绪词等技巧，但不要标题党骗点击；
-4. 口语化，像朋友分享时说的话，不要书面腔；
-5. 不要用"震惊！""速看！""突发！"这类低质标题党词；
-6. 标题要和正文内容匹配，不能文不对题；
-7. 禁止编造或暗示未经证实的事实，禁止用假设性陈述误导读者（如"某某没拿奖？""某某要退出？"这类无中生有的猜测），疑问句只能基于已公开的事实提问；
-8. 标题不得偏向或点名特定人物（正文没偏向某个人，标题也不要只聚焦某一个人），应从事件整体或群体角度切入，保持中立客观。
+【标题要求——非常重要：三段式爆款标题】
+标题必须采用三段式结构，用逗号分隔，格式为：核心事件，补充细节/爆点，情绪反问/互动。三段之间用中文逗号（，）分隔。
+
+具体说明：
+1. 第一段（核心事件）：一句话概括事件核心，8-12字，让读者一眼知道发生了什么；
+2. 第二段（补充细节/爆点）：补充一个关键细节、反差、意外或亮点，8-12字，制造信息增量；
+3. 第三段（情绪反问/互动）：用反问句或感叹句收尾，引发读者共鸣和评论欲，5-10字；
+4. 三段加起来总字数不超过35字（含两个逗号），每段都是语义完整的小句，不能半截话戛然而止；
+5. 口语化，像朋友分享时说的话，不要书面腔；
+6. 不要用"震惊！""速看！""突发！"这类低质标题党词；
+7. 标题要和正文内容匹配，不能文不对题；
+8. 禁止编造或暗示未经证实的事实，禁止用假设性陈述误导读者，疑问句只能基于已公开的事实提问；
+9. 标题不得偏向或点名特定人物，应从事件整体或群体角度切入，保持中立客观。
+
+示例：
+- 深夜一则通告刷屏了，某品牌方连夜道歉，这态度你接受吗？
+- 高校录取通知书玩出新花样，AR技术直接扫出校史，你被惊艳到了吗？
 
 【内容要求】
 1. 如果你了解该事件的背景，请基于事实进行改写；如果不确定具体细节，请围绕话题主题进行创作，但不得编造虚假信息；
@@ -203,7 +211,7 @@ REWRITE_PROMPT = """你是一位有十年经验的媒体编辑，文风接地气
 6. 绝对禁止使用儿话音！这是硬性要求，违反即视为不合格。任何"X儿"格式的口语化后缀都不允许，包括但不限于：事儿/点儿/地儿/哥们儿/玩意儿/劲儿/味儿/脸儿/份儿/调儿/孩儿/老头儿/聊天儿/慢慢儿/好好儿。必须用规范表达替代（这事→这件事，一点→一点，地方→地方，朋友→朋友，东西→东西，劲头→劲头，味道→味道）。写完后请自查，若出现"儿"字作为词尾后缀，必须改写。
 
 【输出格式——必须严格按此格式】
-第一行：标题（不超过25字）
+第一行：三段式标题，用逗号分隔（不超过35字）
 第二行：空行
 第三行开始：文章正文，段落之间用空行分隔。
 不要加"标题："等前缀，不要加任何额外说明。"""
@@ -233,11 +241,11 @@ def rewrite_article(keyword, rank, api_key, model, api_url=None):
     title = lines[0].strip() if lines else keyword
     # 去掉标题前缀（如"标题："）
     title = re.sub(r'^(标题[:：]\s*)', '', title)
-    # 标题字数兜底：超过25字时，在标点处智能截断，保证语义完整
-    if len(title) > 25:
-        # 在第18-25字之间找最后一个标点符号进行截断
-        truncate_at = 25
-        for i in range(25, 17, -1):
+    # 标题字数兜底：超过35字时，在标点处智能截断，保证语义完整
+    if len(title) > 35:
+        # 在第28-35字之间找最后一个标点符号进行截断
+        truncate_at = 35
+        for i in range(35, 27, -1):
             if i < len(title) and title[i-1] in '，。！？、；：,.;:!?':
                 truncate_at = i
                 break
@@ -438,7 +446,27 @@ HTML_TEMPLATE = """<!DOCTYPE html>
     color: #1a1a1a;
     text-align: center;
     margin-bottom: 8px;
-    line-height: 1.4;
+    line-height: 1.6;
+    letter-spacing: 0.5px;
+  }}
+  h1 .seg {{
+    display: inline;
+  }}
+  h1 .seg.seg-1 {{
+    color: #1a1a1a;
+    font-weight: 700;
+  }}
+  h1 .seg.seg-2 {{
+    color: #444;
+    font-weight: 500;
+  }}
+  h1 .seg.seg-3 {{
+    color: #d4380d;
+    font-weight: 600;
+  }}
+  h1 .sep {{
+    color: #bbb;
+    margin: 0 2px;
   }}
   .meta {{
     text-align: center;
@@ -478,7 +506,7 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </style>
 </head>
 <body>
-<h1>{title}</h1>
+<h1>{title_html}</h1>
 <div class="meta">{date} &middot; 热点改写</div>
 {body}
 <div class="footer">本文基于微博热搜改写，配图经二次处理</div>
@@ -488,6 +516,18 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 def build_html(title, article_text, images):
     """生成HTML内容，图片布局：第1段后1张、第3段后2张、第5段后2张"""
+    # 将三段式标题拆分为独立段落，分别渲染
+    title_segs = [s.strip() for s in title.split("，")]
+    if len(title_segs) >= 3:
+        title_html = (
+            f'<span class="seg seg-1">{title_segs[0]}</span>'
+            f'<span class="sep">，</span>'
+            f'<span class="seg seg-2">{title_segs[1]}</span>'
+            f'<span class="sep">，</span>'
+            f'<span class="seg seg-3">{title_segs[2]}</span>'
+        )
+    else:
+        title_html = title
     paragraphs = [p.strip() for p in article_text.split("\n") if p.strip()]
     body_parts = []
     img_idx = 0
@@ -511,7 +551,7 @@ def build_html(title, article_text, images):
         img_idx += 1
     body = "\n".join(body_parts)
     date_str = datetime.now().strftime("%Y年%m月%d日")
-    return HTML_TEMPLATE.format(title=title, date=date_str, body=body)
+    return HTML_TEMPLATE.format(title=title, title_html=title_html, date=date_str, body=body)
 
 
 # ===== 主流程 =====
