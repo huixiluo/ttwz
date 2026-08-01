@@ -20,7 +20,7 @@ The skill is backed by a Python script `hot_news_writer.py` located in the proje
 
 1. **Fetch Weibo hot search**: Simulates the Weibo visitor system to get a SUB cookie, then parses `s.weibo.com/top/summary` HTML to extract 50 trending topics.
 2. **Category filter**: Matches topics against keyword rules to pick the top-ranked item in the requested category (娱乐/体育/社会).
-3. **DeepSeek rewrite**: Calls DeepSeek API (OpenAI-compatible) to generate a click-worthy title (≤25 chars) + ~600-word article. Prompt enforces: no AI flavor, no mechanical connectors, colloquial tone, neutral stance (no bias toward specific persons), no fabricated assumptions.
+3. **DeepSeek rewrite**: Calls DeepSeek API (OpenAI-compatible) to generate a three-segment click-worthy title (≤25 chars, 事件+细节+悬念 or 现象+冲突+疑问) + ~600-word article. Prompt enforces: no AI flavor, no mechanical connectors, colloquial tone, neutral stance (no bias toward specific persons), no fabricated assumptions.
 4. **Image fetch & processing**: Searches Baidu Images for the keyword, downloads 3 images, and applies Pillow processing (16:9 center crop, contrast/sharpness/color enhancement, unsharp mask).
 5. **HTML output**: Embeds images as base64 into a styled HTML file, inserting one image every two paragraphs. Saves to `./output/hot_<category>_<timestamp>.html`.
 
@@ -60,16 +60,20 @@ Then open `http://localhost:8000/` in a browser to see the file list, or directl
 
 ## Output Requirements (enforced in prompt)
 
-### Title (≤25 chars, click-worthy)
+### Title (≤25 chars, three-segment click-worthy)
 
-1. Must be a click-worthy title, ≤25 chars (including punctuation);
-2. Create suspense, conflict or contrast to make people want to click;
-3. Can use questions, numbers, contrast, emotional words, but no clickbait scam;
-4. Colloquial, like something a friend would say, no written-style tone;
-5. Do not use low-quality clickbait words like "震惊！""速看！""突发！";
-6. Title must match article content, no mismatch;
-7. No fabricating or implying unverified facts, no misleading hypothetical statements (e.g. "某某没拿奖？" "某某要退出？"), questions must be based on publicly verified facts only;
-8. Title must not favor or name a specific person — if the article doesn't favor one person, the title shouldn't focus on one person either. Cut in from the event as a whole or from a group perspective, stay neutral and objective.
+The title uses a three-segment structure separated by commas, auto-selecting between two formats based on the content:
+
+- **事件+细节+悬念**: For news with clear event progression — summarize event, add detail, create suspense.
+- **现象+冲突+疑问**: For social phenomena or controversial topics — describe phenomenon, create conflict/contrast, end with a question.
+
+Rules:
+1. Three segments total ≤25 chars (including two commas), each segment must be a semantically complete phrase;
+2. Colloquial, like something a friend would say, no written-style tone;
+3. Do not use low-quality clickbait words like "震惊！""速看！""突发！";
+4. Title must match article content, no mismatch;
+5. No fabricating or implying unverified facts, no misleading hypothetical statements, questions must be based on publicly verified facts only;
+6. Title must not favor or name a specific person — stay neutral and objective.
 
 ### Article (~600 words)
 
