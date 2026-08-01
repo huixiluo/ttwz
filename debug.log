@@ -1,0 +1,40 @@
+=== 开始运行 2026-08-01 16:46:28 ===
+16:46:28 main() 开始
+16:46:55 图片1: 使用已有临时文件 C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_1.jpg (88111字节)
+16:46:55 图片2: 使用已有临时文件 C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_2.jpg (90299字节)
+16:46:55 图片3: 使用已有临时文件 C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_3.jpg (51127字节)
+16:46:55 图片4: 使用已有临时文件 C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_4.jpg (83150字节)
+16:46:55 图片5: 使用已有临时文件 C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_5.jpg (105044字节)
+16:46:55 临时文件准备完成: 5个
+16:46:55 内存已释放
+16:46:55 CDP拦截开始
+16:46:55 CDP拦截: 已启用
+16:46:55 CDP拦截结束
+16:46:55 图片上传阶段开始
+16:46:55 图片1: 上传开始 fpath=C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_1.jpg
+16:46:57 图片1: ✓ URL=https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/fd733a21ef3a48d69e8154d0f9d2eb03~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726016&x-orig-sign=hOkTTBvbPrbmWXBnbDkYRhAuzXo%3D
+16:46:57 图片2: 上传开始 fpath=C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_2.jpg
+16:46:58 图片2: ✓ URL=https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/380ebe0bb65f4cf5a566287d4ac12488~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726018&x-orig-sign=RM9Znr%2B3lCp5PqpaBiIEMYWhCNM%3D
+16:46:58 图片3: 上传开始 fpath=C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_3.jpg
+16:47:00 图片3: ✓ URL=https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/09aa6fd05bc14e019ba0142305c28481~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726019&x-orig-sign=3wvwPl8VjjI3leGk3loSWSxCf5c%3D
+16:47:00 图片4: 上传开始 fpath=C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_4.jpg
+16:47:02 图片4: ✓ URL=https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/7f9b868124d841008a751f6cce6feae5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726021&x-orig-sign=iQ8g9tmKmcKwpiqHRUA799%2BT13g%3D
+16:47:02 图片5: 上传开始 fpath=C:\Users\huixi\AppData\Roaming\TRAE SOLO CN\ModularData\ai-agent\work-mode-projects\6a67903fcfbd38d0e339f717\output\tmp\body_img_5.jpg
+16:47:03 图片5: ✓ URL=https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/7df3b7d219a748de8279a73bf1462943~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726023&x-orig-sign=Rj8YfEL6F5PMWv%2F2UIf1Qw0%2FTh8%3D
+16:47:03 图片上传阶段完成: 5/5张, URLs=['https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/fd733a21ef3a48d69e8154d0f9d2eb03~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726016&x-orig-sign=hOkTTBvbPrbmWXBnbDkYRhAuzXo%3D', 'https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/380ebe0bb65f4cf5a566287d4ac12488~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726018&x-orig-sign=RM9Znr%2B3lCp5PqpaBiIEMYWhCNM%3D', 'https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/09aa6fd05bc14e019ba0142305c28481~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726019&x-orig-sign=3wvwPl8VjjI3leGk3loSWSxCf5c%3D', 'https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/7f9b868124d841008a751f6cce6feae5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726021&x-orig-sign=iQ8g9tmKmcKwpiqHRUA799%2BT13g%3D', 'https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/7df3b7d219a748de8279a73bf1462943~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2416726023&x-orig-sign=Rj8YfEL6F5PMWv%2F2UIf1Qw0%2FTh8%3D']
+16:47:03 构建最终HTML开始
+16:47:03 最终HTML: 2744字符
+16:47:06 内容设置完成(去重后): 757字, 5张图片
+16:47:06 等待图片上传到服务器开始
+16:47:06 所有图片已上传到服务器 (5张)
+16:47:06 填充图片描述开始
+16:47:10 描述字段: 未找到预留位置（将使用alt属性兜底）
+16:47:10 正文保存开始
+16:47:11 正文已保存
+16:47:11 上传封面开始
+16:47:11 upload_cover: 3张封面图
+16:47:17 upload_cover: 已选择3图模式
+16:47:17 upload_cover: 封面1开始 娱乐_1_20260801_015113_cover_1.jpg
+16:49:57 upload_cover: 封面1 未找到file input，尝试兜底
+16:50:07 upload_cover: 封面1 未找到file input
+16:50:07 upload_cover: 封面2开始 娱乐_1_20260801_015113_cover_2.jpg
