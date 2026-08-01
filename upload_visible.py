@@ -25,20 +25,32 @@ IMAGE_LAYOUT = {1: 1, 3: 2, 5: 2}
 
 
 def set_clipboard_html(html_content):
-    """用PowerShell设置剪贴板（同时设置HTML和纯文字格式）"""
+    """用PowerShell设置剪贴板（Windows HTML剪贴板格式 + 纯文字格式）"""
     try:
-        # 从HTML中提取纯文字，用\n\n分隔段落（先替换</p><p>为\n\n，再删标签）
+        # 从HTML中提取纯文字，用\n\n分隔段落
         plain_text = html_content.replace('</p>\n<p>', '\n\n').replace('</p><p>', '\n\n')
         plain_text = re.sub(r'<[^>]+>', '', plain_text)
         plain_text = re.sub(r'\n\s*\n', '\n\n', plain_text).strip()
-        # 用base64编码避免PowerShell转义问题（UTF-16LE for UnicodeText）
-        b64_html = base64.b64encode(html_content.encode('utf-8')).decode('ascii')
+
+        # 构建Windows HTML剪贴板格式（必须包含特定头部）
+        header = "Version:0.9\r\nStartHTML:{:010d}\r\nEndHTML:{:010d}\r\nStartFragment:{:010d}\r\nEndFragment:{:010d}\r\n"
+        html_prefix = "<html><body><!--StartFragment-->"
+        html_suffix = "<!--EndFragment--></body></html>"
+        # 临时占位计算偏移量
+        header_tmp = header.format(0, 0, 0, 0)
+        start_html = len(header_tmp.encode('utf-8'))
+        start_fragment = start_html + len(html_prefix.encode('utf-8'))
+        end_fragment = start_fragment + len(html_content.encode('utf-8'))
+        end_html = end_fragment + len(html_suffix.encode('utf-8'))
+        clipboard_html = header.format(start_html, end_html, start_fragment, end_fragment) + html_prefix + html_content + html_suffix
+
+        # 用base64编码避免PowerShell转义问题
+        b64_html = base64.b64encode(clipboard_html.encode('utf-8')).decode('ascii')
         b64_text = base64.b64encode(plain_text.encode('utf-16-le')).decode('ascii')
         ps_script = (
             'Add-Type -AssemblyName System.Windows.Forms; '
             f'$html = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(\'{b64_html}\')); '
             f'$text = [System.Text.Encoding]::Unicode.GetString([System.Convert]::FromBase64String(\'{b64_text}\')); '
-            '$obj = New-Object System.Collections.Specialized.NameValueCollection; '
             '$data = New-Object System.Windows.Forms.DataObject; '
             '$data.SetText($html, [System.Windows.Forms.TextDataFormat]::Html); '
             '$data.SetText($text, [System.Windows.Forms.TextDataFormat]::UnicodeText); '
@@ -49,7 +61,7 @@ def set_clipboard_html(html_content):
             capture_output=True, text=True, timeout=10
         )
         if result.returncode == 0:
-            dlog(f"set_clipboard_html: 成功 (html={len(html_content)}字符, text={len(plain_text)}字符)")
+            dlog(f"set_clipboard_html: 成功 (html={len(clipboard_html)}字符, text={len(plain_text)}字符)")
             return True
         else:
             dlog(f"set_clipboard_html: 失败 {result.stderr[:300]}")
@@ -311,7 +323,44 @@ def main():
     except:
         pass
 
-    # === 第1步：填标题 ===
+    # 注入网络拦截器，捕获保存请求的请求体
+    page.run_js("""
+window._savedBodies=[];
+var origFetch=window.fetch;
+window.fetch=function(url,options){
+  options=options||{};
+  var urlStr=typeof url==='string'?url:(url&&url.url)||'';
+  var method=(options.method||(url&&url.method)||'GET').toUpperCase();
+  var body=options.body;
+  if(method==='POST'&&body){
+    if(typeof body==='string'){
+      window._savedBodies.push({url:urlStr,body:body.substring(0,8000)});
+    }else if(body instanceof FormData){
+      var obj={};
+      try{for(var entry of body.entries()){obj[entry[0]]=typeof entry[1]==='string'?entry[1].substring(0,5000):'[file]';}}catch(e){}
+      window._savedBodies.push({url:urlStr,body:JSON.stringify(obj).substring(0,8000)});
+    }
+  }
+  return origFetch.apply(this,arguments);
+};
+var origXHRSend=XMLHttpRequest.prototype.send;
+XMLHttpRequest.prototype.send=function(body){
+  if(this._method==='POST'&&body){
+    var bodyStr=typeof body==='string'?body:'[non-string]';
+    window._savedBodies.push({url:this._url||'',body:bodyStr.substring(0,8000)});
+  }
+  return origXHRSend.apply(this,arguments);
+};
+var origXHROpen=XMLHttpRequest.prototype.open;
+XMLHttpRequest.prototype.open=function(method,url){
+  this._url=url;
+  this._method=(method||'GET').toUpperCase();
+  return origXHROpen.apply(this,arguments);
+};
+""")
+    dlog("网络拦截器已注入")
+
+    # === 第2步：填标题 ===
     print("\n[2] 填标题...")
     title_el = page.ele('tag:textarea@placeholder=请输入文章标题（2～30个字）', timeout=10)
     if not title_el:
@@ -545,51 +594,177 @@ for (var i = imgs.length - 1; i > 0; i--) {
             num_imgs = IMAGE_LAYOUT[target_para]
             for _ in range(num_imgs):
                 if url_idx < len(image_urls) and image_urls[url_idx]:
-                    final_html += f'<figure><img src="{image_urls[url_idx]}" alt="图片来源于网络"><figcaption>图片来源于网络</figcaption></figure><p></p>'
+                    # 用p+img标签，避免figure标签兼容性问题
+                    final_html += f'<p><img src="{image_urls[url_idx]}" alt="图片来源于网络"></p>'
                     url_idx += 1
                 else:
                     dlog(f"警告: 图片URL不足，跳过位置{url_idx+1}")
 
     dlog(f"最终HTML: {len(final_html)}字符")
 
-    # [3c] 用innerHTML设置编辑器内容
+    # [3c] 设置编辑器内容（优先使用ProseMirror API，确保内部状态同步）
     print(f"  [3c] 设置编辑器内容...")
-    page.run_js(f"""
-var editor = document.querySelector('.ProseMirror');
-if (editor) {{
-    editor.innerHTML = {json.dumps(final_html)};
-    editor.dispatchEvent(new Event('input', {{bubbles: true}}));
-}}
-""")
-    time.sleep(2)
+    dlog("设置编辑器内容开始")
 
-    # 删除重复图片（同一src只保留第一张）
-    page.run_js("""
-var editor = document.querySelector('.ProseMirror');
-if (!editor) return;
-var imgs = editor.querySelectorAll('img');
-var seen = {};
-for (var i = imgs.length - 1; i >= 0; i--) {
-    var src = imgs[i].src;
-    if (seen[src]) {
-        var parent = imgs[i].parentNode;
-        if (parent && parent.tagName === 'FIGURE') {
-            parent.parentNode.removeChild(parent);
-        } else {
-            imgs[i].parentNode.removeChild(imgs[i]);
-        }
-    } else {
-        seen[src] = true;
-    }
+    # 准备纯文字内容（去除HTML标签）
+    text_plain_parts = [re.sub(r'<[^>]+>', '', t).strip() for t in text_parts]
+
+    # 方法1：通过ProseMirror view API设置内容（最可靠，确保内部状态同步）
+    # DOM-based操作（如innerHTML、直接修改DOM、DOM去重）不会更新ProseMirror内部状态
+    # 必须通过view.dispatch()事务来更新内容，才能确保保存时图片不丢失
+
+    # 步骤1：通过window._pmData传递数据（避免JSON数据混入JS代码导致语法错误）
+    data_json = json.dumps({"tp": text_plain_parts, "iu": image_urls, "il": IMAGE_LAYOUT}, ensure_ascii=False)
+    page.run_js("window._pmData=" + data_json + ";")
+    dlog("已设置window._pmData")
+
+    # 步骤2：查找ProseMirror view并设置内容
+    pm_js = """return (function(){
+function findView(){
+  var editor=document.querySelector('.ProseMirror');
+  if(!editor)return null;
+  var desc=editor.pmViewDesc;
+  while(desc){if(desc.view&&desc.view.state)return desc.view;desc=desc.parent;}
+  function sf(fiber,v){
+    if(!fiber||v.has(fiber)||v.size>500)return null;
+    v.add(fiber);
+    if(fiber.stateNode&&fiber.stateNode.view&&fiber.stateNode.view.state)return fiber.stateNode.view;
+    if(fiber.memoizedProps&&fiber.memoizedProps.view&&fiber.memoizedProps.view.state)return fiber.memoizedProps.view;
+    if(fiber.memoizedState){var s=fiber.memoizedState;while(s){if(s.memoizedState&&s.memoizedState.view&&s.memoizedState.view.state)return s.memoizedState.view;s=s.next;}}
+    var r=sf(fiber.child,v);if(r)return r;
+    return sf(fiber.sibling,v);
+  }
+  var el=editor;
+  for(var i=0;i<15&&el;i++){
+    var fk=Object.keys(el).find(function(k){return k.indexOf('__reactFiber')===0||k.indexOf('__reactInternalInstance')===0;});
+    if(fk){var v=new Set();var r=sf(el[fk],v);if(r)return r;}
+    el=el.parentElement;
+  }
+  return null;
 }
-editor.dispatchEvent(new Event('input', {bubbles: true}));
-""")
-    time.sleep(1)
+var view=findView();
+if(!view)return JSON.stringify({status:'no_view'});
+var schema=view.state.schema;
+var nts=Object.keys(schema.nodes);
+var pn=null,im=null,dn=null;
+nts.forEach(function(k){
+  if(k==='paragraph'||k==='para')pn=k;
+  if(k==='doc')dn=k;
+  if(k==='image'||k==='imageUpload'||k==='media'||k==='img')im=k;
+});
+if(!im)nts.forEach(function(k){if(k.toLowerCase().indexOf('image')>=0||k.toLowerCase().indexOf('media')>=0)im=k;});
+if(!pn)nts.forEach(function(k){if(k.toLowerCase().indexOf('para')>=0)pn=k;});
+if(!dn)nts.forEach(function(k){if(k==='doc'||k==='document'||k==='article')dn=k;});
+if(!pn||!dn)return JSON.stringify({status:'no_types',nodes:nts});
+var urlAttr='src';
+var imAttrs={};
+if(im){
+  var imSpec=schema.nodes[im];
+  if(imSpec&&imSpec.spec&&imSpec.spec.attrs){
+    Object.keys(imSpec.spec.attrs).forEach(function(an){
+      var a=imSpec.spec.attrs[an];
+      if(an==='src'||an==='url'||an==='href')urlAttr=an;
+      imAttrs[an]=a&&a.default!==undefined?a.default:'[no-default]';
+    });
+  }
+}
+var data=window._pmData;
+var content=[];
+var ui=0;
+var hasDataAttr=imAttrs&&Object.keys(imAttrs).indexOf('data')>=0;
+for(var i=0;i<data.tp.length;i++){
+  if(data.tp[i])content.push({type:pn,content:[{type:'text',text:data.tp[i]}]});
+  var t=i+1;
+  if(data.il[t]){
+    for(var j=0;j<data.il[t];j++){
+      if(ui<data.iu.length&&data.iu[ui]){
+        var imgUrl=data.iu[ui];
+        var attrs={};
+        if(hasDataAttr){
+          attrs.data={url:imgUrl,icUri:imgUrl,catchErrorUrl:"",link:"",caption:"图片来源于网络",ic:false,naturalHeight:0,naturalWidth:0,srcType:"",captionLenErr:false,needCheck:false};
+        }else{
+          attrs[urlAttr]=imgUrl;
+          attrs.alt='图片来源于网络';
+        }
+        content.push({type:im,attrs:attrs});
+        ui++;
+      }
+    }
+  }
+}
+try{
+  var doc=schema.nodeFromJSON({type:dn,content:content});
+  view.dispatch(view.state.tr.replaceWith(0,view.state.doc.content.size,doc.content));
+  var ic=0;
+  view.state.doc.descendants(function(node){if(node.type.name===im)ic++;return true;});
+  return JSON.stringify({status:'ok',imgs:ic,chars:view.state.doc.textContent.length,nodes:nts,pn:pn,in:im,urlAttr:urlAttr,imAttrs:imAttrs});
+}catch(e){
+  return JSON.stringify({status:'error',error:e.message,nodes:nts,pn:pn,in:im,urlAttr:urlAttr});
+}
+})()"""
 
-    imgs = page.run_js("return document.querySelectorAll('.ProseMirror img').length;")
-    chars = page.run_js("return document.querySelector('.ProseMirror').innerText.length;")
-    print(f"  内容设置完成: {chars}字, {imgs}张图片")
-    dlog(f"内容设置完成(去重后): {chars}字, {imgs}张图片")
+    pm_result = page.run_js(pm_js)
+    dlog(f"ProseMirror view结果: {pm_result}")
+    print(f"  ProseMirror API: {pm_result}")
+
+    pm_data = None
+    try:
+        pm_data = json.loads(pm_result) if pm_result else None
+    except:
+        pass
+
+    pm_success = pm_data and pm_data.get('status') == 'ok' and pm_data.get('imgs', 0) > 0
+
+    if pm_success:
+        imgs = pm_data.get('imgs', 0)
+        chars = pm_data.get('chars', 0)
+        print(f"  [OK] ProseMirror API设置成功: {chars}字, {imgs}张图片")
+        dlog(f"ProseMirror API成功: {chars}字, {imgs}张图片, nodes={pm_data.get('nodes')}, pn={pm_data.get('pn')}, in={pm_data.get('in')}")
+    else:
+        # 方法2：回退到剪贴板粘贴（不做DOM去重，避免破坏ProseMirror状态）
+        print(f"  [FALLBACK] 剪贴板粘贴 (原因: {pm_result})")
+        dlog(f"回退剪贴板粘贴, PM结果: {pm_result}")
+
+        # 清空编辑器
+        editor_el = page.ele('.ProseMirror', timeout=3)
+        if editor_el:
+            editor_el.click()
+            time.sleep(0.3)
+            page.actions.key_down('ctrl').type('a').key_up('ctrl')
+            time.sleep(0.3)
+            page.actions.key_down('Backspace').key_up('Backspace')
+            time.sleep(0.5)
+
+        clip_ok = set_clipboard_html(final_html)
+        if clip_ok:
+            page.run_js("var e=document.querySelector('.ProseMirror'); if(e) e.focus();")
+            time.sleep(0.3)
+            page.actions.key_down('ctrl').type('v').key_up('ctrl')
+            time.sleep(3)
+            dlog("Ctrl+V粘贴完成")
+        else:
+            dlog("剪贴板失败，回退paste事件")
+            plain_final = re.sub(r'<[^>]+>', '', final_html).strip()
+            paste_js = (
+                "var editor=document.querySelector('.ProseMirror');"
+                "if(!editor)return;"
+                "editor.focus();"
+                "var dt=new DataTransfer();"
+                "dt.setData('text/html'," + json.dumps(final_html) + ");"
+                "dt.setData('text/plain'," + json.dumps(plain_final) + ");"
+                "var pe=new ClipboardEvent('paste',{bubbles:true,cancelable:true});"
+                "Object.defineProperty(pe,'clipboardData',{value:dt,writable:false,configurable:true});"
+                "editor.dispatchEvent(pe);"
+            )
+            page.run_js(paste_js)
+            time.sleep(3)
+            dlog("paste事件粘贴完成")
+
+        # 不做DOM-based去重（会破坏ProseMirror内部状态，导致保存时图片丢失）
+        imgs = page.run_js("return document.querySelectorAll('.ProseMirror img').length;") or 0
+        chars = page.run_js("return document.querySelector('.ProseMirror').innerText.length;") or 0
+        print(f"  剪贴板粘贴: {chars}字, {imgs}张图片")
+        dlog(f"剪贴板粘贴: {chars}字, {imgs}张图片")
 
     # 检查图片src URL（等待blob:URL被替换为服务器URL）
     print("  等待图片上传到服务器...")
@@ -673,6 +848,97 @@ return found;
         dlog("正文保存未确认，触发保存")
         trigger_save(page)
         wait_for_save(page, timeout=15)
+
+    # 验证保存后编辑器内容是否包含图片（检查ProseMirror内部状态，非仅DOM）
+    verify_js = """return (function(){
+function findView(){
+  var editor=document.querySelector('.ProseMirror');
+  if(!editor)return null;
+  var desc=editor.pmViewDesc;
+  while(desc){if(desc.view&&desc.view.state)return desc.view;desc=desc.parent;}
+  function sf(fiber,v){
+    if(!fiber||v.has(fiber)||v.size>500)return null;
+    v.add(fiber);
+    if(fiber.stateNode&&fiber.stateNode.view&&fiber.stateNode.view.state)return fiber.stateNode.view;
+    if(fiber.memoizedProps&&fiber.memoizedProps.view&&fiber.memoizedProps.view.state)return fiber.memoizedProps.view;
+    if(fiber.memoizedState){var s=fiber.memoizedState;while(s){if(s.memoizedState&&s.memoizedState.view&&s.memoizedState.view.state)return s.memoizedState.view;s=s.next;}}
+    var r=sf(fiber.child,v);if(r)return r;
+    return sf(fiber.sibling,v);
+  }
+  var el=editor;
+  for(var i=0;i<15&&el;i++){
+    var fk=Object.keys(el).find(function(k){return k.indexOf('__reactFiber')===0||k.indexOf('__reactInternalInstance')===0;});
+    if(fk){var v=new Set();var r=sf(el[fk],v);if(r)return r;}
+    el=el.parentElement;
+  }
+  return null;
+}
+var view=findView();
+var pmImgs=0,pmChars=0;
+if(view){
+  view.state.doc.descendants(function(node){
+    var n=node.type.name.toLowerCase();
+    if(n.indexOf('image')>=0||n.indexOf('media')>=0||n.indexOf('img')>=0)pmImgs++;
+    return true;
+  });
+  pmChars=view.state.doc.textContent.length;
+}
+var domImgs=document.querySelectorAll('.ProseMirror img').length;
+return JSON.stringify({pmImgs:pmImgs,pmChars:pmChars,domImgs:domImgs,hasView:!!view});
+})()"""
+    verify_result = page.run_js(verify_js)
+    dlog(f"保存后验证(ProseMirror): {verify_result}")
+
+    verify_data = None
+    try:
+        verify_data = json.loads(verify_result) if verify_result else None
+    except:
+        pass
+
+    saved_imgs = (verify_data.get('pmImgs', 0) if verify_data else 0) or page.run_js("return document.querySelectorAll('.ProseMirror img').length;") or 0
+    saved_chars = (verify_data.get('pmChars', 0) if verify_data else 0) or page.run_js("return document.querySelector('.ProseMirror').innerText.length;") or 0
+    dom_imgs = verify_data.get('domImgs', 0) if verify_data else '?'
+    print(f"  保存后验证: {saved_chars}字, {saved_imgs}张图片 (DOM: {dom_imgs})")
+    dlog(f"保存后验证: {saved_chars}字, {saved_imgs}张图片, verify={verify_result}")
+
+    if saved_imgs == 0:
+        print("  [WARN] 保存后图片丢失！重新通过ProseMirror API设置...")
+        dlog("保存后图片丢失，重新通过PM API设置")
+        # 重新通过ProseMirror view API设置内容（不用剪贴板+DOM去重）
+        retry_result = page.run_js(pm_js)
+        dlog(f"重新设置结果: {retry_result}")
+        print(f"  重新设置: {retry_result}")
+        retry_data = None
+        try:
+            retry_data = json.loads(retry_result) if retry_result else None
+        except:
+            pass
+        if retry_data and retry_data.get('status') == 'ok':
+            retry_imgs = retry_data.get('imgs', 0)
+            retry_chars = retry_data.get('chars', 0)
+        else:
+            retry_imgs = page.run_js("return document.querySelectorAll('.ProseMirror img').length;") or 0
+            retry_chars = page.run_js("return document.querySelector('.ProseMirror').innerText.length;") or 0
+        print(f"  重新设置后: {retry_chars}字, {retry_imgs}张图片")
+        dlog(f"重新设置后: {retry_chars}字, {retry_imgs}张图片")
+        # 再次触发保存
+        trigger_save(page)
+        wait_for_save(page, timeout=15)
+
+    # 读取网络拦截结果，检查保存请求是否包含图片
+    saved_bodies = page.run_js("return JSON.stringify(window._savedBodies||[]);")
+    dlog(f"保存请求拦截: {saved_bodies}")
+    try:
+        bodies = json.loads(saved_bodies) if saved_bodies else []
+        for b in bodies:
+            body_str = b.get('body', '')
+            has_img = 'image' in body_str.lower() or 'tos-cn' in body_str.lower() or 'img' in body_str.lower()
+            print(f"  [DIAG] 保存请求 {b.get('url','')[:60]}: 含图片={has_img}, body={len(body_str)}字符")
+            if has_img:
+                print(f"    body片段: {body_str[:300]}")
+            dlog(f"保存请求诊断: url={b.get('url','')[:80]}, 含图片={has_img}, body长度={len(body_str)}")
+    except Exception as e:
+        dlog(f"保存请求解析失败: {e}")
 
     # === 第3步：上传封面 ===
     print("\n[4] 上传封面...")
