@@ -29,10 +29,16 @@ The skill is backed by a Python script `hot_news_writer.py` located in the proje
 ### Run via command line
 
 ```bash
-python hot_news_writer.py 娱乐   # Entertainment
-python hot_news_writer.py 体育   # Sports
-python hot_news_writer.py 社会   # Society
+python hot_news_writer.py              # 1 article, 娱乐
+python hot_news_writer.py 娱乐          # 1 article, 娱乐
+python hot_news_writer.py 社会          # 1 article, 社会
+python hot_news_writer.py 体育          # 1 article, 体育
+python hot_news_writer.py 3             # 3 articles, evenly distributed: 娱乐→社会→体育
+python hot_news_writer.py 娱乐 3        # 3 articles, all 娱乐
+python hot_news_writer.py 6             # 6 articles, 娱乐→社会→体育→娱乐→社会→体育
 ```
+
+When a count is specified without a specific category, articles are evenly distributed across 娱乐, 社会, 体育 in a round-robin fashion.
 
 ### Config
 

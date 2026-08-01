@@ -557,8 +557,8 @@ def build_html(title, article_text, images):
 
 
 # ===== 主流程 =====
-def main(category="娱乐"):
-    config = load_config()
+def generate_one(session, hot_list, category, config):
+    """生成单篇文章，返回文件路径"""
     api_key = config["api_key"]
     model = config.get("model", "deepseek-chat")
     api_url = config.get("api_url", "https://api.deepseek.com/v1/chat/completions")
@@ -566,25 +566,16 @@ def main(category="娱乐"):
     image_count = config.get("image_count", 3)
     os.makedirs(output_dir, exist_ok=True)
 
-    if not api_key or api_key == "YOUR_API_KEY_HERE":
-        raise RuntimeError("请在 config.json 中填写API Key")
-
-    print(f"[1/5] 获取微博热搜（类别：{category}）...")
-    session = get_visitor_session()
-    hot_list = get_hotsearch_list(session)
-    print(f"  共获取 {len(hot_list)} 条热搜")
-    if not hot_list:
-        raise RuntimeError("未获取到热搜数据")
     hot = pick_hot_by_category(hot_list, category)
     keyword = hot["word"]
     print(f"  选中：{hot['title']}（排名 {hot['rank']}）")
 
-    print(f"[2/5] DeepSeek改写文章...")
+    print(f"  [2/5] DeepSeek改写文章...")
     title, article = rewrite_article(keyword, hot["rank"], api_key, model, api_url)
     print(f"  标题：{title}（{len(title)}字）")
     print(f"  正文：共 {len(article)} 字")
 
-    print("[3/5] 获取配图（优先微博原帖素材）...")
+    print(f"  [3/5] 获取配图（优先微博原帖素材）...")
     images = fetch_images_from_weibo(session, keyword, count=image_count)
     source = "微博原帖"
     if len(images) < image_count:
@@ -595,10 +586,10 @@ def main(category="娱乐"):
             source = f"微博原帖({len(images)-len(fallback)}张) + 百度({len(fallback)}张)"
     print(f"  成功处理 {len(images)} 张配图（来源：{source}）")
 
-    print("[4/5] 生成HTML...")
+    print(f"  [4/5] 生成HTML...")
     html = build_html(title, article, images)
 
-    print("[5/5] 保存文件...")
+    print(f"  [5/5] 保存文件...")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"hot_{category}_{timestamp}.html"
     filepath = os.path.join(output_dir, filename)
@@ -608,7 +599,60 @@ def main(category="娱乐"):
     return filepath
 
 
+def main(category="娱乐", count=1):
+    config = load_config()
+    api_key = config["api_key"]
+
+    if not api_key or api_key == "YOUR_API_KEY_HERE":
+        raise RuntimeError("请在 config.json 中填写API Key")
+
+    # 确定类别列表：如果指定了具体类别，全部用该类别；否则按类别均匀分配
+    ALL_CATEGORIES = ["娱乐", "社会", "体育"]
+    if category in ALL_CATEGORIES:
+        categories = [category] * count
+    else:
+        # 按轮次均匀分配：娱乐→社会→体育→娱乐→...
+        categories = [ALL_CATEGORIES[i % 3] for i in range(count)]
+
+    print(f"共需生成 {count} 篇文章，类别分配：{' → '.join(categories)}")
+    print(f"[1/5] 获取微博热搜...")
+    session = get_visitor_session()
+    hot_list = get_hotsearch_list(session)
+    print(f"  共获取 {len(hot_list)} 条热搜")
+    if not hot_list:
+        raise RuntimeError("未获取到热搜数据")
+
+    results = []
+    for i, cat in enumerate(categories):
+        print(f"\n{'='*50}")
+        print(f"第 {i+1}/{count} 篇（类别：{cat}）")
+        print(f"{'='*50}")
+        filepath = generate_one(session, hot_list, cat, config)
+        results.append(filepath)
+        if i < count - 1:
+            time.sleep(2)  # 避免API限流
+
+    print(f"\n全部完成！共生成 {len(results)} 篇文章：")
+    for fp in results:
+        print(f"  {fp}")
+    return results[0] if len(results) == 1 else results
+
+
 if __name__ == "__main__":
     import sys
-    category = sys.argv[1] if len(sys.argv) > 1 else "娱乐"
-    main(category)
+    args = sys.argv[1:]
+
+    # 解析参数：支持 "python hot_news_writer.py [类别|数量] [数量]"
+    category = "娱乐"
+    count = 1
+
+    if args:
+        first = args[0]
+        if first.isdigit():
+            count = int(first)
+        else:
+            category = first
+            if len(args) > 1 and args[1].isdigit():
+                count = int(args[1])
+
+    main(category, count)
