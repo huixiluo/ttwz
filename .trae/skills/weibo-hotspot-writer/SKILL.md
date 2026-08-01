@@ -86,8 +86,9 @@ Then open `http://localhost:8000/` in a browser to see the file list, or directl
 - Ban ending every paragraph with a summary sentence;
 - Use colloquial language, like chatting with a friend — slang, proverbs, metaphors are welcome;
 - Vary sentence length — mix long and short, occasionally use a very short sentence for rhythm;
-- Personal perspective and emotion allowed: 说实话/老实讲/这事儿说起来;
-- Do not start with 近日/近日来/近日，一则... — use a more immersive opening.
+- Personal perspective and emotion allowed: 说实话/老实讲/说起来;
+- Do not start with 近日/近日来/近日，一则... — use a more immersive opening;
+- Ban erhua (儿化音): never use 事儿/点儿/地儿/哥们儿/玩意儿 — use standard forms like 这件事/一点/地方/朋友/东西.
 
 ### Images
 
