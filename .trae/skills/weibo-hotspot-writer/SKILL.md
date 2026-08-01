@@ -95,6 +95,56 @@ Then open `http://localhost:8000/` in a browser to see the file list, or directl
 - 16:9 center crop with filters applied (contrast +12%, sharpness +25%, color +8%, unsharp mask);
 - Clear and visible, max width 800px, JPEG quality 88.
 
+## Toutiao Draft Upload
+
+The skill includes `upload_visible.py` for uploading generated articles to the Toutiao creator platform draft box. It uses DrissionPage to drive a real Chrome browser (non-headless) for completing the full publishing flow.
+
+### Upload Flow
+
+1. **Login**: Load cookies from `toutiao_cookies.json` and navigate to `mp.toutiao.com`.
+2. **Create new article**: Open the publish page with a cache-busting timestamp, wait for the ProseMirror editor to mount.
+3. **Fill title**: Input the article title (≤30 chars) into the title textarea and trigger auto-save.
+4. **Upload body images**: For each image, paste a Blob via `ClipboardEvent('paste')` to trigger the editor's built-in upload handler, then capture the returned server URL (`image-tt-private.toutiao.com`). Deduplicate by URL path.
+5. **Set editor content via ProseMirror API**: Build the document JSON (paragraphs + image nodes) and dispatch a transaction through `view.dispatch(view.state.tr.replaceWith(...))` to ensure internal state syncs with the DOM. Setting `innerHTML` directly does NOT update ProseMirror state and causes images to be lost on save.
+6. **Upload 3 covers**: Select 3-image cover mode, trigger the `.article-cover-add` button, and input each cover file via the file input.
+7. **Verify**: Navigate to the draft list and confirm the article appears.
+
+### Critical: Image Node Attribute
+
+The Toutiao ProseMirror schema's `image` node stores the URL inside a nested `data` object attribute, **NOT** a top-level `src`:
+
+```json
+{
+  "type": "image",
+  "attrs": {
+    "data": {
+      "url": "https://image-tt-private.toutiao.com/...",
+      "icUri": "https://image-tt-private.toutiao.com/...",
+      "caption": "图片来源于网络",
+      "link": "",
+      "ic": false,
+      "naturalHeight": 0,
+      "naturalWidth": 0,
+      "srcType": "",
+      "captionLenErr": false,
+      "needCheck": false
+    }
+  }
+}
+```
+
+Setting `attrs.src` instead of `attrs.data.url` produces an image node whose URL is empty when serialized for the save API, so the draft appears to have no images. Always inspect `schema.nodes.image.spec.attrs` and match the actual attribute shape.
+
+### Image Layout
+
+Enforced via `IMAGE_LAYOUT = {1: 1, 3: 2, 5: 2}` — 1 image after paragraph 1, 2 after paragraph 3, 2 after paragraph 5 (5 images total).
+
+### Debugging
+
+- `debug.log` records every step with timestamps for post-run diagnosis.
+- A network interceptor injected into the page captures all POST bodies, allowing verification that the `/mp/agw/article/publish` request actually contains image URLs.
+- The ProseMirror `view` object is located by traversing React Fiber from the editor DOM element (the view is not exposed on `window`).
+
 ## Scheduled Task
 
 A TRAE scheduled task "微博热搜改写-每日产出" runs daily at 12:00 (Asia/Shanghai) to auto-generate an entertainment article. The task prompt runs the script and displays the title + article content to the user.
