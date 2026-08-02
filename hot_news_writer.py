@@ -164,6 +164,24 @@ def pick_hot_by_category(hot_list, category):
     return candidates[0]
 
 
+def pick_hots_by_category(hot_list, category, count=1):
+    """按类别筛选热搜，取排名最高的 N 条（去重）"""
+    candidates = [h for h in hot_list if classify_hot(h) == category]
+    if not candidates:
+        candidates = hot_list
+    candidates.sort(key=lambda x: x.get("rank", 999))
+    # 按标题去重
+    seen = set()
+    unique = []
+    for h in candidates:
+        if h["title"] not in seen:
+            seen.add(h["title"])
+            unique.append(h)
+            if len(unique) >= count:
+                break
+    return unique
+
+
 # ===== 智谱GLM改写 =====
 REWRITE_PROMPT = """你是一位有十年经验的媒体编辑，文风接地气，擅长把热点写成让人想读下去的文章。
 
@@ -514,35 +532,31 @@ def build_html(title, article_text, images):
     return HTML_TEMPLATE.format(title=title, date=date_str, body=body)
 
 
+# ===== 批量生成清单 =====
+def save_manifest(articles_info, output_dir):
+    """保存批量生成清单，供 upload_visible.py 批量上传使用"""
+    manifest_path = os.path.join(output_dir, "batch_manifest.json")
+    with open(manifest_path, "w", encoding="utf-8") as f:
+        json.dump(articles_info, f, ensure_ascii=False, indent=2)
+    print(f"  清单已保存：{manifest_path}")
+
+
 # ===== 主流程 =====
-def main(category="娱乐"):
-    config = load_config()
+def generate_single(session, config, hot, category, output_dir):
+    """生成单篇文章，返回文章信息"""
     api_key = config["api_key"]
     model = config.get("model", "deepseek-chat")
     api_url = config.get("api_url", "https://api.deepseek.com/v1/chat/completions")
-    output_dir = os.path.join(BASE_DIR, config.get("output_dir", "./output"))
     image_count = config.get("image_count", 3)
-    os.makedirs(output_dir, exist_ok=True)
 
-    if not api_key or api_key == "YOUR_API_KEY_HERE":
-        raise RuntimeError("请在 config.json 中填写API Key")
-
-    print(f"[1/5] 获取微博热搜（类别：{category}）...")
-    session = get_visitor_session()
-    hot_list = get_hotsearch_list(session)
-    print(f"  共获取 {len(hot_list)} 条热搜")
-    if not hot_list:
-        raise RuntimeError("未获取到热搜数据")
-    hot = pick_hot_by_category(hot_list, category)
     keyword = hot["word"]
-    print(f"  选中：{hot['title']}（排名 {hot['rank']}）")
+    print(f"    话题：{hot['title']}（排名 {hot['rank']}）")
 
-    print(f"[2/5] DeepSeek改写文章...")
+    print(f"    [改写] DeepSeek生成文章...")
     title, article = rewrite_article(keyword, hot["rank"], api_key, model, api_url)
-    print(f"  标题：{title}（{len(title)}字）")
-    print(f"  正文：共 {len(article)} 字")
+    print(f"    标题：{title}（{len(title)}字）")
 
-    print("[3/5] 获取配图（优先微博原帖素材）...")
+    print(f"    [配图] 获取图片...")
     images = fetch_images_from_weibo(session, keyword, count=image_count)
     source = "微博原帖"
     if len(images) < image_count:
@@ -551,22 +565,103 @@ def main(category="娱乐"):
         images.extend(fallback)
         if fallback:
             source = f"微博原帖({len(images)-len(fallback)}张) + 百度({len(fallback)}张)"
-    print(f"  成功处理 {len(images)} 张配图（来源：{source}）")
+    print(f"    配图：{len(images)} 张（{source}）")
 
-    print("[4/5] 生成HTML...")
+    print(f"    [HTML] 生成中...")
     html = build_html(title, article, images)
 
-    print("[5/5] 保存文件...")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"hot_{category}_{timestamp}.html"
     filepath = os.path.join(output_dir, filename)
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(html)
-    print(f"  已保存：{filepath}")
-    return filepath
+    print(f"    已保存：{filename}")
+
+    return {
+        "title": title,
+        "category": category,
+        "keyword": keyword,
+        "rank": hot["rank"],
+        "html_file": filepath,
+        "image_count": len(images),
+    }
+
+
+def main(category="娱乐", count=1):
+    config = load_config()
+    api_key = config["api_key"]
+    output_dir = os.path.join(BASE_DIR, config.get("output_dir", "./output"))
+    os.makedirs(output_dir, exist_ok=True)
+
+    if not api_key or api_key == "YOUR_API_KEY_HERE":
+        raise RuntimeError("请在 config.json 中填写API Key")
+
+    print(f"[1] 获取微博热搜...")
+    session = get_visitor_session()
+    hot_list = get_hotsearch_list(session)
+    print(f"  共获取 {len(hot_list)} 条热搜")
+    if not hot_list:
+        raise RuntimeError("未获取到热搜数据")
+
+    if count == 1:
+        # 单篇模式：向后兼容
+        hot = pick_hot_by_category(hot_list, category)
+        info = generate_single(session, config, hot, category, output_dir)
+        print(f"\n[DONE] 文章：{info['title']}")
+        return info["html_file"]
+
+    # 批量模式：按类别均匀分配
+    categories = ["娱乐", "体育", "社会"]
+    per_cat = count // len(categories)
+    remainder = count % len(categories)
+
+    all_articles = []
+    article_idx = 0
+
+    print(f"\n[2] 批量生成 {count} 篇文章（娱乐x{per_cat + (1 if 0 < remainder else 0)}, 体育x{per_cat + (1 if 1 < remainder else 0)}, 社会x{per_cat + (1 if 2 < remainder else 0)}）")
+
+    for cat_idx, cat in enumerate(categories):
+        cat_count = per_cat + (1 if cat_idx < remainder else 0)
+        if cat_count == 0:
+            continue
+        print(f"\n--- {cat}类 {cat_count}篇 ---")
+        topics = pick_hots_by_category(hot_list, cat, cat_count)
+        print(f"  筛选到 {len(topics)} 个话题")
+        for hot in topics:
+            article_idx += 1
+            total = count
+            print(f"\n  [{article_idx}/{total}] {cat}类")
+            time.sleep(1)  # 避免 API 限流
+            info = generate_single(session, config, hot, cat, output_dir)
+            all_articles.append(info)
+
+    # 保存批量清单
+    save_manifest(all_articles, output_dir)
+
+    print(f"\n{'='*50}")
+    print(f"[DONE] 共生成 {len(all_articles)} 篇文章：")
+    for i, a in enumerate(all_articles):
+        print(f"  {i+1}. [{a['category']}] {a['title']}")
+
+    return [a["html_file"] for a in all_articles]
 
 
 if __name__ == "__main__":
     import sys
-    category = sys.argv[1] if len(sys.argv) > 1 else "娱乐"
-    main(category)
+    args = sys.argv[1:]
+    category = "娱乐"
+    count = 1
+
+    # 解析参数：支持 python hot_news_writer.py 娱乐  或  python hot_news_writer.py --count 9
+    i = 0
+    while i < len(args):
+        if args[i] == "--count" and i + 1 < len(args):
+            count = int(args[i + 1])
+            i += 2
+        elif args[i] in ("娱乐", "体育", "社会"):
+            category = args[i]
+            i += 1
+        else:
+            i += 1
+
+    main(category, count)
