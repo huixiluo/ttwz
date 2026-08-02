@@ -599,19 +599,22 @@ def generate_one(session, hot_list, category, config):
     return filepath
 
 
-def main(category="娱乐", count=1):
+def main(category="", count=1):
     config = load_config()
     api_key = config["api_key"]
 
     if not api_key or api_key == "YOUR_API_KEY_HERE":
         raise RuntimeError("请在 config.json 中填写API Key")
 
-    # 确定类别列表：如果指定了具体类别，全部用该类别；否则按类别均匀分配
+    # 确定类别列表
     ALL_CATEGORIES = ["娱乐", "社会", "体育"]
-    if category in ALL_CATEGORIES:
+    if category and category in ALL_CATEGORIES:
+        # 指定了具体类别，全部用该类别
         categories = [category] * count
     else:
-        # 按轮次均匀分配：娱乐→社会→体育→娱乐→...
+        # 未指定或无效类别：按轮次均匀分配
+        if not category:
+            category = "娱乐"  # 单篇文章默认娱乐
         categories = [ALL_CATEGORIES[i % 3] for i in range(count)]
 
     print(f"共需生成 {count} 篇文章，类别分配：{' → '.join(categories)}")
@@ -643,7 +646,7 @@ if __name__ == "__main__":
     args = sys.argv[1:]
 
     # 解析参数：支持 "python hot_news_writer.py [类别|数量] [数量]"
-    category = "娱乐"
+    category = ""  # 空字符串表示未指定类别，将均匀分配
     count = 1
 
     if args:
