@@ -74,40 +74,72 @@ def get_visitor_session():
 
 
 # ===== 微博热搜 =====
-def get_hotsearch_list(session):
-    """获取微博实时热搜榜（通过s.weibo.com解析HTML）"""
-    resp = session.get("https://s.weibo.com/top/summary", timeout=15)
-    resp.raise_for_status()
+# 分类热搜API映射（微博官方分类榜单接口）
+CATEGORY_API = {
+    "娱乐": "https://weibo.com/ajax/statuses/entertainment",
+    "体育": "https://weibo.com/ajax/statuses/sport",
+    "社会": "https://weibo.com/ajax/statuses/social",
+}
 
-    # 解析热搜: <a href="/weibo?q=...&band_rank=N&Refer=top">标题</a>
-    pattern = re.compile(
-        r'<a\s+href="(/weibo\?q=[^"]*band_rank=\d+[^"]*)"[^>]*>([^<]+)</a>'
-    )
+
+def _parse_band_list(band_list, category=""):
+    """解析热搜band_list，返回标准化的热搜列表"""
     hot_list = []
-    for match in pattern.finditer(resp.text):
-        link, title = match.group(1), match.group(2).strip()
-        # 提取热度值
-        rank_m = re.search(r'band_rank=(\d+)', link)
-        rank = int(rank_m.group(1)) if rank_m else 0
-        # 提取搜索词
-        q_m = re.search(r'q=([^&]+)', link)
-        word = quote(q_m.group(1)) if q_m else title
+    rank_counter = 0
+    for item in band_list:
+        # 跳过广告
+        if item.get("ad_type"):
+            continue
+        rank_counter += 1
+        word = item.get("word", "").strip()
+        if not word:
+            continue
         hot_list.append({
-            "title": title,
-            "word": title,  # 用标题作为搜索词
-            "rank": rank,
-            "num": 0,
+            "title": word,
+            "word": word,
+            "rank": item.get("realpos", rank_counter),
+            "num": item.get("num", 0),
+            "category": item.get("category", category),
+            "channel_type": item.get("channel_type", ""),
+            "subject_label": item.get("subject_label", ""),
         })
-
-    # 尝试提取热度数值
-    hot_nums = re.findall(
-        r'<td class="td-02"[^>]*>.*?<span>([\d.万]+)</span>', resp.text, re.DOTALL
-    )
-    for i, num in enumerate(hot_nums):
-        if i < len(hot_list):
-            hot_list[i]["num"] = num
-
     return hot_list
+
+
+def get_hotsearch_list(session):
+    """获取微博实时热搜总榜（通过hot_band API，含官方分类信息）"""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": "https://weibo.com/",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    resp = session.get(
+        "https://weibo.com/ajax/statuses/hot_band",
+        timeout=15, headers=headers
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    band_list = data.get("data", {}).get("band_list", [])
+    return _parse_band_list(band_list)
+
+
+def get_hotsearch_by_category(session, category):
+    """获取微博分类热搜榜（文娱/体育/社会各50条）
+    category: "娱乐" | "体育" | "社会"
+    """
+    api_url = CATEGORY_API.get(category)
+    if not api_url:
+        raise ValueError(f"不支持的分类: {category}，可选: {list(CATEGORY_API.keys())}")
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Referer": "https://weibo.com/",
+        "X-Requested-With": "XMLHttpRequest",
+    }
+    resp = session.get(api_url, timeout=15, headers=headers)
+    resp.raise_for_status()
+    data = resp.json()
+    band_list = data.get("data", {}).get("band_list", [])
+    return _parse_band_list(band_list, category=category)
 
 
 # 类别关键词规则
@@ -120,18 +152,34 @@ CATEGORY_KEYWORDS = {
              "蜘蛛侠", "蝙蝠侠", "超人", "漫威", "DC", "超级英雄", "重启",
              "奥特曼", "变形金刚", "哈利波特",
              # 演技/剧集相关
-             "演技", "古装", "热播", "御廷谣", "剧照", "番剧", "动画",
-             "番剧", "声优", "配音",
+             "演技", "古装", "热播", "御廷谣", "番剧", "动画",
+             "声优", "配音",
              # 科技娱乐/AI相关（非纯技术）
              "AI公司", "AI训练", "版权", "书籍销毁", "盗版",
              # 通用娱乐词
-             "网红", "直播", "短视频", "热搜", "话题"],
+             "网红", "直播", "短视频", "热搜", "话题",
+             # 票务/演出
+             "大麦", "票", "座位图", "巡演", "演出",
+             # 综艺/选秀节目
+             "浪姐", "披哥", "乘风破浪", "披荆斩棘", "选秀", "练习生",
+             # 常见明星名字（按需扩充）
+             "王俊凯", "肖战", "黄晓明", "罗正", "宋威龙", "刘耀文",
+             "陈伟霆", "陈瑶", "敖瑞鹏", "何与", "施南生", "赞达亚",
+             "TF家族", "TF四代", "TFBOYS", "闵塔鲨", "白鹿",
+             # 剧集/影视名
+             "异人之下", "清明上河园", "生命树", "天才女友"],
     "体育": ["比赛", "联赛", "球员", "冠军", "进球", "赛季", "奥运", "世界杯",
              "NBA", "CBA", "足球", "篮球", "网球", "乒乓", "羽毛球", "游泳",
              "田径", "夺冠", "决赛", "半决赛", "教练", "俱乐部", "转会", "运动员",
              "选手", "金牌", "银牌", "铜牌", "破纪录", "欧洲杯", "亚运会",
              "全运会", "锦标赛", "巡回赛", "公开赛", "德比", "德转",
-             "球衣", "球场", "场馆", "赛季", "积分", "排名赛"],
+             "球衣", "球场", "场馆", "积分", "排名赛",
+             # 运动员名字
+             "张继科", "王楚钦", "马龙", "樊振东", "孙颖莎", "陈梦",
+             "全红婵", "苏炳添", "武磊", "郑智",
+             # 赛事/体育相关
+             "赛事", "解说员", "赛事方", "中超", "国足", "男篮", "女篮",
+             "世锦赛", "资格赛", "小组赛", "淘汰赛"],
     "社会": ["警方", "事故", "救援", "市民", "小区", "学校", "学生", "老人",
              "交通", "地铁", "高铁", "天气", "暴雨", "高温", "疫情", "医疗",
              "政策", "法规", "法院", "判决", "见义勇为", "感动", "暖心", "烈士",
@@ -142,16 +190,30 @@ CATEGORY_KEYWORDS = {
              "退货", "取件码", "快递", "消费者", "维权", "投诉",
              # 科技/产业（非娱乐）
              "芯片", "半导体", "市值", "三星", "海力士", "台积电",
-             "新能源", "电动车", "电池", "光伏"],
+             "新能源", "电动车", "电池", "光伏",
+             # 民生/经济
+             "银行", "公积金", "房价", "物价", "工资", "就业",
+             "供冷", "供暖", "超市", "存包",
+             # 国际
+             "日本", "韩国", "印度", "美国", "俄罗斯", "泰国", "总理",
+             # 军事
+             "歼20", "导弹", "军演", "海军", "空军",
+             # 其他社会
+             "探险队", "登山", "遇难", "谋杀", "日元", "危机"],
 }
 
 
 def classify_hot(item):
-    """根据关键词判断热搜类别"""
-    text = item.get("title", "") + item.get("word", "")
-    for cat, keywords in CATEGORY_KEYWORDS.items():
-        if any(kw in text for kw in keywords):
-            return cat
+    """根据微博API返回的category和channel_type字段判断热搜类别"""
+    cat = item.get("category", "")
+    ch = item.get("channel_type", "")
+    # 娱乐：channel_type为Entertainment，或category属于娱乐子类
+    if ch == "Entertainment" or cat in ("艺人", "演出", "综艺", "剧集", "电影", "网红", "艺人,游戏"):
+        return "娱乐"
+    # 体育：category为体育
+    if cat == "体育":
+        return "体育"
+    # 其他归为社会（民生新闻、情感、财经、互联网、国内时政、军事、海外新闻等）
     return "社会"
 
 

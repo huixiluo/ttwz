@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-批量生成6篇文章（2娱乐+2体育+2社会）
+批量生成9篇文章（3娱乐+3体育+3社会）
 每篇600-1000字，5张配图（优先微博原帖，回退百度），选3张作为封面图单独保存
 用法：python batch_generate.py
 """
@@ -48,13 +48,11 @@ def batch_generate():
     print("批量生成6篇文章（2娱乐+2体育+2社会）")
     print("=" * 60)
 
-    print("\n[准备] 获取微博热搜列表...")
+    print("\n[准备] 获取微博分类热搜...")
     session = hnw.get_visitor_session()
-    hot_list = hnw.get_hotsearch_list(session)
-    print(f"  共获取 {len(hot_list)} 条热搜")
 
     categories = ["娱乐", "体育", "社会"]
-    per_category = 2
+    per_category = 3
     results = []
     used_titles = set()  # 跨类别去重，确保9条热搜不重复
 
@@ -63,26 +61,11 @@ def batch_generate():
         print(f"开始处理【{cat}】类，共{per_category}篇")
         print("=" * 60)
 
-        # 先取该类别独有热搜，不够再从通用里补
-        candidates = [h for h in hot_list if hnw.classify_hot(h) == cat]
-        candidates.sort(key=lambda x: x.get("rank", 999))
-        # 排除已用的
-        candidates = [h for h in candidates if h["word"] not in used_titles]
-        # 如果该类别不足per_category条，优先从社会类(默认)补充
-        if len(candidates) < per_category:
-            # 先尝试从社会类中补充
-            others = [h for h in hot_list
-                      if hnw.classify_hot(h) == "社会"
-                      and h["word"] not in used_titles
-                      and h not in candidates]
-            others.sort(key=lambda x: x.get("rank", 999))
-            candidates.extend(others[:per_category - len(candidates)])
-        # 如果还不够，从剩余未使用热搜里补
-        if len(candidates) < per_category:
-            others = [h for h in hot_list
-                      if h["word"] not in used_titles and h not in candidates]
-            others.sort(key=lambda x: x.get("rank", 999))
-            candidates.extend(others[:per_category - len(candidates)])
+        # 直接从微博分类热搜API获取该分类的热搜
+        hot_list = hnw.get_hotsearch_by_category(session, cat)
+        print(f"  [{cat}] 分类热搜共 {len(hot_list)} 条")
+        # 排除已用的，按排名取前per_category条
+        candidates = [h for h in hot_list if h["word"] not in used_titles]
         selected = candidates[:per_category]
 
         for idx, hot in enumerate(selected, 1):

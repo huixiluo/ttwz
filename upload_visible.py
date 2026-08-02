@@ -362,18 +362,23 @@ XMLHttpRequest.prototype.open=function(method,url){
 
     # === 第2步：填标题 ===
     print("\n[2] 填标题...")
-    title_el = page.ele('tag:textarea@placeholder=请输入文章标题（2～30个字）', timeout=10)
-    if not title_el:
-        title_el = page.ele('tag:textarea@placeholder:文章标题', timeout=5)
-    title_el.click()
-    time.sleep(0.5)
-    title_el.input(title)
-    time.sleep(1)
-    page.run_js("""
-var el = document.querySelector('textarea[placeholder*="文章标题"]');
-if (el) { el.blur(); el.dispatchEvent(new Event('change', {bubbles: true})); }
+    import json as _json
+    title_json = _json.dumps(title)
+    # 使用React兼容方式：原生value setter + input事件触发状态更新
+    title_set = page.run_js(f"""
+var el = document.querySelector('textarea[placeholder*="文章标题"]') ||
+         document.querySelector('textarea[placeholder*="请输入文章标题"]');
+if (!el) return 'not_found';
+el.focus();
+var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+nativeSetter.call(el, {title_json});
+el.dispatchEvent(new Event('input', {{bubbles: true}}));
+el.dispatchEvent(new Event('change', {{bubbles: true}}));
+el.blur();
+return el.value;
 """)
     print(f"  标题: {title}")
+    dlog(f"标题设置结果: title_set={repr(title_set)}")
     time.sleep(3)
 
     if wait_for_save(page, timeout=10):

@@ -47,3 +47,14 @@ desktop.ini
 toutiao_qr.png
 output/qr_login.html
 output/toutiao_qr.html
+
+# 运行产物（生成的文章、封面图、临时图片、清单）
+output/hot_*.html
+output/covers/
+output/tmp/
+output/batch_manifest.json
+single_manifest.json
+_preview_result.json
+
+# 临时测试脚本
+_test_*.py
