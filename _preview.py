@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
-"""预览：获取微博热搜并按分类展示9条资讯（3娱乐+3体育+3社会），不生成文章"""
+"""预览：获取微博热搜并按分类展示6条资讯（2娱乐+2体育+2社会），跳过上次已用，不生成文章"""
 import json
 import hot_news_writer as hnw
 
+# 上次已用话题（避免重复）
+LAST_USED = {
+    "周杰伦疑似回应私生子", "橹穆",
+    "伊藤美诚 苍蝇拍打法", "吴梦洁伤愈回归女排",
+    "梅姨真实姓名首曝光", "台风",
+}
+
 print("=" * 60)
-print("获取微博分类热搜（文娱/体育/社会）...")
+print("获取微博分类热搜（文娱/体育/社会），跳过上次已用...")
 print("=" * 60)
 
 session = hnw.get_visitor_session()
 
-# 处理顺序：娱乐→体育→社会
 categories = ["娱乐", "体育", "社会"]
-per_category = 3
-used_titles = set()  # 跨类别去重
+per_category = 2
+used_titles = set(LAST_USED)  # 跨类别去重，包含上次已用
 preview = {}
 
 for cat in categories:

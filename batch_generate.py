@@ -52,7 +52,7 @@ def batch_generate():
     session = hnw.get_visitor_session()
 
     categories = ["娱乐", "体育", "社会"]
-    per_category = 3
+    per_category = 2
     results = []
     used_titles = set()  # 跨类别去重，确保9条热搜不重复
 
@@ -73,14 +73,18 @@ def batch_generate():
             used_titles.add(keyword)  # 标记已用
             print(f"\n--- [{cat} {idx}/{per_category}] 热搜：{hot['title']}（排名{hot['rank']}）---")
 
-            print("  [1/4] DeepSeek改写文章...")
+            print("  [1/5] DeepSeek改写文章...")
             title, article = hnw.rewrite_article(
                 keyword, hot["rank"], api_key, model, api_url
             )
             print(f"  标题：{title}（{len(title)}字）")
-            print(f"  正文：共 {len(article)} 字")
+            print(f"  初稿：共 {len(article)} 字")
 
-            print("  [2/4] 获取配图（优先微博原帖素材，回退百度）...")
+            print("  [2/5] 真人文字校准编辑...")
+            article = hnw.polish_article(article, api_key, model, api_url)
+            print(f"  校准后：共 {len(article)} 字")
+
+            print("  [3/5] 获取配图（优先微博原帖素材，回退百度）...")
             images = hnw.fetch_images_from_weibo(session, keyword, count=image_count)
             source = "微博原帖"
             if len(images) < image_count:
@@ -91,10 +95,10 @@ def batch_generate():
                     source = f"微博原帖({len(images)-len(fallback)}张) + 百度({len(fallback)}张)"
             print(f"  成功处理 {len(images)} 张配图（来源：{source}）")
 
-            print("  [3/4] 生成HTML...")
+            print("  [4/5] 生成HTML...")
             html = hnw.build_html(title, article, images)
 
-            print("  [4/4] 保存文件...")
+            print("  [5/5] 保存文件...")
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             prefix = f"{cat}_{idx}_{timestamp}"
             html_filename = f"hot_{prefix}.html"

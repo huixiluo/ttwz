@@ -21,17 +21,29 @@ def blog(msg):
 
 
 def main():
-    # 清空旧日志
-    with open(BATCH_LOG, "w", encoding="utf-8") as f:
-        f.write("")
+    # 支持命令行参数指定起始索引（从1开始），用于断点续传
+    start_index = 1
+    if len(sys.argv) > 1:
+        try:
+            start_index = int(sys.argv[1])
+        except ValueError:
+            pass
+
+    # 追加模式：如果是断点续传（start_index > 1），不清空旧日志
+    mode = "a" if start_index > 1 else "w"
+    with open(BATCH_LOG, mode, encoding="utf-8") as f:
+        if mode == "w":
+            f.write("")
+        else:
+            f.write(f"\n--- 断点续传：从第{start_index}篇开始 ---\n")
 
     with open(BATCH_MANIFEST, "r", encoding="utf-8") as f:
         articles = json.load(f)
 
     total = len(articles)
-    blog(f"批量上传 {total} 篇文章到头条草稿箱（跳过封面）")
+    blog(f"批量上传 {total} 篇文章到头条草稿箱（跳过封面），从第{start_index}篇开始")
     print("=" * 60, flush=True)
-    print(f"批量上传 {total} 篇文章到头条草稿箱（跳过封面）", flush=True)
+    print(f"批量上传 {total} 篇文章到头条草稿箱（从第{start_index}篇开始）", flush=True)
     print("=" * 60, flush=True)
 
     # 设置环境变量跳过封面上传
@@ -41,6 +53,8 @@ def main():
 
     success = 0
     for i, art in enumerate(articles, 1):
+        if i < start_index:
+            continue  # 跳过已上传的
         title = art.get("title", "")[:30]
         blog(f"[{i}/{total}] 开始上传：{title}")
         print(f"\n{'='*60}", flush=True)

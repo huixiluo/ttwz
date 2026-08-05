@@ -234,15 +234,20 @@ REWRITE_PROMPT = """你是一位有十年经验的媒体编辑，文风接地气
 【热搜话题】{keyword}
 【热搜排名】第{rank}位
 
-【标题要求——非常重要】
-1. 必须是爆款标题，字数不超过25个字（含标点），且必须是一句语义完整的话，不能半截话戛然而止；
-2. 制造悬念、冲突或反差，让人忍不住想点开看；
-3. 可用疑问句、数字、对比、情绪词等技巧，但不要标题党骗点击；
-4. 口语化，像朋友分享时说的话，不要书面腔；
-5. 不要用"震惊！""速看！""突发！"这类低质标题党词；
-6. 标题要和正文内容匹配，不能文不对题；
-7. 禁止编造或暗示未经证实的事实，禁止用假设性陈述误导读者（如"某某没拿奖？""某某要退出？"这类无中生有的猜测），疑问句只能基于已公开的事实提问；
-8. 标题不得偏向或点名特定人物（正文没偏向某个人，标题也不要只聚焦某一个人），应从事件整体或群体角度切入，保持中立客观。
+【标题要求——非常重要，必须严格执行】
+1. 必须是三段式爆款标题，字数不超过25个字（含标点），整体语义完整，不能半截话戛然而止；
+2. 三段式结构是硬性要求：标题必须由三个短句/短语组成，用中文逗号分隔，即标题中必须恰好出现两个逗号，分成三段。禁止只写一段、两段或四段。正确示例："明星哭穷上热搜，网友不买账，这届观众清醒了"（两个逗号，三段）；
+3. 结合本条资讯的具体内容，从以下两种结构形式中选择更适合的一种来生成标题：
+   - 结构A：事件+细节+悬念（先点明事件，再补充一个关键细节，最后用悬念收尾引发好奇）
+   - 结构B：现象+冲突+疑问（先描述现象，再点出冲突点，最后用疑问句引发思考）
+   选择依据：资讯本身有戏剧性细节时优先用结构A；资讯涉及争议、对立或反差时优先用结构B；
+4. 三段要短促有力，每段尽量不超过8个字，节奏感强，像朋友分享时说的话，口语化，不要书面腔；
+5. 制造悬念、冲突或反差，让人忍不住想点开看；可用疑问句、数字、对比、情绪词等技巧，但不要标题党骗点击；
+6. 不要用"震惊！""速看！""突发！"这类低质标题党词；
+7. 标题要和正文内容匹配，不能文不对题；
+8. 禁止编造或暗示未经证实的事实，禁止用假设性陈述误导读者（如"某某没拿奖？""某某要退出？"这类无中生有的猜测），疑问句只能基于已公开的事实提问；
+9. 标题不得偏向或点名特定人物（正文没偏向某个人，标题也不要只聚焦某一个人），应从事件整体或群体角度切入，保持中立客观；
+10. 写完标题后请自查：标题是否恰好有两个逗号、分成三段？若不是，必须改写为符合三段式结构的标题。
 
 【内容要求】
 1. 如果你了解该事件的背景，请基于事实进行改写；如果不确定具体细节，请围绕话题主题进行创作，但不得编造虚假信息；
@@ -261,7 +266,22 @@ REWRITE_PROMPT = """你是一位有十年经验的媒体编辑，文风接地气
 2. 多用生活化的表达，像和朋友聊天那样自然。可以适当用口语、俗语、比喻，让文字有温度；
 3. 句子长短错落，不要都是长句或都是短句。偶尔用一个很短的句子制造节奏感；
 4. 可以带一点个人视角和情绪，比如"说实话""老实讲""说起来"这类自然过渡；
-5. 开头不要用"近日""近日来""近日，一则..."这类套路开头，换个更有代入感的切入方式；
+5. 【开头——非常重要，必须严格执行】开头必须自然、多样、有代入感，坚决杜绝AI味和套路化：
+   - 严禁使用以下固化开头模式（违反即视为不合格）：
+     * "刷到/看到/点开+热搜/榜单/话题"类（如"刷到这条热搜""看到榜单上挂着""点开话题"）；
+     * "朋友圈里/群里/评论区"类（如"朋友圈又炸了""群里在转"）；
+     * "热搜第X位/挂在热搜"类自我引用榜单排名的表述；
+     * "近日""近日来""近日，一则..."这类新闻稿套路；
+     * "话说回来""闲来无事"等生硬铺垫。
+   - 每篇文章的开头切入方式必须不同，请从以下手法中根据内容选择最贴合的一种，且不要与近期文章重复：
+     * 场景切入：用一个具体的生活场景或画面直接开场（如"下班路上刷手机，一条消息弹出来"）；
+     * 细节切入：从事件中最抓人的一个细节、一句话、一个动作写起；
+     * 反问切入：用一个直击人心的问题开场，引发读者思考；
+     * 观点切入：先抛出一个判断或态度，再带出事件；
+     * 对比切入：用今昔对比、表里对比制造反差；
+     * 故事切入：像讲一个故事那样自然开场，先铺垫再点题；
+     * 情绪切入：直接写出一种情绪或感受，让读者共情。
+   - 开头要让人一眼觉得"这是个人在写东西"，而不是"机器在凑字数"。开头三句话内必须抓住读者，不要绕弯子铺垫；
 6. 绝对禁止使用儿话音！这是硬性要求，违反即视为不合格。任何"X儿"格式的口语化后缀都不允许，包括但不限于：事儿/点儿/地儿/哥们儿/玩意儿/劲儿/味儿/脸儿/份儿/调儿/孩儿/老头儿/聊天儿/慢慢儿/好好儿。必须用规范表达替代（这事→这件事，一点→一点，地方→地方，朋友→朋友，东西→东西，劲头→劲头，味道→味道）。写完后请自查，若出现"儿"字作为词尾后缀，必须改写。
 
 【输出格式——必须严格按此格式】
@@ -271,39 +291,31 @@ REWRITE_PROMPT = """你是一位有十年经验的媒体编辑，文风接地气
 不要加"标题："等前缀，不要加任何额外说明。"""
 
 
-def rewrite_article(keyword, rank, api_key, model, api_url=None):
-    """调用LLM改写文章（DeepSeek兼容OpenAI格式），返回 (标题, 正文)"""
-    url = api_url or "https://api.deepseek.com/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-    prompt = REWRITE_PROMPT.format(keyword=keyword, rank=rank)
-    payload = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.9,
-        "max_tokens": 1500,
-    }
-    resp = requests.post(url, json=payload, headers=headers, timeout=120)
-    resp.raise_for_status()
-    data = resp.json()
-    content = data["choices"][0]["message"]["content"].strip()
+def _is_three_part_title(title):
+    """校验标题是否为严格三段式（恰好两个逗号分三段）"""
+    comma_count = title.count('，') + title.count(',')
+    return comma_count == 2
 
-    # 解析标题和正文：第一行为标题，空行后为正文
+
+def _parse_llm_output(content, keyword):
+    """解析LLM输出：第一行为标题，空行后为正文"""
     lines = content.split("\n")
     title = lines[0].strip() if lines else keyword
     # 去掉标题前缀（如"标题："）
     title = re.sub(r'^(标题[:：]\s*)', '', title)
-    # 标题字数兜底：超过25字时，在标点处智能截断，保证语义完整
+    # 标题字数兜底：超过25字时智能截断，保证三段式结构尽量完整
     if len(title) > 25:
-        # 在第18-25字之间找最后一个标点符号进行截断
+        comma_positions = [i for i, c in enumerate(title) if c in '，,']
         truncate_at = 25
         for i in range(25, 17, -1):
-            if i < len(title) and title[i-1] in '，。！？、；：,.;:!?':
+            if i < len(title) and title[i-1] in '，,。！？、；：;:!?':
                 truncate_at = i
                 break
-        title = title[:truncate_at]
+        if comma_positions:
+            last_comma_before = max([p for p in comma_positions if p < truncate_at], default=-1)
+            if last_comma_before >= 0 and (truncate_at - last_comma_before) <= 3:
+                truncate_at = last_comma_before + 1
+        title = title[:truncate_at].rstrip('，,。！？、；：;:!?')
 
     # 正文：跳过标题和紧随的空行
     body_start = 1
@@ -312,13 +324,94 @@ def rewrite_article(keyword, rank, api_key, model, api_url=None):
     article = "\n".join(lines[body_start:]).strip()
     if not article:
         article = content  # 兜底
-    # 后处理：清除儿话音（双保险，DeepSeek未必严格遵守prompt）
+    return title, article
+
+
+def rewrite_article(keyword, rank, api_key, model, api_url=None):
+    """调用LLM改写文章（DeepSeek兼容OpenAI格式），返回 (标题, 正文)
+    标题严格校验三段式（两个逗号分三段），不符合则重试一次。
+    """
+    url = api_url or "https://api.deepseek.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    prompt = REWRITE_PROMPT.format(keyword=keyword, rank=rank)
+
+    title, article = None, None
+    for attempt in range(2):  # 最多2次：首次 + 三段式不合规重试1次
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.9,
+            "max_tokens": 1500,
+        }
+        resp = requests.post(url, json=payload, headers=headers, timeout=120)
+        resp.raise_for_status()
+        data = resp.json()
+        content = data["choices"][0]["message"]["content"].strip()
+        title, article = _parse_llm_output(content, keyword)
+
+        if _is_three_part_title(title):
+            break  # 三段式合规，直接采用
+        # 不合规，重试一次
+        print(f"  [标题校验] 第{attempt+1}次生成的标题非三段式：{title}，重试...")
+        time.sleep(1)
+
+    # # 后处理：清除儿话音（双保险，DeepSeek未必严格遵守prompt）
     article = clean_erhua(article)
     title = clean_erhua(title)
     return title, article
 
 
-# 儿话音替换表（覆盖常见口语后缀，"儿"作为词尾时替换）
+# ===== 真人文字校准编辑 =====
+POLISH_PROMPT = """你是一位真人文字校准编辑。请对以下文章正文进行行文改写。
+
+【改写原则——必须严格执行】
+1. 保留全部原文事实、核心观点，不得篡改、删减、编造任何事实信息；
+2. 删掉以下内容（发现即删除或改写）：
+   - 空洞客套话（如"希望xxx""愿xxx""让我们一起xxx"）；
+   - 机械连接词（首先/其次/最后/总之/综上所述/不难看出/值得一提的是）；
+   - 华丽排比句（是...也是...更是.../不仅...而且...还...）；
+   - 重复的结果性表述（同一段落里反复说同一个意思）；
+   - 教科书式的升华总结（如"这不仅是xxx，更是xxx的体现""值得我们每个人深思"）；
+3. 调节句子长短节奏，让长短句错落有致，逻辑转折自然不生硬；
+4. 允许有轻微不完美，还原普通人真实输出的语感，不要写得像范文或满分作文；
+5. 禁止堆砌网络热梗、禁止强行口语化、禁止编造故事或细节；
+6. 不要套用别的模板风格，保持原文的整体基调和段落结构，只做行文层面的打磨。
+
+【输入文章正文】
+{article}
+
+【输出要求】
+直接输出改写后的正文，不要加任何说明、不要加标题、不要加"改写后"等前缀。段落之间用空行分隔。"""
+
+
+def polish_article(article, api_key, model, api_url=None):
+    """对文章正文进行真人文字校准编辑，返回改写后的正文"""
+    url = api_url or "https://api.deepseek.com/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    prompt = POLISH_PROMPT.format(article=article)
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.7,
+        "max_tokens": 1500,
+    }
+    resp = requests.post(url, json=payload, headers=headers, timeout=120)
+    resp.raise_for_status()
+    data = resp.json()
+    polished = data["choices"][0]["message"]["content"].strip()
+    if not polished:
+        polished = article  # 兜底：返回原文
+    polished = clean_erhua(polished)
+    return polished
+
+
+# 儿话音替换表（覆盖常见口语后缀，"儿"作为词尾后缀）
 _ERHUA_MAP = {
     "这事儿": "这件事", "那事儿": "那件事",
     "哥们儿": "朋友", "玩意儿": "东西", "老头儿": "老头",
