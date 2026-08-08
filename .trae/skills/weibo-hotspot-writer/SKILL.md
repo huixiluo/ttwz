@@ -144,7 +144,7 @@ After the initial draft, `polish_article()` runs a second DeepSeek pass as a rea
 - 16:9 center crop with filters (contrast +12%, sharpness +25%, color +8%, unsharp mask);
 - Max width 800px, JPEG quality 88, base64-encoded;
 - 3 cover images saved separately as JPEG files to `./output/covers/`;
-- Dynamic layout: 1 image after paragraph 1, then 2 images every 2 paragraphs (after 3/5/7/9..., only if at least 2 paragraphs remain after), no images if fewer than 2 paragraphs left at the end.
+- Dynamic layout (5 images cap): 1 image after paragraph 1, then fill 2-image groups "every 2 paragraphs" forward; when the last group leaves >2 pure-text paragraphs at the tail, shift the last 2-image group back to leave exactly 2 paragraphs at the end — ensures no 3–4 paragraph long text tail.
 
 ## Category Hot Search API
 
@@ -192,19 +192,26 @@ The Toutiao ProseMirror schema's `image` node stores the URL inside a nested `da
 
 ### Image Layout
 
-Dynamic layout via `calc_image_layout(total_paragraphs)`:
-- 1 image fixed after paragraph 1;
-- Then 2 images after every 2 paragraphs (3, 5, 7, 9...), but only when at least 2 paragraphs remain after that point (ensures the last 1–2 paragraphs are pure text, no tail-end orphan images);
-- Remaining unused images (if any) are appended at the end as a fallback.
+Dynamic layout via `calc_image_layout(total_paragraphs, num_images=5)` — respects the 5-image hard cap and guarantees at most 2 pure-text tail paragraphs:
 
-Examples:
-| Total paragraphs | Layout dict | Total images placed |
-|---|---|---|
-| 3 | {1: 1} | 1 |
-| 5 | {1: 1, 3: 2} | 3 |
-| 7 | {1: 1, 3: 2, 5: 2} | 5 |
-| 8 | {1: 1, 3: 2, 5: 2} | 5 |
-| 9+ | every +2 paragraphs adds +2 images | increases by 2 |
+1. **Fixed header**: 1 image after paragraph 1 (uses 1 image, 4 remaining → 2 groups of 2).
+2. **Forward fill 2-image groups**: place 2 images after positions 3, 5, 7… "every 2 paragraphs" until images run out.
+3. **Tail-fix back-shift**: after forward fill, if the last 2-image group leaves >2 pure-text trailing paragraphs, move that last group backward to position `total_paragraphs - 2` (leaving exactly 2 pure-text paragraphs at the end). Must keep at least a 2-position gap from the previous group.
+4. **Fallback**: any unused images still get appended at the very end.
+
+Examples (with 5 images total, tail is always ≤2):
+| Total paragraphs | Layout dict | Images placed | Pure-text tail |
+|---|---|---|---|
+| 3 | {1: 1} | 1 | 2 |
+| 4 | {1: 1, 3: 2} | 3 | 1 |
+| 5 | {1: 1, 3: 2} | 3 | 2 |
+| 6 | {1: 1, 3: 2, 5: 2} | 5 | 1 |
+| 7 | {1: 1, 3: 2, 5: 2} | 5 | 2 |
+| 8 | {1: 1, 3: 2, 6: 2} | 5 | 2 |
+| 9 | {1: 1, 3: 2, 7: 2} | 5 | 2 |
+| 10 | {1: 1, 3: 2, 8: 2} | 5 | 2 |
+| 11 | {1: 1, 3: 2, 9: 2} | 5 | 2 |
+| 12 | {1: 1, 3: 2, 10: 2} | 5 | 2 |
 
 ### Batch Upload with Breakpoint Recovery
 

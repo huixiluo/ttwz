@@ -20,20 +20,62 @@ def dlog(msg):
     with open(DEBUG_LOG, "a", encoding="utf-8") as f:
         f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
 
-def calc_image_layout(total_paragraphs):
-    """动态计算图片布局：第1段后1张，之后每两段(第3/5/7...段，其后至少还有2段)配2张，最后不足2段不配。
+def calc_image_layout(total_paragraphs, num_images=5):
+    """动态计算图片布局（5张图上限）：
+    - 第1段后固定1张（用掉1张）
+    - 剩余图片按"每2段文字配2张"从前往后占位
+    - 5张图用光后，若最后一组占位之后剩余纯文字>2段，则将最后一组2张后移到"保留2段结尾"的位置
+    - 若最后一组之后纯文字=0段（图紧贴最后一行），则删除该组避免结尾贴图
+    - 保证最后纯文字段落数≤2段（避免3-4段长尾纯文字）
     返回 dict: {段落号: 图片数量}
     """
+    if total_paragraphs < 1:
+        return {}
+
     layout = {1: 1}
-    para_num = 3
-    while para_num <= total_paragraphs:
-        remaining_after = total_paragraphs - para_num
-        if remaining_after >= 2:
-            layout[para_num] = 2
+    remaining = num_images - 1  # 第1段后用掉1张
+
+    # Step 1: 按从前往后"每两段2张"占位，直到图片用光
+    groups = []  # 放2张图的段落位置
+    pos = 3
+    while remaining >= 2 and pos <= total_paragraphs:
+        groups.append(pos)
+        remaining -= 2
+        pos += 2
+
+    # Step 2: 后处理
+    while groups:
+        last_group = groups[-1]
+        tail = total_paragraphs - last_group
+        if tail > 2:
+            # 长尾：将最后一组后移到"保留2段结尾"的位置
+            new_last = total_paragraphs - 2
+            if new_last > last_group:
+                if len(groups) >= 2:
+                    min_new_last = groups[-2] + 2
+                    if new_last >= min_new_last:
+                        groups[-1] = new_last
+                        break
+                    else:
+                        # 上一组太近无法后移，退而删除本组（再循环判断上一组）
+                        groups.pop()
+                        continue
+                else:
+                    groups[-1] = new_last
+                    break
+            else:
+                break
+        elif tail < 1:
+            # 图紧贴最后一行：删除该组（保留1-2段纯文字结尾更自然）
+            groups.pop()
+            continue
         else:
+            # tail in [1, 2]：完美
             break
-        para_num += 2
-    return layout
+
+    for g in groups:
+        layout[g] = 2
+    return dict(sorted(layout.items()))
 
 
 def set_clipboard_html(html_content):
@@ -290,7 +332,7 @@ def main():
         text_only_html = "\n".join(text_parts)
 
     print(f"  正文: {len(text_parts)}段, {len(image_srcs)}张图片")
-    image_layout = calc_image_layout(len(text_parts))
+    image_layout = calc_image_layout(len(text_parts), len(image_srcs))
     print(f"  图片布局: {image_layout}")
     text_plain = re.sub(r'<[^>]+>', '', text_only_html).strip()
 
