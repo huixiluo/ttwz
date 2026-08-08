@@ -229,7 +229,7 @@ def pick_hot_by_category(hot_list, category):
 # ===== 智谱GLM改写 =====
 REWRITE_PROMPT = """你是一位有十年经验的媒体编辑，文风接地气，擅长把热点写成让人想读下去的文章。
 
-请根据以下微博热搜话题，撰写一篇约600字的文章，并配一个爆款标题。
+请根据以下微博热搜话题，撰写一篇正文必须高于600字的文章（严格硬性要求，正文字数>600），并配一个爆款标题。
 
 【热搜话题】{keyword}
 【热搜排名】第{rank}位
@@ -252,9 +252,9 @@ REWRITE_PROMPT = """你是一位有十年经验的媒体编辑，文风接地气
 【内容要求】
 1. 如果你了解该事件的背景，请基于事实进行改写；如果不确定具体细节，请围绕话题主题进行创作，但不得编造虚假信息；
 2. 适当补充背景信息（如事件前因、相关背景）或延伸内容（如类似案例），提升文章深度和吸引力；
-3. 优化段落结构，每段不超过150字，适当分段提升阅读体验，建议分5-6段，至少5段；
+3. 优化段落结构，每段不超过150字，适当分段提升阅读体验，建议分6-8段，至少6段；
 4. 文章整体导向积极正能量，站在读者角度，引发共鸣，让读者看完有想评论的冲动；
-5. 全文约600字；
+5. 【字数硬性要求】正文字数必须高于600字（>600），这是硬性指标，宁多勿少，写到650-750字为佳；
 6. 保持中立客观，不得偏向或拉踩特定人物，涉及多人时一视同仁地呈现。
 
 【风格要求——非常重要，必须严格执行】
@@ -378,7 +378,8 @@ POLISH_PROMPT = """你是一位真人文字校准编辑。请对以下文章正�
 3. 调节句子长短节奏，让长短句错落有致，逻辑转折自然不生硬；
 4. 允许有轻微不完美，还原普通人真实输出的语感，不要写得像范文或满分作文；
 5. 禁止堆砌网络热梗、禁止强行口语化、禁止编造故事或细节；
-6. 不要套用别的模板风格，保持原文的整体基调和段落结构，只做行文层面的打磨。
+6. 不要套用别的模板风格，保持原文的整体基调和段落结构，只做行文层面的打磨；
+7. 【字数硬性要求】改写后正文字数必须高于600字（>600）。可适度精简，但不得低于600字；若删减后会低于600字，请补充适当内容维持字数。
 
 【输入文章正文】
 {article}
@@ -441,8 +442,50 @@ def clean_erhua(text):
 
 
 # ===== 微博原帖图片搜索 =====
+def fetch_weibo_posts_text(session, keyword, count=8):
+    """从微博搜索结果中提取原帖文字内容，作为改写素材返回。
+    提取字段：text_raw（纯文字，去除话题标签等）、用户昵称、发布时间。
+    返回 list[dict]，每项含 text/user/created_at。
+    """
+    from urllib.parse import quote as url_quote
+    posts = []
+    search_url = (
+        f"https://weibo.com/ajax/statuses/search"
+        f"?q={url_quote(keyword)}"
+    )
+    try:
+        resp = session.get(search_url, headers={
+            "User-Agent": UA_PC,
+            "Referer": "https://weibo.com/",
+        }, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        statuses = data.get("statuses", [])
+        for s in statuses:
+            text = s.get("text_raw", "").strip()
+            if not text or len(text) < 15:
+                # 太短的（如纯表情、纯转发）跳过
+                continue
+            user = s.get("user", {}).get("screen_name", "网友")
+            created_at = s.get("created_at", "")
+            # 过滤纯广告/纯话题标签帖
+            clean = re.sub(r'#[^#]+#', '', text).strip()
+            if len(clean) < 15:
+                continue
+            posts.append({
+                "text": clean,
+                "user": user,
+                "created_at": created_at,
+            })
+            if len(posts) >= count:
+                break
+    except Exception:
+        pass
+    return posts
+
+
 def fetch_images_from_weibo(session, keyword, count=3):
-    """从微博搜索结果中提取原帖图片（使用weibo.com AJAX搜索API），返回base64列表"""
+    """从微博搜索结果中提取原帖高清图片，优先原图，过滤低清小图，返回base64列表"""
     from urllib.parse import quote as url_quote
     images = []
     search_url = (
@@ -462,10 +505,11 @@ def fetch_images_from_weibo(session, keyword, count=3):
             if not pic_infos:
                 continue
             for pid, info in pic_infos.items():
+                # 优先原图（高清）-> largest -> large
                 img_url = (
-                    info.get("large", {}).get("url")
+                    info.get("original", {}).get("url")
                     or info.get("largest", {}).get("url")
-                    or info.get("original", {}).get("url")
+                    or info.get("large", {}).get("url")
                     or ""
                 )
                 if not img_url:
@@ -474,12 +518,14 @@ def fetch_images_from_weibo(session, keyword, count=3):
                     img_resp = session.get(img_url, headers={
                         "User-Agent": UA_PC,
                         "Referer": "https://weibo.com/",
-                    }, timeout=15)
-                    if img_resp.status_code == 200 and len(img_resp.content) > 2000:
+                    }, timeout=20)
+                    # 过滤过小的图片（<8KB 多为缩略图/低清图）
+                    if img_resp.status_code == 200 and len(img_resp.content) > 8000:
                         b64 = process_image(img_resp.content)
-                        images.append(b64)
-                        if len(images) >= count:
-                            return images
+                        if b64:
+                            images.append(b64)
+                            if len(images) >= count:
+                                return images
                 except Exception:
                     continue
                 time.sleep(0.3)
@@ -490,7 +536,7 @@ def fetch_images_from_weibo(session, keyword, count=3):
 
 # ===== 百度图片搜索 =====
 def fetch_images_baidu(keyword, count=3):
-    """通过百度图片搜索获取配图，返回base64列表"""
+    """通过百度图片搜索获取高清配图，优先原图，过滤低清小图，返回base64列表"""
     url = "https://image.baidu.com/search/acjson"
     params = {
         "tn": "resultjson_com",
@@ -506,7 +552,7 @@ def fetch_images_baidu(keyword, count=3):
         "istype": "2",
         "nc": "1",
         "pn": 0,
-        "rn": 20,
+        "rn": 30,
     }
     resp = requests.get(url, params=params, headers={"User-Agent": UA_PC}, timeout=15)
     resp.raise_for_status()
@@ -517,16 +563,26 @@ def fetch_images_baidu(keyword, count=3):
     for item in items:
         if not isinstance(item, dict):
             continue
-        img_url = item.get("thumbURL") or item.get("middleURL") or item.get("hoverURL")
+        # objURL常被加密为乱码无法直接下载，优先使用可用的真实URL
+        # 优先 middleURL(中图) -> thumbURL(缩略图，但通常可直接访问) -> hoverURL -> objURL(可能加密)
+        img_url = (
+            item.get("middleURL")
+            or item.get("thumbURL")
+            or item.get("hoverURL")
+            or item.get("objURL")
+            or item.get("originalURL")
+        )
         if not img_url or not img_url.startswith("http"):
             continue
         try:
-            img_resp = requests.get(img_url, headers={"User-Agent": UA_PC}, timeout=15)
-            if img_resp.status_code == 200 and len(img_resp.content) > 2000:
+            img_resp = requests.get(img_url, headers={"User-Agent": UA_PC}, timeout=20)
+            # 过滤过小的图片（<8KB 多为缩略图/低清图）
+            if img_resp.status_code == 200 and len(img_resp.content) > 8000:
                 b64 = process_image(img_resp.content)
-                images.append(b64)
-                if len(images) >= count:
-                    break
+                if b64:
+                    images.append(b64)
+                    if len(images) >= count:
+                        break
         except Exception:
             continue
         time.sleep(0.3)
@@ -535,13 +591,17 @@ def fetch_images_baidu(keyword, count=3):
 
 # ===== 图片处理 =====
 def process_image(img_bytes):
-    """裁剪+滤镜处理图片，返回base64字符串"""
+    """裁剪+滤镜处理图片，返回base64字符串。过滤过小的图片（人物不清晰）"""
     img = Image.open(io.BytesIO(img_bytes))
     if img.mode != "RGB":
         img = img.convert("RGB")
 
-    # 居中裁剪为 16:9
+    # 最小尺寸过滤：宽<400或高<250的图片跳过（人物不清晰）
     w, h = img.size
+    if w < 400 or h < 250:
+        return None
+
+    # 居中裁剪为 16:9（人物通常在画面中心，居中裁剪保留主体）
     target_ratio = 16 / 9
     current_ratio = w / h
     if current_ratio > target_ratio:
@@ -553,21 +613,21 @@ def process_image(img_bytes):
         top = (h - new_h) // 2
         img = img.crop((0, top, w, top + new_h))
 
-    # 限制最大宽度，保持清晰
-    if img.width > 800:
-        ratio = 800 / img.width
-        img = img.resize((800, int(img.height * ratio)), Image.LANCZOS)
+    # 限制最大宽度为1200（提升清晰度，原来800偏小）
+    if img.width > 1200:
+        ratio = 1200 / img.width
+        img = img.resize((1200, int(img.height * ratio)), Image.LANCZOS)
 
-    # 滤镜：增强对比度+锐度+色彩饱和度
+    # 滤镜：增强对比度+锐度+色彩饱和度（提升人物清晰度）
     img = ImageEnhance.Contrast(img).enhance(1.12)
-    img = ImageEnhance.Sharpness(img).enhance(1.25)
+    img = ImageEnhance.Sharpness(img).enhance(1.30)
     img = ImageEnhance.Color(img).enhance(1.08)
-    # 轻微锐化提升清晰度
-    img = img.filter(ImageFilter.UnsharpMask(radius=1, percent=80, threshold=2))
+    # 锐化提升清晰度（增强人物面部细节）
+    img = img.filter(ImageFilter.UnsharpMask(radius=1, percent=90, threshold=2))
 
-    # 转base64
+    # 转base64（提高JPEG质量到92，保留更多细节）
     buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=88)
+    img.save(buf, format="JPEG", quality=92)
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 

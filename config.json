@@ -1,7 +1,0 @@
-{
-  "api_key": "sk-997052bc174c4d2d870b9c252c4968e6",
-  "api_url": "https://api.deepseek.com/v1/chat/completions",
-  "model": "deepseek-chat",
-  "output_dir": "./output",
-  "image_count": 5
-}

@@ -1,5 +1,13 @@
-# 敏感配置（含API Key，请勿提交）
+# 敏感配置（含API Key / 登录Cookies，请勿提交）
 config.json
+toutiao_cookies.json
+
+# 临时数据文件
+articles_9.json
+article_content.json
+_weibo_posts_raw.json
+fix_article9_images.py
+_test_fetch_posts.py
 
 # Python
 __pycache__/

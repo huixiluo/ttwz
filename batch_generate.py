@@ -45,16 +45,24 @@ def batch_generate():
         raise RuntimeError("请在 config.json 中填写API Key")
 
     print("=" * 60)
-    print("批量生成6篇文章（2娱乐+2体育+2社会）")
+    print("批量生成9篇文章（3娱乐+3体育+3社会）")
     print("=" * 60)
 
     print("\n[准备] 获取微博分类热搜...")
     session = hnw.get_visitor_session()
 
     categories = ["娱乐", "体育", "社会"]
-    per_category = 2
+    per_category = 3
     results = []
-    used_titles = set()  # 跨类别去重，确保9条热搜不重复
+    # 上次已用话题（避免重复，与_preview.py保持一致）
+    used_titles = {
+        "周杰伦疑似回应私生子", "橹穆",
+        "伊藤美诚 苍蝇拍打法", "吴梦洁伤愈回归女排",
+        "梅姨真实姓名首曝光", "台风",
+        "TFBOYS发文祝出道十三周年快乐", "周杰伦 私生子",
+        "王艺迪3比1伊藤美诚", "王艺迪 止藤片",
+        "戴手链美甲给宝宝打针护士已停职", "李亚鹏向地铁吐血女孩捐99999元",
+    }
 
     for cat in categories:
         print(f"\n{'='*60}")
