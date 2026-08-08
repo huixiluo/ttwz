@@ -192,26 +192,24 @@ The Toutiao ProseMirror schema's `image` node stores the URL inside a nested `da
 
 ### Image Layout
 
-Dynamic layout via `calc_image_layout(total_paragraphs, num_images=5)` — respects the 5-image hard cap and guarantees at most 2 pure-text tail paragraphs:
+Dynamic layout via `calc_image_layout(total_paragraphs, num_images=5)` — respects the 5-image hard cap, guarantees **at most 2–3 pure-text tail paragraphs** (priority is to keep middle pure-text gaps ≤3 paragraphs to avoid long unbroken text stretches):
 
-1. **Fixed header**: 1 image after paragraph 1 (uses 1 image, 4 remaining → 2 groups of 2).
-2. **Forward fill 2-image groups**: place 2 images after positions 3, 5, 7… "every 2 paragraphs" until images run out.
-3. **Tail-fix back-shift**: after forward fill, if the last 2-image group leaves >2 pure-text trailing paragraphs, move that last group backward to position `total_paragraphs - 2` (leaving exactly 2 pure-text paragraphs at the end). Must keep at least a 2-position gap from the previous group.
-4. **Fallback**: any unused images still get appended at the very end.
+1. **Fixed header**: 1 image after paragraph 1 (uses 1 image, 4 remaining → 2 groups of 2 for 5 images total; or 1 group of 2 for 3-image fallback).
+2. **Uniform even-spacing**: Remaining 2-image groups are placed at equal-step positions between the header image (pos=1) and the desired tail anchor. The default tail anchor is `total_paragraphs - 2` (keeping exactly 2 pure-text trailing paragraphs).
+3. **Gap≤3 priority with tail relaxation**: The algorithm evaluates two candidate layouts (tail=2 and tail=3) and selects the one that first achieves a **maximum pure-text gap of ≤3 paragraphs between adjacent image groups**. Only when gap≤3 is satisfied for both candidates does it prefer the layout with the shorter tail. This avoids the "middle window" problem where 3–6 consecutive paragraphs have no images.
+4. **Edge trimming**: If a 2-image group would land flush against the last paragraph (tail < 1), it is removed to prevent the image from touching the article end.
 
-Examples (with 5 images total, tail is always ≤2):
-| Total paragraphs | Layout dict | Images placed | Pure-text tail |
-|---|---|---|---|
-| 3 | {1: 1} | 1 | 2 |
-| 4 | {1: 1, 3: 2} | 3 | 1 |
-| 5 | {1: 1, 3: 2} | 3 | 2 |
-| 6 | {1: 1, 3: 2, 5: 2} | 5 | 1 |
-| 7 | {1: 1, 3: 2, 5: 2} | 5 | 2 |
-| 8 | {1: 1, 3: 2, 6: 2} | 5 | 2 |
-| 9 | {1: 1, 3: 2, 7: 2} | 5 | 2 |
-| 10 | {1: 1, 3: 2, 8: 2} | 5 | 2 |
-| 11 | {1: 1, 3: 2, 9: 2} | 5 | 2 |
-| 12 | {1: 1, 3: 2, 10: 2} | 5 | 2 |
+Examples (with 5 images total — middle gaps always ≤3 for 6–12 paragraphs):
+| Total paragraphs | Layout dict       | Pure-text gaps between groups | Max gap | Pure-text tail |
+|---|---|---|---|---|
+| 5 | {1: 1, 3: 2}       | [1]                           | 1       | 2 |
+| 6 | {1: 1, 3: 2, 5: 2} | [1, 1]                        | 1       | 1 |
+| 7 | {1: 1, 3: 2, 5: 2} | [1, 1]                        | 1       | 2 |
+| 8 | {1: 1, 4: 2, 6: 2} | [2, 1]                        | 2       | 2 |
+| 9 | {1: 1, 4: 2, 7: 2} | [2, 2]                        | 2       | 2 |
+| 10 | {1: 1, 4: 2, 8: 2} | [2, 3]                        | 3       | 2 |
+| 11 | {1: 1, 5: 2, 9: 2} | [3, 3]                        | 3       | 2 |
+| 12 | {1: 1, 5: 2, 9: 2} | [3, 3]                        | 3       | 3 (relaxed to keep gap≤3) |
 
 ### Batch Upload with Breakpoint Recovery
 

@@ -702,60 +702,86 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 
 
 def _calc_image_layout(total_paragraphs, num_images=5):
-    """动态计算图片布局（5张图上限）：
-    - 第1段后固定1张（用掉1张）
-    - 剩余图片按"每2段文字配2张"从前往后占位
-    - 5张图用光后，若最后一组占位之后剩余纯文字>2段，则将最后一组2张后移到"保留2段结尾"的位置
-    - 若最后一组之后纯文字=0段（图紧贴最后一行），则删除该组避免结尾贴图
-    - 保证最后纯文字段落数≤2段（避免3-4段长尾纯文字）
+    """动态计算图片布局（5张图上限）——均匀分布，避免中间大片文字空档。
+    原则：
+    - 第1段后固定1张（用掉1张）——记为位置A
+    - 剩下的所有图组（每组2张）+ 最后一组位置 = 优先固定在 total_paragraphs - 2
+      （保证结尾恰好2段纯文字）
+    - 所有配图位置从 A 到 最后一组 之间做等步长均匀分布
+    - 若保持结尾2段导致中间"纯文字空档">3段，则尝试放宽结尾为3段换取空档≤3段
+      （中间空窗比结尾多1段纯文字更影响阅读体验）
+    - 若最后一组之后纯文字<1段（图紧贴最后一行），则删除该组避免结尾贴图
     返回 dict: {段落号: 图片数量}
     """
     if total_paragraphs < 1:
         return {}
 
-    layout = {1: 1}
-    remaining = num_images - 1  # 第1段后用掉1张
+    n_groups = (num_images - 1) // 2  # 5张图→2组，3张→1组，3张以下→0组
+    if n_groups <= 0:
+        return {1: 1} if num_images >= 1 else {}
 
-    # Step 1: 按从前往后"每两段2张"占位，直到图片用光
-    groups = []  # 放2张图的段落位置
-    pos = 3
-    while remaining >= 2 and pos <= total_paragraphs:
-        groups.append(pos)
-        remaining -= 2
-        pos += 2
+    first = 1
 
-    # Step 2: 后处理
-    while groups:
-        last_group = groups[-1]
-        tail = total_paragraphs - last_group
-        if tail > 2:
-            # 长尾：将最后一组后移到"保留2段结尾"的位置
-            new_last = total_paragraphs - 2
-            if new_last > last_group:
-                if len(groups) >= 2:
-                    min_new_last = groups[-2] + 2
-                    if new_last >= min_new_last:
-                        groups[-1] = new_last
-                        break
-                    else:
-                        # 上一组太近无法后移，退而删除本组（再循环判断上一组）
-                        groups.pop()
-                        continue
-                else:
-                    groups[-1] = new_last
-                    break
-            else:
-                break
-        elif tail < 1:
-            # 图紧贴最后一行：删除该组（保留1-2段纯文字结尾更自然）
-            groups.pop()
-            continue
+    def _build_positions(last):
+        """给定最后一组位置last，返回均匀分布的positions列表（含first）"""
+        if last < 3:
+            return [first]
+        pos_list = [first]
+        if n_groups == 1:
+            pos_list.append(last)
         else:
-            # tail in [1, 2]：完美
-            break
+            step = (last - first) / n_groups
+            for k in range(1, n_groups + 1):
+                if k == n_groups:
+                    raw = last
+                else:
+                    raw = first + step * k
+                pos = int(round(raw))
+                min_pos = pos_list[-1] + 2
+                remaining_after = n_groups - k
+                max_pos = last - 2 * remaining_after
+                pos = max(min_pos, min(max_pos, pos))
+                pos_list.append(pos)
+        # 结尾贴图修正
+        while len(pos_list) > 1 and (total_paragraphs - pos_list[-1] < 1):
+            pos_list.pop()
+        return pos_list
 
-    for g in groups:
-        layout[g] = 2
+    def _max_gap(pos_list):
+        """计算相邻配图之间的最大纯文字空档"""
+        if len(pos_list) < 2:
+            return 0
+        return max(pos_list[i+1] - pos_list[i] - 1 for i in range(len(pos_list) - 1))
+
+    # 候选方案：结尾保2段 vs 结尾保3段（3段仅在2段方案空档>3时才考虑）
+    candidates = []
+    for tail_target in [2, 3]:
+        last_cand = total_paragraphs - tail_target
+        if last_cand >= 3:
+            positions = _build_positions(last_cand)
+            if len(positions) >= 2:
+                actual_tail = total_paragraphs - positions[-1]
+                gap = _max_gap(positions)
+                candidates.append((gap, actual_tail, positions))
+
+    if not candidates:
+        return {1: 1}
+
+    # 排序优先级：
+    # 1) 最大空档≤3 的方案 优于 >3 的
+    # 2) 结尾纯文字≤2 的方案 优于 >2 的  （空档合格的前提下，优先结尾更紧凑）
+    # 3) 空档更小 优于 更大
+    # 4) 结尾纯文字更小 优于 更大
+    def _score(c):
+        gap, tail, pos = c
+        return (0 if gap <= 3 else 1, 0 if tail <= 2 else 1, gap, tail)
+
+    candidates.sort(key=_score)
+    best_positions = candidates[0][2]
+
+    layout = {}
+    for i, p in enumerate(best_positions):
+        layout[p] = 1 if i == 0 else 2
     return dict(sorted(layout.items()))
 
 
