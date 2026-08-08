@@ -512,17 +512,19 @@ return el.value;
     try:
         tmp_files = []
         tmp_dir = os.path.join(BASE_DIR, "output", "tmp")
+        os.makedirs(tmp_dir, exist_ok=True)
+        # 清空旧临时文件，避免复用上一篇残留图片
+        for old_f in os.listdir(tmp_dir):
+            if old_f.startswith("body_img_"):
+                try:
+                    os.remove(os.path.join(tmp_dir, old_f))
+                except Exception:
+                    pass
         for img_i, data_url in enumerate(image_srcs):
-            fname = f"body_img_{img_i+1}.jpg"
-            fpath = os.path.join(tmp_dir, fname)
-            if os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
-                dlog(f"图片{img_i+1}: 使用已有临时文件 {fpath} ({os.path.getsize(fpath)}字节)")
-                tmp_files.append(fpath)
-            else:
-                dlog(f"图片{img_i+1}: 保存新临时文件...")
-                fpath = save_base64_to_temp(data_url, img_i)
-                tmp_files.append(fpath)
-                dlog(f"图片{img_i+1}保存完成: {fpath}")
+            dlog(f"图片{img_i+1}: 保存新临时文件...")
+            fpath = save_base64_to_temp(data_url, img_i)
+            tmp_files.append(fpath)
+            dlog(f"图片{img_i+1}保存完成: {fpath}")
         dlog(f"临时文件准备完成: {len(tmp_files)}个")
     except BaseException as e:
         import traceback
