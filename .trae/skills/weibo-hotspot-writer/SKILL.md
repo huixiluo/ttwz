@@ -143,7 +143,8 @@ After the initial draft, `polish_article()` runs a second DeepSeek pass as a rea
 - 5 images per article, sourced from Weibo original posts first (via `/ajax/statuses/search` -> `pic_infos` -> large/largest/original URL), Baidu Images as fallback;
 - 16:9 center crop with filters (contrast +12%, sharpness +25%, color +8%, unsharp mask);
 - Max width 800px, JPEG quality 88, base64-encoded;
-- 3 cover images saved separately as JPEG files to `./output/covers/`.
+- 3 cover images saved separately as JPEG files to `./output/covers/`;
+- Dynamic layout: 1 image after paragraph 1, then 2 images every 2 paragraphs (after 3/5/7/9..., only if at least 2 paragraphs remain after), no images if fewer than 2 paragraphs left at the end.
 
 ## Category Hot Search API
 
@@ -191,7 +192,19 @@ The Toutiao ProseMirror schema's `image` node stores the URL inside a nested `da
 
 ### Image Layout
 
-`IMAGE_LAYOUT = {1: 1, 3: 2, 5: 2}` - 1 image after paragraph 1, 2 after paragraph 3, 2 after paragraph 5 (5 images total).
+Dynamic layout via `calc_image_layout(total_paragraphs)`:
+- 1 image fixed after paragraph 1;
+- Then 2 images after every 2 paragraphs (3, 5, 7, 9...), but only when at least 2 paragraphs remain after that point (ensures the last 1–2 paragraphs are pure text, no tail-end orphan images);
+- Remaining unused images (if any) are appended at the end as a fallback.
+
+Examples:
+| Total paragraphs | Layout dict | Total images placed |
+|---|---|---|
+| 3 | {1: 1} | 1 |
+| 5 | {1: 1, 3: 2} | 3 |
+| 7 | {1: 1, 3: 2, 5: 2} | 5 |
+| 8 | {1: 1, 3: 2, 5: 2} | 5 |
+| 9+ | every +2 paragraphs adds +2 images | increases by 2 |
 
 ### Batch Upload with Breakpoint Recovery
 

@@ -701,13 +701,28 @@ HTML_TEMPLATE = """<!DOCTYPE html>
 </html>"""
 
 
+def _calc_image_layout(total_paragraphs):
+    """动态计算图片布局：第1段后1张，之后每两段(第3/5/7...段，其后至少还有2段)配2张，最后不足2段不配。
+    返回 dict: {段落号: 图片数量}
+    """
+    layout = {1: 1}
+    para_num = 3
+    while para_num <= total_paragraphs:
+        remaining_after = total_paragraphs - para_num
+        if remaining_after >= 2:
+            layout[para_num] = 2
+        else:
+            break
+        para_num += 2
+    return layout
+
+
 def build_html(title, article_text, images):
-    """生成HTML内容，图片布局：第1段后1张、第3段后2张、第5段后2张"""
+    """生成HTML内容，动态图片布局：第1段后1张，之后每两段配2张，最后不足2段不配"""
     paragraphs = [p.strip() for p in article_text.split("\n") if p.strip()]
     body_parts = []
     img_idx = 0
-    # 图片布局规则：{段落号: 图片数量}
-    image_layout = {1: 1, 3: 2, 5: 2}
+    image_layout = _calc_image_layout(len(paragraphs))
     for i, para in enumerate(paragraphs):
         body_parts.append(f"<p>{para}</p>")
         para_num = i + 1

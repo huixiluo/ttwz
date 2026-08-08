@@ -2,7 +2,7 @@
 """完整上传：非headless模式 + 标题.input() + 正文paste + 封面上传
 
 图片上传策略（分批粘贴，避免光标定位问题）：
-1. 按 IMAGE_LAYOUT 分批：文字批次 → 图片批次 交替
+1. 按 image_layout 分批：文字批次 → 图片批次 交替
 2. 每次粘贴文字后光标自动在末尾，立即粘贴图片到该位置
 3. 图片布局：第1段后1张、第3段后2张、第5段后2张
 """
@@ -20,8 +20,20 @@ def dlog(msg):
     with open(DEBUG_LOG, "a", encoding="utf-8") as f:
         f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
 
-# 图片布局：第1段后1张、第3段后2张、第5段后2张
-IMAGE_LAYOUT = {1: 1, 3: 2, 5: 2}
+def calc_image_layout(total_paragraphs):
+    """动态计算图片布局：第1段后1张，之后每两段(第3/5/7...段，其后至少还有2段)配2张，最后不足2段不配。
+    返回 dict: {段落号: 图片数量}
+    """
+    layout = {1: 1}
+    para_num = 3
+    while para_num <= total_paragraphs:
+        remaining_after = total_paragraphs - para_num
+        if remaining_after >= 2:
+            layout[para_num] = 2
+        else:
+            break
+        para_num += 2
+    return layout
 
 
 def set_clipboard_html(html_content):
@@ -278,6 +290,8 @@ def main():
         text_only_html = "\n".join(text_parts)
 
     print(f"  正文: {len(text_parts)}段, {len(image_srcs)}张图片")
+    image_layout = calc_image_layout(len(text_parts))
+    print(f"  图片布局: {image_layout}")
     text_plain = re.sub(r'<[^>]+>', '', text_only_html).strip()
 
     # 启动浏览器
@@ -407,7 +421,7 @@ return el.value;
     time.sleep(1)
 
     # [3a] 分批粘贴：文字批次 → 图片批次 交替（避免光标定位问题）
-    # 按 IMAGE_LAYOUT 分批：例如 {1:1, 3:2, 5:2} + 6段文字
+    # 按 image_layout 分批：例如 {1:1, 3:2, 5:2} + 6段文字
     # 批次1: 粘贴段落[0:1] → 图片1
     # 批次2: 粘贴段落[1:3] → 图片2,3
     # 批次3: 粘贴段落[3:5] → 图片4,5
@@ -415,8 +429,8 @@ return el.value;
     batches = []  # [(text_slice, num_imgs, start_img_idx)]
     last_para = 0
     img_idx = 0
-    for target_para in sorted(IMAGE_LAYOUT.keys()):
-        num_imgs = IMAGE_LAYOUT[target_para]
+    for target_para in sorted(image_layout.keys()):
+        num_imgs = image_layout[target_para]
         text_slice = text_parts[last_para:target_para]
         batches.append((text_slice, num_imgs, img_idx))
         last_para = target_para
@@ -587,7 +601,7 @@ for (var i = imgs.length - 1; i > 0; i--) {
     print(f"  [3a] 完成: {len(valid_urls)}/{len(tmp_files)}张图片已上传")
     dlog(f"图片上传阶段完成: {len(valid_urls)}/{len(tmp_files)}张, URLs={image_urls}")
 
-    # [3b] 构建最终HTML（文字+图片，按IMAGE_LAYOUT布局）
+    # [3b] 构建最终HTML（文字+图片，按image_layout布局）
     print(f"  [3b] 构建最终内容（{len(text_parts)}段文字, {len(valid_urls)}张图片）...")
     dlog("构建最终HTML开始")
     final_html = ""
@@ -595,8 +609,8 @@ for (var i = imgs.length - 1; i > 0; i--) {
     for para_idx, para_html in enumerate(text_parts):
         final_html += para_html
         target_para = para_idx + 1  # 段落从1开始
-        if target_para in IMAGE_LAYOUT:
-            num_imgs = IMAGE_LAYOUT[target_para]
+        if target_para in image_layout:
+            num_imgs = image_layout[target_para]
             for _ in range(num_imgs):
                 if url_idx < len(image_urls) and image_urls[url_idx]:
                     # 用p+img标签，避免figure标签兼容性问题
@@ -619,7 +633,7 @@ for (var i = imgs.length - 1; i > 0; i--) {
     # 必须通过view.dispatch()事务来更新内容，才能确保保存时图片不丢失
 
     # 步骤1：通过window._pmData传递数据（避免JSON数据混入JS代码导致语法错误）
-    data_json = json.dumps({"tp": text_plain_parts, "iu": image_urls, "il": IMAGE_LAYOUT}, ensure_ascii=False)
+    data_json = json.dumps({"tp": text_plain_parts, "iu": image_urls, "il": image_layout}, ensure_ascii=False)
     page.run_js("window._pmData=" + data_json + ";")
     dlog("已设置window._pmData")
 
