@@ -237,3 +237,4 @@ Each article upload runs as a subprocess with a 180s timeout. Logs are written t
 - If title fails three-part validation: automatically retries once.
 - If batch upload stalls: use `python batch_upload.py <start_index>` to resume.
 - If cover upload fails: article content is still saved; covers can be manually added later.
+- **Stale temp images**: `upload_visible.py` saves body images to `output/tmp/body_img_N.jpg` before uploading. If these files persist from a previous article, they will be reused by mistake, causing the wrong images to appear in the new article. Fixed: all `body_img_*` files are cleared before each upload, forcing fresh extraction from the current article's base64 data.
