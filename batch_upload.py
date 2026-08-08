@@ -82,24 +82,23 @@ def main():
             capture_output=True, timeout=30
         )
 
-        # 运行 upload_visible.py（捕获输出到日志文件）
+        # 运行 upload_visible.py（输出重定向到日志文件，避免管道死锁）
         blog(f"[{i}/{total}] 调用 subprocess: {sys.executable} -u upload_visible.py")
+        upload_log = os.path.join(BASE_DIR, "upload_subprocess.log")
         try:
-            result = subprocess.run(
-                [sys.executable, "-u", "upload_visible.py"],
-                cwd=BASE_DIR,
-                env=env,
-                capture_output=True,
-                text=True,
-                timeout=180,
-            )
-            # 记录子进程输出到日志
-            if result.stdout:
-                for line in result.stdout.splitlines():
-                    blog(f"  [stdout] {line}")
-            if result.stderr:
-                for line in result.stderr.splitlines():
-                    blog(f"  [stderr] {line}")
+            with open(upload_log, "w", encoding="utf-8") as logf:
+                result = subprocess.run(
+                    [sys.executable, "-u", "upload_visible.py"],
+                    cwd=BASE_DIR,
+                    env=env,
+                    stdout=logf,
+                    stderr=subprocess.STDOUT,
+                    timeout=180,
+                )
+            # 读取子进程输出到日志
+            with open(upload_log, "r", encoding="utf-8") as logf:
+                for line in logf:
+                    blog(f"  [stdout] {line.rstrip()}")
             blog(f"[{i}/{total}] subprocess返回 returncode={result.returncode}")
 
             if result.returncode == 0:
