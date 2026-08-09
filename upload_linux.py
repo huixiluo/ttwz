@@ -36,7 +36,7 @@ def set_clipboard_html_noop(html_content):
 uv.set_clipboard_html = set_clipboard_html_noop
 
 
-def force_save(page, timeout=60):
+def force_save(page, timeout=120):
     """Linux headless 下等待自动保存完成
 
     关键修复：PM API 设置内容后，React 的保存状态可能未同步。
@@ -97,12 +97,16 @@ if (editor) {
 }
 """)
 
-    # 第2步：安静等待自动保存完成
-    dlog("force_save: 等待自动保存完成")
+    # 第2步：等待自动保存完成
+    # 关键：头条保存API可能返回7050（限流/临时失败），但平台会自动重试
+    # 不要在第一次FAIL时就放弃，要持续等待直到SAVED或超时
+    dlog("force_save: 等待自动保存完成（容忍中间失败）")
     print("  [save] 等待自动保存完成...")
 
     last_status = ""
     save_request_seen = False
+    fail_count = 0
+    success_api_seen = False
     for i in range(timeout):
         _t.sleep(1)
         status = page.run_js("""
@@ -115,55 +119,119 @@ return 'IDLE';
 """) or ""
 
         # 检查是否有保存API请求被捕获
-        save_api_count = page.run_js("""
+        save_api_info = page.run_js("""
 var bodies = window._savedBodies || [];
-var count = 0;
+var responses = window._saveResponses || [];
+var reqCount = 0;
 for (var i = 0; i < bodies.length; i++) {
     var u = bodies[i].url || '';
     if (u.indexOf('save') >= 0 || u.indexOf('draft') >= 0 || u.indexOf('article') >= 0) {
         if (u.indexOf('monitor') < 0 && u.indexOf('collect') < 0 && u.indexOf('feedback') < 0) {
-            count++;
+            reqCount++;
         }
     }
 }
-return count;
-""") or 0
+var successCount = 0;
+var failCount = 0;
+for (var i = 0; i < responses.length; i++) {
+    var b = responses[i].body || '';
+    if (b.indexOf('"code":0') >= 0 || b.indexOf('"code": 0') >= 0) successCount++;
+    else if (b.indexOf('7050') >= 0) failCount++;
+}
+return JSON.stringify({req: reqCount, success: successCount, fail: failCount});
+""") or "{}"
+        try:
+            api_info = json.loads(save_api_info)
+        except Exception:
+            api_info = {"req": 0, "success": 0, "fail": 0}
+        save_api_count = api_info.get("req", 0)
+        success_count = api_info.get("success", 0)
+        fail_api_count = api_info.get("fail", 0)
+
         if save_api_count > 0 and not save_request_seen:
             save_request_seen = True
             dlog(f"force_save: [{i}s] 检测到保存API请求 ({save_api_count}个)")
             print(f"  [save] [{i}s] 检测到保存API请求")
 
+        if success_count > 0 and not success_api_seen:
+            success_api_seen = True
+            dlog(f"force_save: [{i}s] 检测到成功的保存API响应 (code:0)")
+            print(f"  [save] [{i}s] 检测到成功保存响应")
+
         if i % 10 == 0:
-            print(f"  [save] [{i}s] status={status} save_apis={save_api_count}")
-            dlog(f"force_save: [{i}s] status={status} save_apis={save_api_count}")
+            print(f"  [save] [{i}s] status={status} apis={save_api_count}(ok={success_count},fail={fail_api_count})")
+            dlog(f"force_save: [{i}s] status={status} apis={save_api_count}(ok={success_count},fail={fail_api_count})")
         if status != last_status:
             dlog(f"force_save: 状态变化 {last_status} -> {status} (at {i}s)")
             last_status = status
-        if status == 'SAVED':
-            dlog(f"force_save: 保存确认 (status={status}, 用时{i}s)")
+
+        # 成功条件：UI显示SAVED 或 保存API返回code:0
+        if status == 'SAVED' or success_api_seen:
+            dlog(f"force_save: 保存确认 (status={status}, success_api={success_api_seen}, 用时{i}s)")
             print(f"  [save] 保存确认 (用时{i}s)")
             return True
+
+        # FAIL状态不立即返回，因为平台会自动重试
+        # 7050错误是限流，平台会持续重试，最终会返回code:0
+        # 关键：即使UI显示FAIL，也要继续等待保存API返回code:0
         if status == 'FAIL':
-            dlog(f"force_save: 保存失败")
-            print(f"  [save] 保存失败！")
-            fail_detail = page.run_js("""
+            fail_count += 1
+            if fail_count == 1:
+                dlog(f"force_save: [{i}s] 检测到FAIL，等待平台自动重试（7050限流）...")
+                print(f"  [save] [{i}s] 检测到FAIL，等待重试...")
+            # 每10秒重新触发一次保存（通过模拟按键）
+            if fail_count % 15 == 0 and fail_count > 0:
+                dlog(f"force_save: [{i}s] 重新触发保存（fail_count={fail_count}）")
+                print(f"  [save] [{i}s] 重新触发保存...")
+                try:
+                    page.run_js("var e=document.querySelector('.ProseMirror'); if(e){e.focus();}")
+                    time.sleep(0.3)
+                    page.run_cdp('Input.dispatchKeyEvent', type='keyDown', key='End', code='End',
+                                  windowsVirtualKeyCode=35, nativeVirtualKeyCode=35)
+                    page.run_cdp('Input.dispatchKeyEvent', type='keyUp', key='End', code='End',
+                                  windowsVirtualKeyCode=35, nativeVirtualKeyCode=35)
+                    time.sleep(0.2)
+                    page.run_cdp('Input.dispatchKeyEvent', type='keyDown', key=' ', code='Space',
+                                  windowsVirtualKeyCode=32, nativeVirtualKeyCode=32)
+                    page.run_cdp('Input.dispatchKeyEvent', type='keyUp', key=' ', code='Space',
+                                  windowsVirtualKeyCode=32, nativeVirtualKeyCode=32)
+                    time.sleep(0.2)
+                    page.run_cdp('Input.dispatchKeyEvent', type='keyDown', key='Backspace', code='Backspace',
+                                  windowsVirtualKeyCode=8, nativeVirtualKeyCode=8)
+                    page.run_cdp('Input.dispatchKeyEvent', type='keyUp', key='Backspace', code='Backspace',
+                                  windowsVirtualKeyCode=8, nativeVirtualKeyCode=8)
+                except Exception:
+                    pass
+            # 只在连续FAIL超过60次（约1分钟）且没有任何成功API响应时才放弃
+            if fail_count >= 60 and not success_api_seen:
+                dlog(f"force_save: 连续FAIL {fail_count}次，放弃")
+                print(f"  [save] 连续FAIL {fail_count}次，放弃")
+                fail_detail = page.run_js("""
 var msg = document.querySelector('.byte-message-error');
 return msg ? msg.innerText : 'no_detail';
 """) or ""
-            print(f"  [save] 失败详情: {fail_detail}")
-            dlog(f"保存失败详情: {fail_detail}")
-            # 捕获保存API响应
-            save_resp = page.run_js("return JSON.stringify(window._saveResponses||[]);") or "[]"
-            dlog(f"force_save: 保存API响应: {save_resp}")
-            try:
-                srs = json.loads(save_resp)
-                for sr in srs:
-                    print(f"  [save] 响应: HTTP {sr.get('status','?')} - {sr.get('body','')[:300]}")
-            except Exception:
-                pass
-            return False
-    dlog(f"force_save: 保存超时 (最后status={status}, save_apis={save_api_count})")
-    print(f"  [save] 保存超时 (最后status={status}, save_apis={save_api_count})")
+                print(f"  [save] 失败详情: {fail_detail}")
+                dlog(f"保存失败详情: {fail_detail}")
+                save_resp = page.run_js("return JSON.stringify(window._saveResponses||[]);") or "[]"
+                dlog(f"force_save: 保存API响应: {save_resp}")
+                try:
+                    srs = json.loads(save_resp)
+                    for sr in srs[-3:]:
+                        print(f"  [save] 响应: HTTP {sr.get('status','?')} - {sr.get('body','')[:300]}")
+                except Exception:
+                    pass
+                return False
+        else:
+            # 非FAIL状态重置计数
+            fail_count = 0
+
+    dlog(f"force_save: 保存超时 (最后status={status}, apis={save_api_count}, ok={success_count})")
+    print(f"  [save] 保存超时 (最后status={status}, ok={success_count})")
+    # 如果有成功的API响应，也算成功
+    if success_api_seen:
+        dlog("force_save: 超时但有成功API响应，视为成功")
+        print(f"  [save] 超时但有成功API响应，视为成功")
+        return True
     return False
 
 
@@ -832,7 +900,7 @@ return found;
 
     dlog("正文保存开始")
     print("  [save] 触发保存...")
-    force_save(page, timeout=60)
+    force_save(page, timeout=120)
 
     # 验证保存后内容
     verify_js = """return (function(){
@@ -905,7 +973,7 @@ return JSON.stringify({pmImgs:pmImgs,pmChars:pmChars,domImgs:domImgs,hasView:!!v
             retry_chars = page.run_js("return document.querySelector('.ProseMirror').innerText.length;") or 0
         print(f"  重新设置后: {retry_chars}字, {retry_imgs}张图片")
         dlog(f"重新设置后: {retry_chars}字, {retry_imgs}张图片")
-        force_save(page, timeout=30)
+        force_save(page, timeout=120)
 
     # 跳过封面上传（Linux headless下封面上传不稳定）
     if os.environ.get("SKIP_COVER") == "1":
@@ -916,7 +984,7 @@ return JSON.stringify({pmImgs:pmImgs,pmChars:pmChars,domImgs:domImgs,hasView:!!v
         dlog("跳过封面上传（Linux headless 不稳定）")
 
     print("  [save] 最终保存...")
-    force_save(page, timeout=30)
+    force_save(page, timeout=120)
 
     # 验证草稿箱
     print("\n[5] 验证草稿箱...")
@@ -971,16 +1039,26 @@ return JSON.stringify({pmImgs:pmImgs,pmChars:pmChars,domImgs:domImgs,hasView:!!v
             dlog(f"[SUCCESS] 文章已在草稿箱中")
             found = True
             break
-        # 也尝试用关键词匹配
-        if "互扇巴掌" in draft_text:
-            idx = draft_text.find("互扇巴掌")
-            print(f"[SUCCESS] 文章已在草稿箱中（关键词匹配）!")
+        # 也尝试用标题后半部分匹配（避免前8字因标点不匹配）
+        match_key2 = title[-8:] if len(title) > 8 else title
+        if match_key2 in draft_text:
+            idx = draft_text.find(match_key2)
+            print(f"[SUCCESS] 文章已在草稿箱中（尾部匹配）!")
             print(f"  {draft_text[idx:idx+120]}")
-            dlog(f"[SUCCESS] 文章已在草稿箱中（关键词匹配）")
+            dlog(f"[SUCCESS] 文章已在草稿箱中（尾部匹配）")
             found = True
             break
-        print(f"  [retry {retry+1}/3] 未找到，刷新重试...")
-        dlog(f"验证重试 {retry+1}/3")
+        # 用文章关键词匹配（从manifest中的keyword）
+        keyword = art.get("keyword", "")
+        if keyword and keyword in draft_text:
+            idx = draft_text.find(keyword)
+            print(f"[SUCCESS] 文章已在草稿箱中（关键词匹配）!")
+            print(f"  {draft_text[idx:idx+120]}")
+            dlog(f"[SUCCESS] 文章已在草稿箱中（关键词匹配: {keyword}）")
+            found = True
+            break
+        print(f"  [retry {retry+1}/3] 未找到（标题: {title[:20]}...），刷新重试...")
+        dlog(f"验证重试 {retry+1}/3, 标题={title}")
         page.get("https://mp.toutiao.com/profile_v4/manage/draft")
         time.sleep(5)
 

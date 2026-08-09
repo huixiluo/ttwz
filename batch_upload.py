@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""批量上传6篇文章到头条草稿箱（跳过封面，后续手动补）
-依次读取 batch_manifest.json 中的每篇文章，写入 single_manifest.json 后调用 upload_visible.main()
+"""批量上传文章到头条草稿箱（Linux headless 版）
+依次读取 batch_manifest.json 中的每篇文章，写入 single_manifest.json 后调用 upload_linux.py
 """
 import os
 import json
@@ -18,6 +18,18 @@ def blog(msg):
     """文件日志，绕过终端输出捕获问题"""
     with open(BATCH_LOG, "a", encoding="utf-8") as f:
         f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
+
+
+def cleanup_chrome():
+    """清理可能残留的 chromium 进程（Linux）"""
+    try:
+        subprocess.run(
+            ["pkill", "-f", "chrome-linux64/chrome"],
+            capture_output=True, timeout=10
+        )
+    except Exception:
+        pass
+    time.sleep(2)
 
 
 def main():
@@ -41,7 +53,7 @@ def main():
         articles = json.load(f)
 
     total = len(articles)
-    blog(f"批量上传 {total} 篇文章到头条草稿箱（跳过封面），从第{start_index}篇开始")
+    blog(f"批量上传 {total} 篇文章到头条草稿箱（Linux headless，跳过封面），从第{start_index}篇开始")
     print("=" * 60, flush=True)
     print(f"批量上传 {total} 篇文章到头条草稿箱（从第{start_index}篇开始）", flush=True)
     print("=" * 60, flush=True)
@@ -49,7 +61,7 @@ def main():
     # 设置环境变量跳过封面上传
     env = os.environ.copy()
     env["SKIP_COVER"] = "1"
-    env["PYTHONUNBUFFERED"] = "1"  # 禁用输出缓冲
+    env["PYTHONUNBUFFERED"] = "1"
 
     success = 0
     for i, art in enumerate(articles, 1):
@@ -75,30 +87,26 @@ def main():
                     except Exception:
                         pass
 
-        # 清理浏览器进程
-        subprocess.run(
-            ["powershell", "-Command",
-             "taskkill /F /IM chrome.exe 2>$null; taskkill /F /IM chromedriver.exe 2>$null; Start-Sleep -Seconds 2"],
-            capture_output=True, timeout=30
-        )
+        # 清理浏览器进程（Linux）
+        cleanup_chrome()
 
-        # 运行 upload_visible.py（输出重定向到日志文件，避免管道死锁）
-        blog(f"[{i}/{total}] 调用 subprocess: {sys.executable} -u upload_visible.py")
+        # 运行 upload_linux.py（输出重定向到日志文件，避免管道死锁）
+        blog(f"[{i}/{total}] 调用 subprocess: {sys.executable} -u upload_linux.py")
         upload_log = os.path.join(BASE_DIR, "upload_subprocess.log")
         try:
             with open(upload_log, "w", encoding="utf-8") as logf:
                 result = subprocess.run(
-                    [sys.executable, "-u", "upload_visible.py"],
+                    [sys.executable, "-u", "upload_linux.py"],
                     cwd=BASE_DIR,
                     env=env,
                     stdout=logf,
                     stderr=subprocess.STDOUT,
-                    timeout=180,
+                    timeout=600,  # 10分钟超时（保存可能需要多次重试）
                 )
             # 读取子进程输出到日志
             with open(upload_log, "r", encoding="utf-8") as logf:
-                for line in logf:
-                    blog(f"  [stdout] {line.rstrip()}")
+                content = logf.read()
+                blog(f"[{i}/{total}] subprocess输出 (returncode={result.returncode}):\n{content[-3000:]}")
             blog(f"[{i}/{total}] subprocess返回 returncode={result.returncode}")
 
             if result.returncode == 0:
@@ -110,14 +118,18 @@ def main():
                 blog(f"[{i}/{total}] 上传异常 (returncode={result.returncode})")
         except subprocess.TimeoutExpired:
             print(f"\n  >> [{i}/{total}] 超时", flush=True)
-            blog(f"[{i}/{total}] 超时（180s）")
+            blog(f"[{i}/{total}] 超时（300s）")
         except Exception as e:
             print(f"\n  >> [{i}/{total}] 异常: {e}", flush=True)
             blog(f"[{i}/{total}] 异常: {e}")
 
-        # 篇间间隔
+        # 篇间间隔（避免保存API被限流，7050错误）
+        # 7050限流约需5分钟冷却，所以篇间等待300秒
         if i < total:
-            time.sleep(3)
+            wait_sec = 300  # 5分钟
+            print(f"\n  >> 等待 {wait_sec}秒 后继续下一篇（避免7050限流）...", flush=True)
+            blog(f"[{i}/{total}] 等待 {wait_sec}秒")
+            time.sleep(wait_sec)
 
     blog(f"批量上传完成：{success}/{total} 篇成功")
     print(f"\n{'='*60}", flush=True)
