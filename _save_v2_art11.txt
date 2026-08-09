@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 11, "title": "上海果断停课停工，台风天不冒险，这操作稳", "content": "<p>台风逼近的消息一传开，最让家长揪心的就是孩子还要不要去上学。这回上海的反应很快，明确要求根据天气情况及时果断停课停工。通知一发，群里瞬间安静了，大家心里那块石头也算落了地。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/202ccdc7114747c59dcc7b44d74bc46e~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417419167&x-orig-sign=JLwRgLPftrF2w%2FBNpHKtuSGxwKE%3D\" alt=\"图片来源于网络\">\n<p>这种果断，值得点个赞。过去有些地方在台风天总爱犹豫，怕停课影响教学进度，怕停工影响经济运转。结果雨势一来，路上堵成一锅粥，孩子在风雨里等校车，家长心急如焚。这次上海没走老路，该停就停，把人命安全摆在第一位，比什么都实在。</p>\n<p>停课停工听着简单，背后的协调工作量不小。学校要临时通知到每个家长，企业要安排好停工期间的考勤和工资，公共交通也得跟着调整班次。哪一环掉链子，市民体验就打折。上海的应急预案能把这一串环节串起来，靠的是平时演练到位，不是临时拍脑袋。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/d4a022ca706c49d9ab00e9792f5bc361~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417419168&x-orig-sign=c9OFNK78UryCt9qYZqjeaXHVHQk%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/b868b979ffed4ce887611a0899bd3ba9~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417419169&x-orig-sign=VmLJ1OJ1vJ7%2FhFTch4UXfFBOxT0%3D\" alt=\"图片来源于网络\">\n<p>也有人心疼损失。工厂停一天就是一天的产能，商铺关门就是一天的收入。这些账确实得算，但跟人命比起来，都是小事。风雨天出事故的代价，远比停工一天的损失大得多。再说台风又不是天天来，一年也就那么几次，提前准备一下，不至于扛不住。</p>\n<p>对普通市民来说，通知下来之后该做什么才是关键。囤点吃的喝的，检查门窗，给手机充满电，这些事看着琐碎，关键时刻都顶用。还有不少人爱在台风天去江边海边看浪，这真的是拿命开玩笑，别去凑这个热闹。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/4d591fd928184da1b44522b268054a2a~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417419169&x-orig-sign=o2OQRioReqjZydjiAf5ml57ZZc4%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/edaba6693ff14b17bf9946977d76c5b3~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417419170&x-orig-sign=N%2FySTXRY69xjMcH1yi6qgBovZ7c%3D\" alt=\"图片来源于网络\">\n<p>这次停课停工的通知，给其他城市也算打了个样。台风路径再难预测，应对的态度可以先明确下来。与其到时候手忙脚乱，不如提前把话说清楚。市民心里有底，整座城市的运转就不会乱。安全这根弦绷紧了，比什么都强。</p>", "word_cnt": 613, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();
