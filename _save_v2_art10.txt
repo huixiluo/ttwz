@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 10, "title": "酸菜又见脚踩，老坛变了味，信任还回得来吗", "content": "<p>一坛酸菜摆在货架上，看着和过去没什么两样。可画面一切到作坊内部，几双脚踩在白菜上的镜头一出来，胃里那股反胃感立刻就上来了。这不是头一回发生的事，但每回被翻出来，照样让人膈应。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/1c8698b669b140ffa94b2328b5768495~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417418346&x-orig-sign=T19ZRVG%2FNi1nV%2BYj6vIL4UTmVfg%3D\" alt=\"图片来源于网络\">\n<p>老坛酸菜这道菜，本来就是靠传统工艺做口碑的。老坛、发酵、慢工出细活，这些词听着就让人放心。结果脚踩这种画面一曝光，前面所有美好的想象都碎了。消费者不是不能接受手工制作，是不能接受这种毫无卫生底线的手工。</p>\n<p>最让人寒心的是，这不是偶然个例。前几年315晚会就曝光过类似的事，当时行业整顿的声势也不小，罚款的罚款，整改的整改，承诺书签了一摞。可风头一过，老问题又冒头。这次再被翻出来，说明上次的整改没真正扎到根上，或者说，利益的诱惑比监管的力度大。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/83492994dfd14a1d9c6aadf03da8c77b~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417418346&x-orig-sign=FGsHVIuDWYQjceA%2FS6ySEbMR8Gw%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/fe82958546414f3a888bc4a4e7bc166f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417418347&x-orig-sign=hYdeuZXiS%2B7yla7BH1K1Kj2KQfQ%3D\" alt=\"图片来源于网络\">\n<p>说到底还是成本问题。正规腌制需要场地、设备、时间，哪一样都是钱。小作坊为了压低成本，能用脚踩就绝不上设备，能省工序就省工序。劣币驱逐良币，守规矩的厂子反而被低价挤得没活路，最后整个行业的口碑一起往下掉。</p>\n<p>监管这块也得反思。日常检查是不是走过场？处罚力度是不是够痛？如果违法成本远低于违法所得，那处罚就等于变相鼓励。光靠几次集中曝光和专项行动，治标不治本。得让违规者付出付不起的代价，才能刹住这股歪风。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/6380c5bd0c8e44aa9603b67e24c029a0~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417418348&x-orig-sign=URX1nsgsPfJavewwhFX7Je9V%2BjA%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/a06544d6290946cf852cda475c17516d~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417418349&x-orig-sign=ibKtdvV%2F%2Fv6sJ0JYZEQxvbj9xMw%3D\" alt=\"图片来源于网络\">\n<p>消费者这边其实挺无奈的。买袋酸菜还得查厂家资质、看检测报告，这要求对普通人来说太高了。大多数人就是看品牌、看包装、看价格，结果信任的还是出问题的。这种信任一旦透支，重建起来很难。品牌方砸多少广告，都不如一次事故毁得快。</p>\n<p>说到底，食品安全这条线，谁碰谁就该付出代价。老坛酸菜这个品类不该被一棍子打死，但那些不守规矩的作坊必须被清理出去。否则苦的是整个行业，亏的是消费者，最后连守规矩的厂家一起陪葬。信任这东西，建立需要多年，毁掉只要一坛脚踩的酸菜。</p>", "word_cnt": 728, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();
