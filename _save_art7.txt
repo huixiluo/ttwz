@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 7, "title": "雅典娜闺蜜再惹争议，信任被利用，朋友还能信吗", "content": "<p>网络上又一场关于友情的纠纷闹得沸沸扬扬。网红雅典娜和闺蜜之间的事被翻出来，双方的恩怨细节不断被添油加醋地传播，围观的人越来越多，说法也越来越乱。这种事看多了，难免让人对朋友这个词多想几分。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/19a6509df9624887a68c90737a4191ba~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416005&x-orig-sign=ZCa5SqerISep04hpYCut8Qfc%2BO4%3D\" alt=\"图片来源于网络\">\n<p>事情的来龙去脉，外人很难说清楚。网络上流传的版本各有各的立场，有说是闺蜜背叛在先，有说是利益分配不均，还有各种真假难辨的截图和聊天记录。作为旁观者，看到的信息都是经过筛选和剪辑的，贸然站队容易被打脸。但有一点是确定的：曾经亲密的两个人，闹到公开对簿公堂，这份关系是真的碎了。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/455a721d106946668b8585442ce6046a~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416007&x-orig-sign=0KB9JLl3i5Z8zaXJ%2F5%2FTMoxfhXU%3D\" alt=\"图片来源于网络\">\n<p>网红之间的友情纠纷，这几年见了不少。表面上是感情问题，背后往往绕不开流量和钱。合作分成、账号归属、商业资源分配，这些利益一旦掺进来，再好的关系也经不起折腾。很多人把网红间的友谊想得太纯粹，其实这个圈子里的合作，本质上也是一种商业关系，边界模糊迟早出问题。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/4a63222111d74b7aae799e43b47ae3f5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416008&x-orig-sign=PddyuX8M65sfjV90esGs855ln78%3D\" alt=\"图片来源于网络\">\n<p>再说围观心态。每出一次这种事，评论区就分成两派互相攻击，有人誓死挺一方，有人乐得看热闹。其实双方的具体恩怨，外人哪能真知道？多数人只是借别人的事发泄自己的情绪。这种狂欢式的围观，对当事人是二次伤害，对围观者也没什么营养。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/fee1315a1d00408e8ec3c61c12435d46~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416008&x-orig-sign=kVdBSgBbeow%2B4kTffmd9HQQqdoI%3D\" alt=\"图片来源于网络\">\n<p>对普通人来说，看这类新闻最大的价值不是站队，而是对照自己。朋友之间如果涉及钱和合作，规矩提前讲清楚，比事后撕破脸强一百倍。感情归感情，账归账，这两样搅在一起，到头来往往是感情和钱一起没。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/f5b7042a43c24dbca42eeb433f8d0cdb~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416009&x-orig-sign=jt1HEq3gbxMf%2BTgGBj2J65yxLek%3D\" alt=\"图片来源于网络\">\n<p>至于雅典娜这件事本身，让子弹飞一会吧。网络上的是非，反转的次数多了去了。急着下结论的，到头来往往要收回话。</p>", "word_cnt": 614, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();

@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 2, "title": "没刘海判若两人，田曦薇变了，还是滤镜惹的祸", "content": "<p>一个发型能改变多少？看到田曦薇没刘海的照片，这个问题突然有了答案。平时习惯了她刘海遮额头的模样，露出额头之后整个人的气质都变了，眉眼间的英气一下子凸显出来，难怪网友直呼差点没认出来。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/61e786a5921e4ab1b87beb49e4ce5823~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415986&x-orig-sign=dVvNn7UH%2B%2BHOrHwqlFZJJy%2FENkQ%3D\" alt=\"图片来源于网络\">\n<p>其实这事挺有意思的。一个演员的长相明明没变，只是换了个发型，给人的感觉却完全不同。这说明很多时候我们记住的并不是一张脸本身，而是某种固定的造型搭配。刘海一摘，像是换了个人，这种反差感本身就是一种新鲜的视觉体验。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/843515f27a7c48b7bd53ff5d00b305de~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415987&x-orig-sign=xgZHYndT1BzmFhm526v%2F2Iwllhk%3D\" alt=\"图片来源于网络\">\n<p>有讨论说这是不是造型团队的刻意安排，让公众看到她更多面的可塑性。也有人说不过是日常随手一拍，没必要过度解读。两种猜测都有可能，毕竟演员的形象管理本就是工作的一部分，但也不必每张照片都往战略层面去想。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/6ace097f89b24a99a0ada7a235812150~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415987&x-orig-sign=LDECVOTa8eiA5hE%2BZhjcLWD193Q%3D\" alt=\"图片来源于网络\">\n<p>再看观众审美这件事。一个人好不好看，很多时候不是五官决定的，而是整体造型、气质、甚至当天的状态共同塑造的。刘海这种小细节，在不同人脸上效果天差地别。放在田曦薇身上，露出额头反而显出几分凌厉的气场，跟过去偏甜的风格形成对比。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/9cca5188e7944b3b8e6fc31c525428a3~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415989&x-orig-sign=u27w3fiAprPEsMTPa%2FxbX2oNECg%3D\" alt=\"图片来源于网络\">\n<p>当然也有人觉得没必要为一张照片讨论这么久，明星换个造型太正常了。这话也没错。但公众对明星外表的关注度一直很高，这也是行业现实，不算什么坏事，说明大家确实在看、在关注。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/ac655ea39597419cb7ce1ba6923283bf~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415989&x-orig-sign=OA2ZcDuf%2FA1cVUgIuWZsJLG%2BrCU%3D\" alt=\"图片来源于网络\">\n<p>说起来，演员能驾驭多种风格其实是优势。今天露出额头有气场，明天换个造型又能走温婉路线，这种可变性对角色塑造是加分项。比起一成不变的标签，能让人看到不同侧面的演员路子更宽。至于田曦薇在新作品里会是什么造型，留到播出那天揭晓也不迟。</p>", "word_cnt": 603, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();

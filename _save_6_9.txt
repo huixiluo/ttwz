@@ -1,0 +1,67 @@
+
+return (async function() {
+    var articles = [{"index": 6, "title": "U17国足并列夺冠，小将争气了，中国足球有戏吗", "content": "<p>中国足球听到好消息，总觉得有点不真实。U17国足以东道主身份和阿森纳青年队并列拿下一项赛事的冠军，这个消息传开，足球圈里难得地热闹了一回。不夸张地说，这种久违的振奋感，很多球迷已经等了很久。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/9c0b7a57352248868387f35ff5f794b9~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416001&x-orig-sign=IMYDKvZ1wi1DPURYJR1QMc%2FtaiA%3D\" alt=\"图片来源于网络\">\n<p>先说成绩本身。能和英超豪门阿森纳的青年梯队并列冠军，说明这批小球员在同龄段是具备竞争力的。比赛细节外界了解有限，但并列冠军不是随便能拿的，背后是训练、战术执行和比赛气质的综合体现。对长期在低谷里打转的中国足球来说，这是一束难得的光。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/4242586c0e4d4450a4affa7a1d00caff~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416002&x-orig-sign=gPL6MSMOiJypWGbpyRY6%2Ba3MbLQ%3D\" alt=\"图片来源于网络\">\n<p>当然要冷静。青年队的成绩和成年队之间，隔着一道不小的坎。世界范围内，青少年赛事出彩、成年后泯然众人的例子太多了。身体发育、战术理解的深化、心理成熟度，每一个阶段都有人掉队。所以这个冠军值得高兴，但不宜过度拔高，把它当成什么转折点还为时过早。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/64c9482040c6422b9c48084fa52e5afb~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416003&x-orig-sign=ymknXE9k%2BBLuwgZwJt%2BxbBr5Oak%3D\" alt=\"图片来源于网络\">\n<p>不过话说回来，正视困难不代表否定成绩。这批球员能走到这一步，说明青训体系里是有好苗子的，关键看后续怎么培养。训练质量、比赛机会、留洋通道，这些环节跟上了，小苗才能长成大树。跟不上的话，再好的天赋也会被浪费。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/2c1eabc443af434a9b5e6fdfa2037f58~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416003&x-orig-sign=jQFXI54FEWdpD2cS5yzeLRC5mCs%3D\" alt=\"图片来源于网络\">\n<p>还有一点，和强队交手本身就是学习。能跟阿森纳青年队真刀真枪地比，对球员的眼界和自信心都是锻炼。这种高水平对抗的机会，对年轻球员来说比国内的一些低强度比赛有价值得多。希望以后这样的交流赛能多一些。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/d1c1382e6e3e4cb3a9e2fe9b19aa4c01~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416004&x-orig-sign=y%2FrADP7S2Xtee0Kr6dYfz%2BCt50g%3D\" alt=\"图片来源于网络\">\n<p>中国足球这些年让球迷失望太多，所以一点好消息出来，有人不敢信，有人急着唱衰，都正常。但这批小将的成绩是实打实的，给他们一点耐心和掌声不过分。至于将来能走多远，走着看吧，至少这一步是往前的。</p>", "word_cnt": 625, "img_count": 5}, {"index": 7, "title": "雅典娜闺蜜再惹争议，信任被利用，朋友还能信吗", "content": "<p>网络上又一场关于友情的纠纷闹得沸沸扬扬。网红雅典娜和闺蜜之间的事被翻出来，双方的恩怨细节不断被添油加醋地传播，围观的人越来越多，说法也越来越乱。这种事看多了，难免让人对朋友这个词多想几分。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/19a6509df9624887a68c90737a4191ba~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416005&x-orig-sign=ZCa5SqerISep04hpYCut8Qfc%2BO4%3D\" alt=\"图片来源于网络\">\n<p>事情的来龙去脉，外人很难说清楚。网络上流传的版本各有各的立场，有说是闺蜜背叛在先，有说是利益分配不均，还有各种真假难辨的截图和聊天记录。作为旁观者，看到的信息都是经过筛选和剪辑的，贸然站队容易被打脸。但有一点是确定的：曾经亲密的两个人，闹到公开对簿公堂，这份关系是真的碎了。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/455a721d106946668b8585442ce6046a~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416007&x-orig-sign=0KB9JLl3i5Z8zaXJ%2F5%2FTMoxfhXU%3D\" alt=\"图片来源于网络\">\n<p>网红之间的友情纠纷，这几年见了不少。表面上是感情问题，背后往往绕不开流量和钱。合作分成、账号归属、商业资源分配，这些利益一旦掺进来，再好的关系也经不起折腾。很多人把网红间的友谊想得太纯粹，其实这个圈子里的合作，本质上也是一种商业关系，边界模糊迟早出问题。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/4a63222111d74b7aae799e43b47ae3f5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416008&x-orig-sign=PddyuX8M65sfjV90esGs855ln78%3D\" alt=\"图片来源于网络\">\n<p>再说围观心态。每出一次这种事，评论区就分成两派互相攻击，有人誓死挺一方，有人乐得看热闹。其实双方的具体恩怨，外人哪能真知道？多数人只是借别人的事发泄自己的情绪。这种狂欢式的围观，对当事人是二次伤害，对围观者也没什么营养。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/fee1315a1d00408e8ec3c61c12435d46~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416008&x-orig-sign=kVdBSgBbeow%2B4kTffmd9HQQqdoI%3D\" alt=\"图片来源于网络\">\n<p>对普通人来说，看这类新闻最大的价值不是站队，而是对照自己。朋友之间如果涉及钱和合作，规矩提前讲清楚，比事后撕破脸强一百倍。感情归感情，账归账，这两样搅在一起，到头来往往是感情和钱一起没。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/f5b7042a43c24dbca42eeb433f8d0cdb~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416009&x-orig-sign=jt1HEq3gbxMf%2BTgGBj2J65yxLek%3D\" alt=\"图片来源于网络\">\n<p>至于雅典娜这件事本身，让子弹飞一会吧。网络上的是非，反转的次数多了去了。急着下结论的，到头来往往要收回话。</p>", "word_cnt": 614, "img_count": 5}, {"index": 8, "title": "老人想验孙子血缘，儿媳拒了，这家账怎么算", "content": "<p>一个家庭里儿子走了，留下老人、儿媳和年幼的孙子。老人提出要给孙子做一次血缘鉴定，儿媳拒绝了。这件事一曝光，网上的讨论就没停过，每个人都能从自己的角度说出几分道理，但也都没法替当事人做决定。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/4ea84de4d9e64e88943f44d10d3ce592~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416010&x-orig-sign=rZaBAoxmKE9ia2CeO1yeq5AEvQ8%3D\" alt=\"图片来源于网络\">\n<p>老人的心思能理解。儿子不在了，想知道孙子是不是自家的血脉，这种念头说不上多高尚，但放在失独的背景下，不算过分。老人怕的是辛辛苦苦养大的孙子，万一跟自家没血缘，那份传承就断了。这种担忧，根子上是对儿子离去后自己位置的不安。</p>\n<p>儿媳这边也有她的立场。丈夫刚走，公公就提出要验孩子的血缘，换谁心里都不好受。这不光是个技术问题，更是一种信任的考验。验了，等于承认了怀疑；不验，又会被解读成心里有鬼。怎么选都难。何况孩子还小，这种事对孩子将来的影响，做母亲的不能不考虑。</p>\n<p>法律层面其实有说法。近亲之间的血缘鉴定，如果一方不同意，法院一般不会强制，但可能会在证据上作不利于拒方推定。也就是说，拒绝对儿媳不一定有利。但法律归法律，亲情归亲情，赢了官司输了感情的事，在这个家里恐怕已经发生了。</p>\n<p>真正难的是孩子。大人吵来吵去，最终受影响最深的是那个还不懂事的小孩。将来长大知道了这些事，他会怎么看待这个家？老人的焦虑可以理解，儿媳的抵触也能共情，但双方是不是该把孩子的感受放在前面想一想？</p>\n<p>这类家务事，外人很难评出个绝对的对错。家家有本难念的账，这本账里掺着失去亲人的痛、对未来的不安、还有信任的裂痕。能坐下来好好谈，比争个输赢重要得多。实在谈不拢，走法律程序也是一种选择，但走到那一步，这个家基本也就散了。</p>", "word_cnt": 634, "img_count": 1}, {"index": 9, "title": "台风白海豚逼近，登陆点预测，沿海该准备了", "content": "<p>台风的名字起得再温柔，破坏力也不会打折。白海豚这个听起来无害的名字背后，是一场正在逼近沿海的强台风。气象部门持续更新登陆地点的预测，沿海各地的防台工作已经启动，对很多人来说，这又是一个紧张时段。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/8a581f405c964c4785856752c1f5e7f1~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416010&x-orig-sign=aWYCZ5%2Fyk%2FUpPMIivggd2gwROiM%3D\" alt=\"图片来源于网络\">\n<p>预测登陆点这件事，比想象中复杂。台风的路径受大气环流、海温、周边天气系统等多重因素影响，稍有变化路径就会偏移。气象部门发布的\"最大可能登陆地点\"，是基于现有数据的概率判断，不是板上钉钉的结论。所以大家会看到预测点这几天来回调整，这不是预报不准，而是天气本身在变。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/1038e63712be4135baffbda3813551e5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416011&x-orig-sign=Oc7sg3LMncHnw7sNN76npyA3lRM%3D\" alt=\"图片来源于网络\">\n<p>对沿海居民来说，最该做的不是猜它到底从哪登陆，而是把该准备的准备好。手电筒、饮用水、收音机这些应急物资提前备齐，阳台上的花盆杂物该搬就搬，低洼地区的居民留意转移通知。这些事看着琐碎，真到了风大雨急的时候，每一样都可能用上。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/9996c22339304954a4009920fc22a425~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416012&x-orig-sign=HNQ9V9am4UcxL7RIl%2BI5FyQcb4A%3D\" alt=\"图片来源于网络\">\n<p>再看信息传递。每次台风来，朋友圈和群里总会传一些未经证实的消息，什么几级几级、几点登陆、哪里要淹。这些信息来源不明，容易引起不必要的恐慌。看天气预报认准官方渠道，转发前多核实一下，对别人对自己都是负责。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/cbd307af8a6b4d858d002395e7ef0ade~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416012&x-orig-sign=WLM90ClMyxXeXIcScIpbl9BJxco%3D\" alt=\"图片来源于网络\">\n<p>农业和渔业受影响最大。临海的养殖户、渔民这几天都在抢收抢避，跟时间赛跑。作物成熟的也在赶着抢收，赶在风雨来之前把能收的收了。这些人的辛苦，城里人平时不太看得到，但台风一来他们就是承受最直接的一群。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/aecf1ad81b144de9b5ea05f2e57131c9~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416013&x-orig-sign=ZIXuenR%2FMzit4aL9ukVenGDp6DU%3D\" alt=\"图片来源于网络\">\n<p>白海豚最终从哪登陆、有多强，过几天就清楚了。但不管怎样，防台这根弦从现在就得绷紧。天灾面前，宁可准备过度，也别心存侥幸。沿海的朋友多留意官方预警，平安比什么都重要。</p>", "word_cnt": 620, "img_count": 5}];
+    var results = [];
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    for (var i = 0; i < articles.length; i++) {
+        var art = articles[i];
+        try {
+            var extra = {
+                'content_source': '100000000402',
+                'content_word_cnt': art.word_cnt,
+                'is_multi_title': 0,
+                'sub_titles': [],
+                'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+                'tuwen_wtt_transfer_switch': '1'
+            };
+            var ts = Date.now();
+            var data = new URLSearchParams();
+            data.append('source', '29');
+            data.append('extra', JSON.stringify(extra));
+            data.append('content', art.content);
+            data.append('title', art.title);
+            data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+            data.append('title_id', ts + '_' + (ts * 1000));
+            data.append('mp_editor_stat', '{}');
+            data.append('is_refute_rumor', '0');
+            data.append('save', '0');
+            data.append('entrance', '');
+            data.append('timer_status', '0');
+            data.append('timer_time', '');
+            data.append('educluecard', '');
+            data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+            data.append('pgc_feed_covers', '[]');
+            data.append('article_ad_type', '3');
+            data.append('claim_exclusive', '0');
+            data.append('is_fans_article', '0');
+            data.append('govern_forward', '0');
+            data.append('praise', '0');
+            data.append('disable_praise', '0');
+            data.append('tree_plan_article', '0');
+            data.append('star_order_id', '');
+            data.append('star_order_name', '');
+            data.append('customer_nick_name', '');
+            data.append('activity_tag', '0');
+            data.append('trends_writing_tag', '0');
+            var resp = await fetch(SAVE_URL, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: data.toString()
+            });
+            var j = await resp.json();
+            results.push({
+                index: art.index,
+                title: art.title,
+                code: j.code,
+                message: j.message || '',
+                pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+                img_count: art.img_count
+            });
+            await new Promise(r => setTimeout(r, 2000));
+        } catch(e) {
+            results.push({index: art.index, title: art.title, code: -1, message: 'JS_ERROR: ' + e.message, pgc_id: null, img_count: art.img_count});
+        }
+    }
+    return JSON.stringify(results);
+})();

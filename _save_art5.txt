@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 5, "title": "王艺迪2比4落败，张本美和涨球了，国乒要警惕", "content": "<p>输球的滋味不好受，尤其是输给主要对手。王艺迪2比4不敌张本美和，这个比分让不少球迷心里一沉。不是不能接受输球，而是对手越来越强这个事实，值得认真对待。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/cf08ac0440c4498db33d560cd6e7093d~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415998&x-orig-sign=%2BmtqtJDmIzPlHSaa9%2FGz2wEIu%2Bc%3D\" alt=\"图片来源于网络\">\n<p>比赛过程看，张本美和确实涨球了。无论是节奏控制还是关键分的把握，都比过去更成熟。她年纪还轻，技术框架已经相当完整，再加上比赛气质沉稳，未来几年会是一个持续性的威胁。国乒对她的研究肯定没停过，但对手也在进步，这种追赶和反追赶的较量，本身就是竞技体育的常态。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/491f2a7f7b154936b7318fd6dedcb388~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415999&x-orig-sign=dh639m67B%2F2971jjU9zgN7wtoTU%3D\" alt=\"图片来源于网络\">\n<p>王艺迪这场发挥有起伏，几局关键分没拿下来，节奏被打乱了。竞技比赛就是这样，一两个关键分的得失，往往决定整场走向。输一场不代表实力不行，但暴露出的问题值得复盘——是战术执行不到位，还是心理层面有波动，教练组会比外界看得更清楚。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/2e267f48a65d41ae96ad259469b368ec~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416000&x-orig-sign=NkQjkew87OU3vF81iwlosLyel%2F8%3D\" alt=\"图片来源于网络\">\n<p>没必要因为一场失利就唱衰。国乒的厚度和调整能力是公认的，一场比赛的输赢不会动摇根基。但也不能因为整体强大就忽视个体的差距。张本美和这一代日本选手的成长速度，确实在缩短和国乒的差距，这是客观事实。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/892d22a3d8bd40cba99fd6bf149d751e~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416000&x-orig-sign=DVgkbf0j%2B61dfkR7HoHmeNgJWBY%3D\" alt=\"图片来源于网络\">\n<p>女线的现在的竞争格局，比前几年复杂了。不只是张本美和，日本队整体在往上走，欧洲也有新人冒头。国乒的优势还在，但容错空间在变小。每一场都要认真打，每一个对手都不能轻视，这个心态比战术更重要。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/b325171001e9491fa0488991d70ba529~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416001&x-orig-sign=FHdCXs6WMgsxno7eWRG17isJG%2B8%3D\" alt=\"图片来源于网络\">\n<p>对球迷来说，理性看输赢也是一种成熟。赢了不捧杀，输了不唱衰，给运动员留出调整的空间。接下来的比赛还有很多，一场失利如果能换来更清醒的认识，那这学费就没白交，调整好心态再上场就是了。</p>", "word_cnt": 595, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();

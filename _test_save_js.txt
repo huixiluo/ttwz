@@ -1,0 +1,63 @@
+
+return (async function() {
+    var art = {"index": 1, "title": "饭局被偷拍流出，贾冰没发火，网友却吵翻了", "content": "<p>贾冰这人，平时演小品演得乐呵，私底下到底是啥样，外界其实了解不多。一组私人饭局的照片这两天在网上流传，画面里他正和朋友吃饭，姿态随意，跟舞台上那个收放自如的喜剧人没两样。几张照片不算清晰，但能看出桌上没什么排场，就是一桌人聊天吃饭的氛围。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/f00a3f5210ea413292cde7088a911643~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415983&x-orig-sign=rwFUA9wgCy3P7poJhBfa8CFSr88%3D\" alt=\"图片来源于网络\">\n<p>说实话，偷拍这件事确实不太地道。人家关起门来和朋友吃饭聊天，本就是私事，没招谁没惹谁，结果镜头一伸就给拍下来传开了。换谁心里都不舒服。可贵的是贾冰本人没公开动怒，没发长文控诉，态度挺克制。这种不动声色的反应，反而让人觉得他活得通透。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/735f2d3e92cb4d7db9af98ce67d57df7~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415984&x-orig-sign=oZW%2FTB3fN5XM7pHou8zVNFrdhZs%3D\" alt=\"图片来源于网络\">\n<p>不过网友的反应分成两拨。一拨觉得，明星既然吃了公众人物这碗饭，私下被关注也是代价之一，没什么大惊小怪，想图清静就别干这行。另一拨则认为，私人场合就是私人场合，不能因为他是演员就理所当然被偷窥，这跟明星身份没关系，是基本的边界问题，普通人被偷拍还能报警呢。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/e359522d78d944a9831c6bc45f5fe57e~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415984&x-orig-sign=%2BBZh8bFVHCNXNHPS01gQ%2Fh73o1I%3D\" alt=\"图片来源于网络\">\n<p>这两种说法都有道理，也都没法完全说服对方。关键在于，公众人物这个身份的边界到底划在哪——是只限工作场合，还是连吃顿饭都得算在内。不光娱乐圈在吵，普通网友也各有各的看法，谁也没法给谁下定论。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/d942e3dd0052413dab3fa0f080f50b04~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415985&x-orig-sign=SLDXHYgg72NjWiyr4YIRXjBpmeM%3D\" alt=\"图片来源于网络\">\n<p>其实类似的事这些年挺多。从饭局被拍到机场被围，再到餐厅被认出来要求合影，明星的私人时间越来越像奢侈品。有人习惯了，有人还在适应。这次贾冰的处理方式反而圈了点好感，没闹大，没让事态升级，挺有分寸感。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/5db22a2c1ad348c8b1cb8a4e306fc474~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415986&x-orig-sign=nqVSGJBvVWfgPicTj2lbXEr18Sw%3D\" alt=\"图片来源于网络\">\n<p>喜欢一个演员，最好的方式还是看作品。他在舞台上能让人笑出来，这份本事比私下一顿饭的镜头值得琢磨多了。至于偷拍那件事，权当是给所有人提个醒：边界这两个字，谁都得守，不管是镜头前的人还是镜头后的人。</p>", "word_cnt": 651, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count,
+            full_response: j
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();

@@ -1,0 +1,67 @@
+
+return (async function() {
+    var articles = [{"index": 2, "title": "没刘海判若两人，田曦薇变了，还是滤镜惹的祸", "content": "<p>一个发型能改变多少？看到田曦薇没刘海的照片，这个问题突然有了答案。平时习惯了她刘海遮额头的模样，露出额头之后整个人的气质都变了，眉眼间的英气一下子凸显出来，难怪网友直呼差点没认出来。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/61e786a5921e4ab1b87beb49e4ce5823~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415986&x-orig-sign=dVvNn7UH%2B%2BHOrHwqlFZJJy%2FENkQ%3D\" alt=\"图片来源于网络\">\n<p>其实这事挺有意思的。一个演员的长相明明没变，只是换了个发型，给人的感觉却完全不同。这说明很多时候我们记住的并不是一张脸本身，而是某种固定的造型搭配。刘海一摘，像是换了个人，这种反差感本身就是一种新鲜的视觉体验。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/843515f27a7c48b7bd53ff5d00b305de~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415987&x-orig-sign=xgZHYndT1BzmFhm526v%2F2Iwllhk%3D\" alt=\"图片来源于网络\">\n<p>有讨论说这是不是造型团队的刻意安排，让公众看到她更多面的可塑性。也有人说不过是日常随手一拍，没必要过度解读。两种猜测都有可能，毕竟演员的形象管理本就是工作的一部分，但也不必每张照片都往战略层面去想。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/6ace097f89b24a99a0ada7a235812150~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415987&x-orig-sign=LDECVOTa8eiA5hE%2BZhjcLWD193Q%3D\" alt=\"图片来源于网络\">\n<p>再看观众审美这件事。一个人好不好看，很多时候不是五官决定的，而是整体造型、气质、甚至当天的状态共同塑造的。刘海这种小细节，在不同人脸上效果天差地别。放在田曦薇身上，露出额头反而显出几分凌厉的气场，跟过去偏甜的风格形成对比。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/9cca5188e7944b3b8e6fc31c525428a3~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415989&x-orig-sign=u27w3fiAprPEsMTPa%2FxbX2oNECg%3D\" alt=\"图片来源于网络\">\n<p>当然也有人觉得没必要为一张照片讨论这么久，明星换个造型太正常了。这话也没错。但公众对明星外表的关注度一直很高，这也是行业现实，不算什么坏事，说明大家确实在看、在关注。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/ac655ea39597419cb7ce1ba6923283bf~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415989&x-orig-sign=OA2ZcDuf%2FA1cVUgIuWZsJLG%2BrCU%3D\" alt=\"图片来源于网络\">\n<p>说起来，演员能驾驭多种风格其实是优势。今天露出额头有气场，明天换个造型又能走温婉路线，这种可变性对角色塑造是加分项。比起一成不变的标签，能让人看到不同侧面的演员路子更宽。至于田曦薇在新作品里会是什么造型，留到播出那天揭晓也不迟。</p>", "word_cnt": 603, "img_count": 5}, {"index": 3, "title": "披荆斩棘官宣阵容，老将新面孔齐了，你期待谁", "content": "<p>综艺节目的阵容永远是开播前最热的话题。披荆斩棘这季的名单一出来，社交平台上讨论就没停过，老面孔带来情怀，新面孔带来悬念，这种搭配本身就自带流量。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/1a39a14eceb14a2483478d91d083a5b2~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415990&x-orig-sign=8xU8hIecF0fKEkpcfSpnEs%2FVAKQ%3D\" alt=\"图片来源于网络\">\n<p>看公布的名单，有几位是观众等了好几季的，终于肯来了。也有几位属于跨界尝试，之前不在大众的综艺认知里。这种混搭的好处是话题层次丰富——老选手之间有交情有故事，新选手能不能融入、会不会有化学反应，都是看点。节目还没开录，观众的期待值已经被拉起来了。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/e7e544b021534fdab428110aaa68a236~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415991&x-orig-sign=FMF0J7xf%2BfhRGiGuXrPu03kKn1I%3D\" alt=\"图片来源于网络\">\n<p>其实这类节目的核心从来不是单纯比唱跳。真人秀嘛，看的是人在压力下的真实反应，是兄弟情、竞争心、合作中的摩擦和默契。阵容越多元，碰撞的可能就越大。全是熟人容易腻，全是新人又缺抓手，所以老带新是最稳妥的结构。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/c1262931015c4db2a473375c980c7fad~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415992&x-orig-sign=vJTpIFTjCzHZl4513FlAsN%2FOHv4%3D\" alt=\"图片来源于网络\">\n<p>每季开播前都有人质疑，是不是该停了、是不是审美疲劳了。但数据说明观众还是买账的，讨论度年年都在。这说明题材本身有生命力，关键看怎么做。阵容只是一道开胃菜，真正决定口碑的还是赛制设计和后期剪辑。把人凑齐不难，难的是让这群人在镜头前真实地碰撞出火花，而不是按剧本走流程。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/0b0d706c374a40499075a98b302eca9c~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415992&x-orig-sign=bHznMbhVTwhHtrzcj%2FlHd50O%2BXY%3D\" alt=\"图片来源于网络\">\n<p>从官宣到现在，已经有粉丝开始给自己喜欢的人拉票造势了。这也正常，综艺本来就有互动属性。不过理性看，比赛结果到底怎样谁也说不准，过早押宝容易失望。不如放平心态，看哥哥们怎么把舞台撑起来。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/f69c445122ab4b51a2bc241e542696e8~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415993&x-orig-sign=Ii8ks8Czmj%2FOM1EfeICKmaj4iVI%3D\" alt=\"图片来源于网络\">\n<p>阵容摆在这了，接下来就看节目组怎么排兵布阵。能把这么多性格各异的人放到一个舞台上，本身就挺考验调度功力的。期待开播之后，这些名字能碰撞出点让人意外的东西。</p>", "word_cnt": 598, "img_count": 5}, {"index": 4, "title": "王楚钦入选青年榜，球技在线，商业价值也跟上了", "content": "<p>过去说起运动员，大家第一反应是赛场成绩。现在榜单越来越多，衡量维度也宽了。王楚钦入选中国品牌青年榜，释放出一个信号：乒乓球运动员的商业价值，正在被更广泛地认可。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/9ff7ab1200a84b68ac4245f7be4f7df5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415995&x-orig-sign=4PqKEAwp9B8S8DudT3MkZSSg1is%3D\" alt=\"图片来源于网络\">\n<p>王楚钦的实力不用多说，世界排名摆在那，关键比赛的发挥也稳。入选这类榜单，说明他不光球打得好，在品牌方眼里也具备号召力。年轻、形象正面、成绩过硬，这几样凑在一起，商业合作自然找上门。体育和商业挂钩不是坏事，反而说明项目本身的热度在涨。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/6340544c01724557817c9413d62e33c7~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415995&x-orig-sign=gXN0isTKCbUm0tWiCtDanOcCsug%3D\" alt=\"图片来源于网络\">\n<p>有人担心运动员过度接商业活动会影响训练。这个顾虑合理，但也要看具体情况。国乒对运动员的商业活动一直有管理，不是想接就接。合理的商业合作反而能帮助推广项目，让更多人关注乒乓球，对整个运动的发展是正向的。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/eebfdf36ef624b1795bd37141d622920~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415996&x-orig-sign=VLgVIBRToAMbk2WfLwiJq%2Fe%2F7ks%3D\" alt=\"图片来源于网络\">\n<p>再看这类青年榜单的评选标准，通常比较综合，不光看成绩，还看社会影响力、公众形象、发展潜力。王楚钦能在多个维度上被认可，说明他作为公众人物的整体形象是站得住的。这对年轻运动员来说是个正面的示范——好好打比赛，场外的认可自然会来。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/ff29dfb95b9c4879a0dea938d3a25806~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415996&x-orig-sign=NQX%2BhHoD5yoCxjMwWEbUo9J8xNU%3D\" alt=\"图片来源于网络\">\n<p>横向看看其他项目的年轻选手，其实都在面临类似的关口。成绩是根基，但怎么在成绩和商业之间找平衡，是新一代运动员都要学的课题。有人处理得好，路越走越宽；有人分了心，成绩反而下滑。这个度，需要运动员和团队一起把控。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/03734bb2068242cbbb15d90339e496c0~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415997&x-orig-sign=J18HbxKrY%2B5MPzmt1IqUieoLrWY%3D\" alt=\"图片来源于网络\">\n<p>对王楚钦来说，榜单是一份认可，也是一种提醒。还年轻，路还长，赛场上的硬成绩永远是最硬的底气。商业价值是成绩的副产品，主次别搞反了，一步一个脚印，路才能走得稳。</p>", "word_cnt": 592, "img_count": 5}, {"index": 5, "title": "王艺迪2比4落败，张本美和涨球了，国乒要警惕", "content": "<p>输球的滋味不好受，尤其是输给主要对手。王艺迪2比4不敌张本美和，这个比分让不少球迷心里一沉。不是不能接受输球，而是对手越来越强这个事实，值得认真对待。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/cf08ac0440c4498db33d560cd6e7093d~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415998&x-orig-sign=%2BmtqtJDmIzPlHSaa9%2FGz2wEIu%2Bc%3D\" alt=\"图片来源于网络\">\n<p>比赛过程看，张本美和确实涨球了。无论是节奏控制还是关键分的把握，都比过去更成熟。她年纪还轻，技术框架已经相当完整，再加上比赛气质沉稳，未来几年会是一个持续性的威胁。国乒对她的研究肯定没停过，但对手也在进步，这种追赶和反追赶的较量，本身就是竞技体育的常态。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/491f2a7f7b154936b7318fd6dedcb388~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415999&x-orig-sign=dh639m67B%2F2971jjU9zgN7wtoTU%3D\" alt=\"图片来源于网络\">\n<p>王艺迪这场发挥有起伏，几局关键分没拿下来，节奏被打乱了。竞技比赛就是这样，一两个关键分的得失，往往决定整场走向。输一场不代表实力不行，但暴露出的问题值得复盘——是战术执行不到位，还是心理层面有波动，教练组会比外界看得更清楚。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/2e267f48a65d41ae96ad259469b368ec~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416000&x-orig-sign=NkQjkew87OU3vF81iwlosLyel%2F8%3D\" alt=\"图片来源于网络\">\n<p>没必要因为一场失利就唱衰。国乒的厚度和调整能力是公认的，一场比赛的输赢不会动摇根基。但也不能因为整体强大就忽视个体的差距。张本美和这一代日本选手的成长速度，确实在缩短和国乒的差距，这是客观事实。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/892d22a3d8bd40cba99fd6bf149d751e~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416000&x-orig-sign=DVgkbf0j%2B61dfkR7HoHmeNgJWBY%3D\" alt=\"图片来源于网络\">\n<p>女线的现在的竞争格局，比前几年复杂了。不只是张本美和，日本队整体在往上走，欧洲也有新人冒头。国乒的优势还在，但容错空间在变小。每一场都要认真打，每一个对手都不能轻视，这个心态比战术更重要。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/b325171001e9491fa0488991d70ba529~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416001&x-orig-sign=FHdCXs6WMgsxno7eWRG17isJG%2B8%3D\" alt=\"图片来源于网络\">\n<p>对球迷来说，理性看输赢也是一种成熟。赢了不捧杀，输了不唱衰，给运动员留出调整的空间。接下来的比赛还有很多，一场失利如果能换来更清醒的认识，那这学费就没白交，调整好心态再上场就是了。</p>", "word_cnt": 595, "img_count": 5}];
+    var results = [];
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    for (var i = 0; i < articles.length; i++) {
+        var art = articles[i];
+        try {
+            var extra = {
+                'content_source': '100000000402',
+                'content_word_cnt': art.word_cnt,
+                'is_multi_title': 0,
+                'sub_titles': [],
+                'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+                'tuwen_wtt_transfer_switch': '1'
+            };
+            var ts = Date.now();
+            var data = new URLSearchParams();
+            data.append('source', '29');
+            data.append('extra', JSON.stringify(extra));
+            data.append('content', art.content);
+            data.append('title', art.title);
+            data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+            data.append('title_id', ts + '_' + (ts * 1000));
+            data.append('mp_editor_stat', '{}');
+            data.append('is_refute_rumor', '0');
+            data.append('save', '0');
+            data.append('entrance', '');
+            data.append('timer_status', '0');
+            data.append('timer_time', '');
+            data.append('educluecard', '');
+            data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+            data.append('pgc_feed_covers', '[]');
+            data.append('article_ad_type', '3');
+            data.append('claim_exclusive', '0');
+            data.append('is_fans_article', '0');
+            data.append('govern_forward', '0');
+            data.append('praise', '0');
+            data.append('disable_praise', '0');
+            data.append('tree_plan_article', '0');
+            data.append('star_order_id', '');
+            data.append('star_order_name', '');
+            data.append('customer_nick_name', '');
+            data.append('activity_tag', '0');
+            data.append('trends_writing_tag', '0');
+            var resp = await fetch(SAVE_URL, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: data.toString()
+            });
+            var j = await resp.json();
+            results.push({
+                index: art.index,
+                title: art.title,
+                code: j.code,
+                message: j.message || '',
+                pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+                img_count: art.img_count
+            });
+            await new Promise(r => setTimeout(r, 2000));
+        } catch(e) {
+            results.push({index: art.index, title: art.title, code: -1, message: 'JS_ERROR: ' + e.message, pgc_id: null, img_count: art.img_count});
+        }
+    }
+    return JSON.stringify(results);
+})();

@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 9, "title": "台风白海豚逼近，登陆点预测，沿海该准备了", "content": "<p>台风的名字起得再温柔，破坏力也不会打折。白海豚这个听起来无害的名字背后，是一场正在逼近沿海的强台风。气象部门持续更新登陆地点的预测，沿海各地的防台工作已经启动，对很多人来说，这又是一个紧张时段。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/8a581f405c964c4785856752c1f5e7f1~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416010&x-orig-sign=aWYCZ5%2Fyk%2FUpPMIivggd2gwROiM%3D\" alt=\"图片来源于网络\">\n<p>预测登陆点这件事，比想象中复杂。台风的路径受大气环流、海温、周边天气系统等多重因素影响，稍有变化路径就会偏移。气象部门发布的\"最大可能登陆地点\"，是基于现有数据的概率判断，不是板上钉钉的结论。所以大家会看到预测点这几天来回调整，这不是预报不准，而是天气本身在变。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/1038e63712be4135baffbda3813551e5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416011&x-orig-sign=Oc7sg3LMncHnw7sNN76npyA3lRM%3D\" alt=\"图片来源于网络\">\n<p>对沿海居民来说，最该做的不是猜它到底从哪登陆，而是把该准备的准备好。手电筒、饮用水、收音机这些应急物资提前备齐，阳台上的花盆杂物该搬就搬，低洼地区的居民留意转移通知。这些事看着琐碎，真到了风大雨急的时候，每一样都可能用上。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/9996c22339304954a4009920fc22a425~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416012&x-orig-sign=HNQ9V9am4UcxL7RIl%2BI5FyQcb4A%3D\" alt=\"图片来源于网络\">\n<p>再看信息传递。每次台风来，朋友圈和群里总会传一些未经证实的消息，什么几级几级、几点登陆、哪里要淹。这些信息来源不明，容易引起不必要的恐慌。看天气预报认准官方渠道，转发前多核实一下，对别人对自己都是负责。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/cbd307af8a6b4d858d002395e7ef0ade~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416012&x-orig-sign=WLM90ClMyxXeXIcScIpbl9BJxco%3D\" alt=\"图片来源于网络\">\n<p>农业和渔业受影响最大。临海的养殖户、渔民这几天都在抢收抢避，跟时间赛跑。作物成熟的也在赶着抢收，赶在风雨来之前把能收的收了。这些人的辛苦，城里人平时不太看得到，但台风一来他们就是承受最直接的一群。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/aecf1ad81b144de9b5ea05f2e57131c9~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416013&x-orig-sign=ZIXuenR%2FMzit4aL9ukVenGDp6DU%3D\" alt=\"图片来源于网络\">\n<p>白海豚最终从哪登陆、有多强，过几天就清楚了。但不管怎样，防台这根弦从现在就得绷紧。天灾面前，宁可准备过度，也别心存侥幸。沿海的朋友多留意官方预警，平安比什么都重要。</p>", "word_cnt": 620, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();
