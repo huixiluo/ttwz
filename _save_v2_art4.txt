@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 4, "title": "王楚钦入选青年榜，球技在线，商业价值也跟上了", "content": "<p>过去说起运动员，大家第一反应是赛场成绩。现在榜单越来越多，衡量维度也宽了。王楚钦入选中国品牌青年榜，释放出一个信号：乒乓球运动员的商业价值，正在被更广泛地认可。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/9ff7ab1200a84b68ac4245f7be4f7df5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415995&x-orig-sign=4PqKEAwp9B8S8DudT3MkZSSg1is%3D\" alt=\"图片来源于网络\">\n<p>王楚钦的实力不用多说，世界排名摆在那，关键比赛的发挥也稳。入选这类榜单，说明他不光球打得好，在品牌方眼里也具备号召力。年轻、形象正面、成绩过硬，这几样凑在一起，商业合作自然找上门。体育和商业挂钩不是坏事，反而说明项目本身的热度在涨。</p>\n<p>有人担心运动员过度接商业活动会影响训练。这个顾虑合理，但也要看具体情况。国乒对运动员的商业活动一直有管理，不是想接就接。合理的商业合作反而能帮助推广项目，让更多人关注乒乓球，对整个运动的发展是正向的。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/6340544c01724557817c9413d62e33c7~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415995&x-orig-sign=gXN0isTKCbUm0tWiCtDanOcCsug%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/eebfdf36ef624b1795bd37141d622920~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415996&x-orig-sign=VLgVIBRToAMbk2WfLwiJq%2Fe%2F7ks%3D\" alt=\"图片来源于网络\">\n<p>再看这类青年榜单的评选标准，通常比较综合，不光看成绩，还看社会影响力、公众形象、发展潜力。王楚钦能在多个维度上被认可，说明他作为公众人物的整体形象是站得住的。这对年轻运动员来说是个正面的示范——好好打比赛，场外的认可自然会来。</p>\n<p>横向看看其他项目的年轻选手，其实都在面临类似的关口。成绩是根基，但怎么在成绩和商业之间找平衡，是新一代运动员都要学的课题。有人处理得好，路越走越宽；有人分了心，成绩反而下滑。这个度，需要运动员和团队一起把控。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/ff29dfb95b9c4879a0dea938d3a25806~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415996&x-orig-sign=NQX%2BhHoD5yoCxjMwWEbUo9J8xNU%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/03734bb2068242cbbb15d90339e496c0~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417415997&x-orig-sign=J18HbxKrY%2B5MPzmt1IqUieoLrWY%3D\" alt=\"图片来源于网络\">\n<p>对王楚钦来说，榜单是一份认可，也是一种提醒。还年轻，路还长，赛场上的硬成绩永远是最硬的底气。商业价值是成绩的副产品，主次别搞反了，一步一个脚印，路才能走得稳。</p>", "word_cnt": 592, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();

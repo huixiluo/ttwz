@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 6, "title": "U17国足并列夺冠，小将争气了，中国足球有戏吗", "content": "<p>中国足球听到好消息，总觉得有点不真实。U17国足以东道主身份和阿森纳青年队并列拿下一项赛事的冠军，这个消息传开，足球圈里难得地热闹了一回。不夸张地说，这种久违的振奋感，很多球迷已经等了很久。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/9c0b7a57352248868387f35ff5f794b9~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416001&x-orig-sign=IMYDKvZ1wi1DPURYJR1QMc%2FtaiA%3D\" alt=\"图片来源于网络\">\n<p>先说成绩本身。能和英超豪门阿森纳的青年梯队并列冠军，说明这批小球员在同龄段是具备竞争力的。比赛细节外界了解有限，但并列冠军不是随便能拿的，背后是训练、战术执行和比赛气质的综合体现。对长期在低谷里打转的中国足球来说，这是一束难得的光。</p>\n<p>当然要冷静。青年队的成绩和成年队之间，隔着一道不小的坎。世界范围内，青少年赛事出彩、成年后泯然众人的例子太多了。身体发育、战术理解的深化、心理成熟度，每一个阶段都有人掉队。所以这个冠军值得高兴，但不宜过度拔高，把它当成什么转折点还为时过早。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/4242586c0e4d4450a4affa7a1d00caff~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416002&x-orig-sign=gPL6MSMOiJypWGbpyRY6%2Ba3MbLQ%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/64c9482040c6422b9c48084fa52e5afb~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416003&x-orig-sign=ymknXE9k%2BBLuwgZwJt%2BxbBr5Oak%3D\" alt=\"图片来源于网络\">\n<p>不过话说回来，正视困难不代表否定成绩。这批球员能走到这一步，说明青训体系里是有好苗子的，关键看后续怎么培养。训练质量、比赛机会、留洋通道，这些环节跟上了，小苗才能长成大树。跟不上的话，再好的天赋也会被浪费。</p>\n<p>还有一点，和强队交手本身就是学习。能跟阿森纳青年队真刀真枪地比，对球员的眼界和自信心都是锻炼。这种高水平对抗的机会，对年轻球员来说比国内的一些低强度比赛有价值得多。希望以后这样的交流赛能多一些。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/2c1eabc443af434a9b5e6fdfa2037f58~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416003&x-orig-sign=jQFXI54FEWdpD2cS5yzeLRC5mCs%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/d1c1382e6e3e4cb3a9e2fe9b19aa4c01~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416004&x-orig-sign=y%2FrADP7S2Xtee0Kr6dYfz%2BCt50g%3D\" alt=\"图片来源于网络\">\n<p>中国足球这些年让球迷失望太多，所以一点好消息出来，有人不敢信，有人急着唱衰，都正常。但这批小将的成绩是实打实的，给他们一点耐心和掌声不过分。至于将来能走多远，走着看吧，至少这一步是往前的。</p>", "word_cnt": 625, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();

@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 8, "title": "老人想验孙子血缘，儿媳拒了，这家账怎么算", "content": "<p>一个家庭里儿子走了，留下老人、儿媳和年幼的孙子。老人提出要给孙子做一次血缘鉴定，儿媳拒绝了。这件事一曝光，网上的讨论就没停过，每个人都能从自己的角度说出几分道理，但也都没法替当事人做决定。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/4ea84de4d9e64e88943f44d10d3ce592~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417416010&x-orig-sign=rZaBAoxmKE9ia2CeO1yeq5AEvQ8%3D\" alt=\"图片来源于网络\">\n<p>老人的心思能理解。儿子不在了，想知道孙子是不是自家的血脉，这种念头说不上多高尚，但放在失独的背景下，不算过分。老人怕的是辛辛苦苦养大的孙子，万一跟自家没血缘，那份传承就断了。这种担忧，根子上是对儿子离去后自己位置的不安。</p>\n<p>儿媳这边也有她的立场。丈夫刚走，公公就提出要验孩子的血缘，换谁心里都不好受。这不光是个技术问题，更是一种信任的考验。验了，等于承认了怀疑；不验，又会被解读成心里有鬼。怎么选都难。何况孩子还小，这种事对孩子将来的影响，做母亲的不能不考虑。</p>\n<p>法律层面其实有说法。近亲之间的血缘鉴定，如果一方不同意，法院一般不会强制，但可能会在证据上作不利于拒方推定。也就是说，拒绝对儿媳不一定有利。但法律归法律，亲情归亲情，赢了官司输了感情的事，在这个家里恐怕已经发生了。</p>\n<p>真正难的是孩子。大人吵来吵去，最终受影响最深的是那个还不懂事的小孩。将来长大知道了这些事，他会怎么看待这个家？老人的焦虑可以理解，儿媳的抵触也能共情，但双方是不是该把孩子的感受放在前面想一想？</p>\n<p>这类家务事，外人很难评出个绝对的对错。家家有本难念的账，这本账里掺着失去亲人的痛、对未来的不安、还有信任的裂痕。能坐下来好好谈，比争个输赢重要得多。实在谈不拢，走法律程序也是一种选择，但走到那一步，这个家基本也就散了。</p>", "word_cnt": 634, "img_count": 1};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+})();
