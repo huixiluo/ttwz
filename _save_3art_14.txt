@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 14, "title": "樊振东入选青年榜，靠的是实力，不是流量", "content": "<p>樊振东又添了一个新头衔，入选中国品牌青年榜。消息一出，球迷们并不意外，反倒觉得是水到渠成的事。从年少成名到扛起国乒大旗，他的每一步都走得扎实。这个榜单看重的从来不是一时的热度，而是长期积累的口碑和影响力。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/ef664e059b7746e79cc4ff324a99714f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420826&x-orig-sign=fHcY4%2BuHh6%2BAEDf92vs3V5focew%3D\" alt=\"图片来源于网络\">\n<p>论成绩，樊振东的履历足够亮眼。世乒赛冠军、世界杯冠军、奥运冠军，该拿的大赛荣誉他基本拿了个遍。更难得的是他的稳定性，常年保持在世界顶尖水平，这种持续性比偶尔爆发更考验选手的综合素质。竞技场上的一时风光容易，十年如一日地站在巅峰，背后是常人看不到的自律。</p>\n<p>品牌榜看人，不光看竞技成绩，也看个人形象。樊振东在公众面前一直比较低调，不炒作不张扬，专注于赛场本身。这种气质在当下流量为王的环境里反而显得稀缺。品牌方青睐他，正是看中这种踏实可靠的调性，跟那种靠话题维持曝光的选手不是一回事。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/684c730c0d9b4e4391b7cb40c65b2a7d~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420826&x-orig-sign=r0VHkP%2FB%2BxjccvHmN1v1CgC7jgQ%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/f51433ca7fd74e44a5d5f75f5bf1d8f7~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420827&x-orig-sign=QIXiuIuQEjkA7ghAX3wTzTqAQME%3D\" alt=\"图片来源于网络\">\n<p>国乒这次有人入选，也折射出整个队伍的价值。国乒多年来积累的荣誉和群众基础，让队内的核心选手天然具备商业价值。樊振东作为当前男乒的领军人物，身上承载的不只是个人成绩，还有这支队伍的品牌效应。这种双重加持，是其他项目的运动员很难复制的。</p>\n<p>对年轻运动员来说，樊振东的路径是个参考。先在赛场上把成绩打出来，商业价值自然会跟上。顺序不能反，一旦本末倒置，把精力过多放在场外，竞技状态很容易受影响。这些年翻车的例子不少，都是没把握好这个度。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/d145a094af234817abb0d068a8bf1ff9~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420828&x-orig-sign=UQ85ZAyKkOhTBoENga5GAe1%2FfLs%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/2e1ff6cd4bc848108b368f860dcf803b~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420828&x-orig-sign=ku%2Bx91s9DCih4f%2FD0q3G9Av9R80%3D\" alt=\"图片来源于网络\">\n<p>入选榜单是认可，也是新的起点。樊振东的职业生涯还在继续，后面的挑战只会更艰巨。年轻选手在身后追赶，国际对手也在研究突破。能走到今天靠的是实力，能走多远还得靠这份实力能不能持续下去。荣誉是过去的总结，不是未来的保票。</p>", "word_cnt": 661, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});

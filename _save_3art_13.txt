@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 13, "title": "张本智和4比2晋级，内战不手软，弟弟有戏吗", "content": "<p>一场日本队内的较量，硬是被打出了焦点战的氛围。张本智和4比2拿下松岛辉空，比分看着不算悬殊，过程却处处透着较劲。同门对决向来不好打，彼此熟悉套路，谁也没法靠奇招取胜，拼的就是基本功和临场心态。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/268cc227fae848a088b704f44cc792a2~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420821&x-orig-sign=7STAduMg11rEni%2B4%2FaZtU7pU2SU%3D\" alt=\"图片来源于网络\">\n<p>张本智和这场比赛的状态算正常。他的打法一向以凶狠著称，正反手衔接快，相持能力强。面对年纪更轻的队友，他没给太多喘息机会，关键分上处理得很老练。这种比赛节奏的把控，是常年征战国际赛场磨出来的，不是天赋能完全替代的。</p>\n<p>松岛辉空这边输得不冤。作为日本乒坛新生代的代表，他的冲击力有目共睹，反手质量尤其突出。可面对经验老到的张本，他在节奏变化和落点控制上明显吃了亏。年轻选手的通病就是关键时刻容易急，一急动作就变形，失误跟着上来。这场球对他是一次实打实的磨砺。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/340ee01bf5124b3589941b1a31cb288a~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420822&x-orig-sign=TQYi8fKMC2E27mct3kBuzgxkdNM%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/93d1343f4b094551829dffa26d2361ea~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420823&x-orig-sign=eQa955ePP97XLP6Oyh6ZlP8XPAc%3D\" alt=\"图片来源于网络\">\n<p>日本男乒这些年的人才储备确实可观。从水谷隼到张本智和，再到松岛辉空这批更年轻的，几乎没断过档。这种梯队建设背后是成体系的青训和联赛支撑，不是靠一两个天才撑场面。国乒看着他们崛起，心里也得有本明白账。</p>\n<p>对国乒来说，张本智和依然是主要对手之一。他打法成熟，大赛经验丰富，遇到状态好的时候谁都得小心。松岛辉空虽然还没到那个层次，但潜力摆在那，假以时日未必不能成为新的威胁。提前研究、提前准备，比临阵抱佛脚管用得多。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/21acf01a0b944be5b22173735c0565fe~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420824&x-orig-sign=SDhjvKoPh0d04WHnIWBtBOWQI%2FE%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/0b8571454e3449e18282a3156334e344~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420825&x-orig-sign=wddfX%2BnGEvD7q9uzg0lskPEop6U%3D\" alt=\"图片来源于网络\">\n<p>这场内战的结果，对日本队内部的竞争格局也有影响。张本的位置进一步巩固，松岛则需要在下一场证明自己。竞技体育就是这样，一场球的胜负说明不了全部，却能直接影响后续的排兵布阵。年轻选手想上位，光有潜力不够，还得把潜力变成实打实的成绩。</p>", "word_cnt": 638, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});

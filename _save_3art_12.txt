@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 12, "title": "苏醒被说控制内娱，玩梗玩大了，真当真了", "content": "<p>苏醒这回算是被自己的嘴坑了一把。本来一句玩笑话，说自己在内娱混得风生水起，结果被人解读成\"控制内娱\"，一时间讨论炸开了锅。他本人在节目里那股子随性的劲头，老粉都熟悉，可放到不熟悉的人眼里，就成了另一种味道。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/7b03b3191c974edba9fe19902d829390~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420818&x-orig-sign=YtZtsYEYRtXe4VuZbC6b4cdRhv0%3D\" alt=\"图片来源于网络\">\n<p>这事说到底还是语境的问题。苏醒的搞笑路线一直是自嘲加互损，跟兄弟们拌嘴也是节目效果的一部分。他那种\"我什么场面没见过\"的腔调，放在老朋友堆里是笑点，放到网上被人逐字逐句拆解，就成了把柄。网友的脑补能力向来不弱，一句话能编出十层意思。</p>\n<p>再说\"控制内娱\"这四个字本身就有水分。内娱这么大摊子，资方、平台、经纪公司、流量明星，哪一方的影响力都比一个综艺常驻大得多。苏醒再能聊，能调动的资源也有限。把一句调侃当实锤，要么是没看懂梗，要么是故意带节奏。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/c419233788ea4d008226f27106a7e644~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420818&x-orig-sign=txv1lPxiUeU7L5Ah72lt6%2BEOQus%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/a25a9b98d7f5460dba8af6a8ddba10ac~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420819&x-orig-sign=v8iPMqrPqi7jS9ex8bH1lcXVfP8%3D\" alt=\"图片来源于网络\">\n<p>回头看他这两年的轨迹，翻红之后确实活跃。综艺接连不断，舞台上的存在感越来越强，跟当年快男那会儿的低谷比，简直是两个世界。这种反弹本身就够有故事性，可人红是非多的老话也跟着应验。一句话被放大，一段互动被过度解读，红利的另一面就是这种审视。</p>\n<p>粉丝这边倒是看得很明白。不少人直接在评论区玩梗接茬，把\"控制内娱\"变成了新一轮的段子素材。这种化解方式其实挺聪明，越描越黑不如顺着梗往下走。互联网的注意力来得快走得也快，今天的热点明天就被新话题盖过去。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/8ee0991f3b8b48408f1377a4d4c8c7f3~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420820&x-orig-sign=6QNS355MwRJtEL8gpDcZ0wtgDZY%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/6e197a4169714f5b914b523be28c6b2b~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417420821&x-orig-sign=IV%2F4%2FSQ9J%2FEaR3ALXEkgM%2FplMEs%3D\" alt=\"图片来源于网络\">\n<p>苏醒本人到现在没正面回应，这态度也算得当。有些事越解释越乱，不如让时间去消化。玩笑就是玩笑，当真了就输了。真正能立足娱乐圈的，从来不是靠几句嘴皮子，而是作品和口碑。这点道理，他比谁都清楚。</p>", "word_cnt": 636, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});
