@@ -21,7 +21,7 @@ The core pipeline has 5 steps:
 2. **DeepSeek rewrite**: Calls DeepSeek API to generate a three-part title (<=25 chars, two commas splitting three segments) + ~600-word article. Prompt enforces: diverse openings (7 techniques), no AI flavor, no mechanical connectors, colloquial tone, neutral stance. Title is validated for three-part structure and retried if non-compliant.
 3. **Human-editor polish**: A second LLM pass acts as a real human copy editor. Preserves all facts and core viewpoints, deletes empty pleasantries / mechanical connectors / flowery parallelism / repetitive conclusions / textbook-style endings, adjusts sentence rhythm, restores natural human writing feel. No meme-stacking, no forced slang, no fabricated stories.
 4. **Image fetch & processing**: Prioritizes Weibo original post images (via `/ajax/statuses/search` API, extracts `pic_infos` large/largest/original URLs), falls back to Baidu Images if insufficient. Applies Pillow processing (16:9 center crop, contrast/sharpness/color enhancement, unsharp mask). 5 images per article.
-5. **HTML output**: Embeds images as base64 into a styled HTML file. Saves to `./output/hot_<category>_<index>_<timestamp>.html`. Cover images saved separately to `./output/covers/`.
+5. **HTML output**: Embeds images as base64 into a styled HTML file. Saves to `./output/hot_<category>_<index>_<timestamp>.html`. (Cover images are applied to the Toutiao draft via the API-patch flow, not saved as files.)
 
 ## Usage
 
@@ -56,7 +56,7 @@ python batch_upload.py          # Upload all articles in manifest
 python batch_upload.py 4        # Resume from 4th article (breakpoint recovery)
 ```
 
-Reads `batch_manifest.json`, uploads each article via `upload_visible.py` to the Toutiao creator platform draft box. Cover upload is skipped by default (set `SKIP_COVER=0` to enable). Supports breakpoint resume via command-line start index.
+Reads `batch_manifest.json`, uploads each article via `upload_visible.py` to the Toutiao creator platform draft box. After each article is saved as a draft, 3 cover images are applied via the API-patch flow (coverType=3 + pgc_feed_covers). Supports breakpoint resume via command-line start index.
 
 ### Config
 
@@ -143,8 +143,8 @@ After the initial draft, `polish_article()` runs a second DeepSeek pass as a rea
 - 5 images per article, sourced from Weibo original posts first (via `/ajax/statuses/search` -> `pic_infos` -> large/largest/original URL), Baidu Images as fallback;
 - 16:9 center crop with filters (contrast +12%, sharpness +25%, color +8%, unsharp mask);
 - Max width 800px, JPEG quality 88, base64-encoded;
-- 3 cover images saved separately as JPEG files to `./output/covers/`;
-- Dynamic layout (5 images cap): 1 image after paragraph 1, then fill 2-image groups "every 2 paragraphs" forward; when the last group leaves >2 pure-text paragraphs at the tail, shift the last 2-image group back to leave exactly 2 paragraphs at the end — ensures no 3–4 paragraph long text tail.
+- **3 cover images** applied to Toutiao draft via `coverType: 3` + `pgc_feed_covers` (an array of 3 image URLs extracted from the first 3 body images). See "Cover Image" section below.
+- **Document-version layout** (5 images cap, see "Image Layout" section for full algorithm): 1 image after paragraph 1, then 2-image groups evenly spaced; priority is keeping middle pure-text gaps ≤3 paragraphs and tail ≤2 paragraphs.
 
 ## Category Hot Search API
 
@@ -170,7 +170,7 @@ The skill includes `upload_visible.py` for uploading generated articles to the T
 4. **Upload body images**: Two-stage approach:
    - Stage 1: Upload all images one-by-one by pasting Blob via `ClipboardEvent('paste')`, capturing returned server URLs.
    - Stage 2: Set all content (text + images) at once via ProseMirror `view.dispatch()` API with properly structured image nodes.
-5. **Skip or upload covers**: By default `SKIP_COVER=1` skips cover upload. Set `SKIP_COVER=0` to upload 3 covers via file input.
+5. **Apply 3 covers**: After the draft is saved, apply 3 cover images via the API-patch flow described in the "Cover Image (3-image mode)" section below (coverType=3 + pgc_feed_covers). Cover upload via file input is no longer used.
 6. **Verify**: Check draft list for the article.
 
 ### Critical: Image Node Attribute
@@ -211,6 +211,27 @@ Examples (with 5 images total — middle gaps always ≤3 for 6–12 paragraphs)
 | 11 | {1: 1, 5: 2, 9: 2} | [3, 3]                        | 3       | 2 |
 | 12 | {1: 1, 5: 2, 9: 2} | [3, 3]                        | 3       | 3 (relaxed to keep gap≤3) |
 
+### Cover Image (3-image mode)
+
+Toutiao drafts use **3 cover images** (coverType=3), not the older single-image / no-cover defaults. The cover is applied by intercepting the editor's auto-save request and patching two fields in the `/mp/agw/article/publish` POST body:
+
+1. **draft_form_data**: `{"coverType": 3}` (changed from `{"coverType": 2}`).
+2. **pgc_feed_covers**: a JSON array of 3 cover objects, URL-encoded. Each object:
+   ```json
+   {"url": "https://image-tt-private.toutiao.com/...", "uri": "tos-cn-i-6w9my0ksvp/<hash>"}
+   ```
+   The 3 covers are extracted from the first 3 unique body images (deduplicated by `web_uri`).
+
+### Implementation steps for cover
+
+1. Navigate to the draft edit page `?pgc_id=<id>`.
+2. Intercept `XMLHttpRequest.prototype.send` to capture the auto-save body when `__url.indexOf('article/publish') !== -1`.
+3. Trigger an auto-save by editing the title (append then remove a space) — React-controlled, so use the native `value` setter + `input`/`change` events.
+4. Once `window.__fullSaveBody` is captured, fetch the first 3 `img[src*="image-tt-private"]` from the editor (dedupe by `web_uri`).
+5. Replace `pgc_feed_covers=%5B%5D` with `pgc_feed_covers=<encoded JSON>` and `draft_form_data=%7B%22coverType%22%3A2%7D` with `...%3A3%7D`.
+6. Re-POST the patched body to `https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0`.
+7. Refresh the edit page to verify 3 cover thumbnails appear with "编辑"/"替换" links.
+
 ### Batch Upload with Breakpoint Recovery
 
 `batch_upload.py` reads `batch_manifest.json` and uploads each article sequentially. Supports a command-line start index for resuming after interruptions:
@@ -236,5 +257,5 @@ Each article upload runs as a subprocess with a 180s timeout. Logs are written t
 - If DeepSeek API fails: check API key in config.json (402 = insufficient balance).
 - If title fails three-part validation: automatically retries once.
 - If batch upload stalls: use `python batch_upload.py <start_index>` to resume.
-- If cover upload fails: article content is still saved; covers can be manually added later.
+- If cover application fails: the article content is already saved as a draft; the cover can be re-applied by re-running the API-patch flow (intercept auto-save → patch coverType=3 + pgc_feed_covers → re-POST).
 - **Stale temp images**: `upload_visible.py` saves body images to `output/tmp/body_img_N.jpg` before uploading. If these files persist from a previous article, they will be reused by mistake, causing the wrong images to appear in the new article. Fixed: all `body_img_*` files are cleared before each upload, forcing fresh extraction from the current article's base64 data.
