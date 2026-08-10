@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""批量抓取9个话题的微博原帖文字素材，保存为JSON供改写参考"""
+"""批量抓取6个话题的微博原帖文字素材，保存为JSON供改写参考"""
 import os
 import json
 import hot_news_writer as hnw
@@ -8,7 +8,6 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def main():
-    # 读取预览资讯
     preview_path = os.path.join(BASE_DIR, "_preview_result.json")
     with open(preview_path, "r", encoding="utf-8") as f:
         preview = json.load(f)
@@ -25,7 +24,7 @@ def main():
     all_posts = {}
     for i, (cat, item) in enumerate(items):
         keyword = item["word"]
-        print(f"\n[{i+1}/9] [{cat}] 抓取原帖：{keyword}")
+        print(f"\n[{i+1}/6] [{cat}] 抓取原帖：{keyword}")
         posts = hnw.fetch_weibo_posts_text(session, keyword, count=8)
         print(f"  抓取到 {len(posts)} 条原帖")
         all_posts[keyword] = {
@@ -36,7 +35,6 @@ def main():
         for j, p in enumerate(posts[:3], 1):
             print(f"  帖{j} | {p['user']}: {p['text'][:80]}...")
 
-    # 保存
     output_path = os.path.join(BASE_DIR, "_weibo_posts_raw.json")
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(all_posts, f, ensure_ascii=False, indent=2)

@@ -23,7 +23,7 @@ The core pipeline has 6 steps:
    - **DeepSeek mode**: Calls DeepSeek API to generate a three-part title (<=25 chars, two commas splitting three segments) + >600-word article based on the fetched post text. Prompt enforces: diverse openings (7 techniques), no AI flavor, no mechanical connectors, colloquial tone, neutral stance. Title is validated for three-part structure and retried if non-compliant.
    - **Direct editor mode** (when DeepSeek API is unavailable or balance insufficient): The assistant directly authors the article based on the fetched Weibo post text, following the same standards (three-part title, >600 words, diverse opening, no AI flavor, no erhua).
 4. **Human-editor polish**: A second LLM pass (or editor pass) acts as a real human copy editor. Preserves all facts and core viewpoints, deletes empty pleasantries / mechanical connectors / flowery parallelism / repetitive conclusions / textbook-style endings, adjusts sentence rhythm, restores natural human writing feel. No meme-stacking, no forced slang, no fabricated stories.
-5. **Image fetch & processing**: Prioritizes Weibo original post images (via `/ajax/statuses/search` API, extracts `pic_infos` large/largest/original URLs), falls back to Baidu Images if insufficient. Applies Pillow processing (16:9 center crop, contrast/sharpness/color enhancement, unsharp mask, max width 1200px, JPEG quality 92). 5 images per article. Filters low-res images (width<500 or height<300).
+5. **Image fetch & processing**: Prioritizes Weibo original post images (via `/ajax/statuses/search` API, extracts `pic_infos` large/largest/original URLs), falls back to Baidu Images if insufficient. Applies Pillow processing (preserve original aspect ratio — no cropping, contrast/sharpness/color enhancement, unsharp mask, max width 1200px, JPEG quality 92). 5 images per article. Filters low-res images (width<500 or height<300).
 6. **HTML output**: Embeds images as base64 into a styled HTML file. Saves to `./output/hot_<category>_<index>_<timestamp>.html`. Cover images saved separately to `./output/covers/`.
 
 ## Usage
@@ -70,7 +70,7 @@ python batch_upload.py          # Upload all articles in manifest
 python batch_upload.py 4        # Resume from 4th article (breakpoint recovery)
 ```
 
-Reads `batch_manifest.json`, uploads each article via `upload_visible.py` to the Toutiao creator platform draft box. Cover upload is skipped by default (set `SKIP_COVER=0` to enable). Supports breakpoint resume via command-line start index.
+Reads `batch_manifest.json`, uploads each article via `upload_visible.py` to the Toutiao creator platform draft box. Cover upload is enabled by default (SKIP_COVER=0). Supports breakpoint resume via command-line start index.
 
 ### Config
 
@@ -161,9 +161,10 @@ After the initial draft, `polish_article()` runs a second DeepSeek pass (or edit
 
 - 5 images per article, sourced from Weibo original posts first (via `/ajax/statuses/search` -> `pic_infos` -> original/largest/large URL), Baidu Images as fallback;
 - Filter low-res images: skip images <8KB or width<500 or height<300 (ensures people in images are clearly visible);
-- 16:9 center crop with filters (contrast +12%, sharpness +30%, color +8%, unsharp mask 90%);
-- Max width 1200px, JPEG quality 92, base64-encoded;
-- 3 cover images saved separately as JPEG files to `./output/covers/`;
+- Preserve original aspect ratio — no cropping (keeps full image content);
+- Filters (contrast +12%, sharpness +30%, color +8%, unsharp mask 90%);
+- Max width 1200px (downscale only, never upscale), JPEG quality 92, base64-encoded;
+- 3 cover images saved separately as JPEG files to `./output/covers/` — **uploaded by default** (SKIP_COVER=0);
 - Dynamic layout (5 images cap): 1 image after paragraph 1, then fill 2-image groups "every 2 paragraphs" forward; when the last group leaves >2 pure-text paragraphs at the tail, shift the last 2-image group back to leave exactly 2 paragraphs at the end — ensures no 3–4 paragraph long text tail.
 
 ## Category Hot Search API
@@ -202,7 +203,7 @@ The skill includes `upload_visible.py` for uploading generated articles to the T
 4. **Upload body images**: Two-stage approach:
    - Stage 1: Upload all images one-by-one by pasting Blob via `ClipboardEvent('paste')`, capturing returned server URLs.
    - Stage 2: Set all content (text + images) at once via ProseMirror `view.dispatch()` API with properly structured image nodes.
-5. **Skip or upload covers**: By default `SKIP_COVER=1` skips cover upload. Set `SKIP_COVER=0` to upload 3 covers via file input.
+5. **Upload covers**: By default `SKIP_COVER=0` uploads 3 covers via file input. Set `SKIP_COVER=1` to skip.
 6. **Verify**: Check draft list for the article.
 
 ### Critical: Image Node Attribute
@@ -256,6 +257,6 @@ Each article upload runs as a subprocess with a 180s timeout. Logs are written t
 - If DeepSeek API fails (402 = insufficient balance, missing key): falls back to direct editor authoring mode.
 - If title fails three-part validation: automatically retries once.
 - If batch upload stalls: use `python batch_upload.py <start_index>` to resume.
-- If cover upload fails: article content is still saved; covers can be manually added later.
+- If cover upload fails: article content is still saved; covers can be manually added later. Set `SKIP_COVER=1` to skip cover upload entirely.
 - **Stale temp images**: `upload_visible.py` saves body images to `output/tmp/body_img_N.jpg` before uploading. If these files persist from a previous article, they will be reused by mistake, causing the wrong images to appear in the new article. Fixed: all `body_img_*` files are cleared before each upload, forcing fresh extraction from the current article's base64 data.
 - **Baidu image encrypted objURL**: Some Baidu image results return encrypted `objURL` that cannot be directly downloaded. Fixed: prioritize `middleURL`/`thumbURL` (always accessible) over `objURL`.

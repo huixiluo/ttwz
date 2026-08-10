@@ -1,20 +1,67 @@
-_test_*.py
-__pycache__/
-*.pyc
-*.pyo
-output/
-*.log
+# 敏感配置（含API Key，请勿提交）
 config.json
-toutiao_cookies*.json
-_*.py
-_*.json
-!_preview.py
-*.bak
-*_manifest.json
-*.jsonl
-qr_login.html
-toutiao_upload_test.py
-upload2.py
-browser_login.py
+
+# 临时数据文件
+articles_9.json
+article_content.json
+_weibo_posts_raw.json
+fix_article9_images.py
+_test_fetch_posts.py
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+venv/
+env/
+ENV/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 日志
+*.log
+
+# 临时二维码图片
+toutiao_qr.png
+output/qr_login.html
+output/toutiao_qr.html
+
+# 运行产物（生成的文章、封面图、临时图片、清单）
+output/hot_*.html
+output/covers/
+output/tmp/
+output/batch_manifest.json
 single_manifest.json
-gen_*.py
+_preview_result.json
+
+# 临时测试脚本
+_test_*.py

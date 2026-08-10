@@ -591,29 +591,19 @@ def fetch_images_baidu(keyword, count=3):
 
 # ===== 图片处理 =====
 def process_image(img_bytes):
-    """裁剪+滤镜处理图片，返回base64字符串。过滤过小的图片（人物不清晰）"""
+    """滤镜处理图片（保留原尺寸，不裁剪），返回base64字符串。过滤过小的图片（人物不清晰）"""
     img = Image.open(io.BytesIO(img_bytes))
     if img.mode != "RGB":
         img = img.convert("RGB")
 
-    # 最小尺寸过滤：宽<400或高<250的图片跳过（人物不清晰）
+    # 最小尺寸过滤：宽<500或高<300的图片跳过（人物不清晰）
     w, h = img.size
-    if w < 400 or h < 250:
+    if w < 500 or h < 300:
         return None
 
-    # 居中裁剪为 16:9（人物通常在画面中心，居中裁剪保留主体）
-    target_ratio = 16 / 9
-    current_ratio = w / h
-    if current_ratio > target_ratio:
-        new_w = int(h * target_ratio)
-        left = (w - new_w) // 2
-        img = img.crop((left, 0, left + new_w, h))
-    else:
-        new_h = int(w / target_ratio)
-        top = (h - new_h) // 2
-        img = img.crop((0, top, w, top + new_h))
+    # 保留原尺寸，不裁剪
 
-    # 限制最大宽度为1200（提升清晰度，原来800偏小）
+    # 限制最大宽度为1200（提升清晰度，过大则等比缩小）
     if img.width > 1200:
         ratio = 1200 / img.width
         img = img.resize((1200, int(img.height * ratio)), Image.LANCZOS)

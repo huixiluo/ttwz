@@ -46,9 +46,9 @@ def main():
     print(f"批量上传 {total} 篇文章到头条草稿箱（从第{start_index}篇开始）", flush=True)
     print("=" * 60, flush=True)
 
-    # 设置环境变量跳过封面上传
+    # 设置环境变量：默认上传封面（SKIP_COVER=0）
     env = os.environ.copy()
-    env["SKIP_COVER"] = "1"
+    env["SKIP_COVER"] = "0"
     env["PYTHONUNBUFFERED"] = "1"  # 禁用输出缓冲
 
     success = 0
