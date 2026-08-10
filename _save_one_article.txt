@@ -1,0 +1,62 @@
+return (async function() {
+    var art = {"index": 22, "title": "雅典娜遇害案曝光，真相仍模糊，安全网要织密", "content": "<p>一条让人心里发凉的消息在网上扩散——网红雅典娜遇害了。这种事听起来像是影视剧里的桥段，可它就这么硬生生地摆在眼前。一个曾经在镜头前笑着分享生活的女孩，如今却以这样的方式告别，任谁看了都觉得堵得慌。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/b6f796487d2a47d69205d5bb87a5198f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417489118&x-orig-sign=ireC%2BnH%2F6dq1a9wIO0fUZRG22tY%3D\" alt=\"图片来源于网络\">\n<p>雅典娜这个名字，关注过网红圈的人应该不陌生。她之前在社交平台上积累了不少粉丝，靠颜值和生活方式吸引关注。可后来她突然消失了，关于她去向的传言就没断过。最离谱的说法是她被骗到境外，卷入了非法活动。这次\"遇害\"消息一出，等于把之前那些猜测推向了最坏的方向。</p>\n<p>具体细节目前还模糊。到底是真遇害了，还是传言被夸大，需要官方通报才能下结论。但可以肯定的是，这不是一起简单的事件。涉及境外、涉及人身安全、涉及网络红人，每一个标签都让事情变得复杂。普通人遇到这种事可能悄无声息地处理了，可她有粉丝、有关注度，事情就被放大了无数倍。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/b735ff22832e4b6e92229844f4cb585f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417489119&x-orig-sign=MAFq2fHfgGoVzb%2BZ8YLhi0Qp9Nw%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/603e1431701949769c2ac756f0e0a0dd~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417489120&x-orig-sign=Xe0KZCqIYRmpQ%2BlPZWsU8V%2FQGnI%3D\" alt=\"图片来源于网络\">\n<p>说到底，这事扯出了一个老问题：网络上的光鲜和现实里的风险，往往是两回事。网红在镜头前展示的是精心包装过的生活，可线下他们也是普通人，一样会遇到骗子、坏人、危险。有些年轻人被\"网红梦\"冲昏了头，看到所谓\"海外机会\"\"高薪工作\"就一头扎进去，殊不知陷阱可能就藏在背后。</p>\n<p>更值得警惕的是跨境人口贩卖这条暗线。这几年曝光的案例里，不少人就是被\"高薪工作\"诱骗出境，最后陷入无法脱身的境地。打击这种犯罪，靠一个国家单打独斗不行，得有跨国合作。普通人能做的，是面对天上掉下来的好事多留个心眼，别让自己的贪念给坏人可乘之机。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/a28d049b8fdb432d8ee5e6e747f298bd~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417489122&x-orig-sign=B9MTxe%2F4e%2FWeWE75sgNx%2BxGITx0%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/25bc0def83534966a0051f5c1f87a8d2~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417489122&x-orig-sign=47mAUA1uVqrRwO%2Fq7PO8BvO6Eis%3D\" alt=\"图片来源于网络\">\n<p>雅典娜的事让人唏嘘，也让人后怕。希望真相能尽快水落石出，给关注这件事的人一个交代，也给她的家人一个说法。网络时代信息真假难辨，但每一条生命都值得被认真对待。下次再看到所谓\"快速致富\"的招揽时，不妨多想一秒：天上不会掉馅饼，掉下来的多半是陷阱。你怎么看？</p>", "word_cnt": 735, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var covers = [{"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/b6f796487d2a47d69205d5bb87a5198f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417489118&x-orig-sign=ireC%2BnH%2F6dq1a9wIO0fUZRG22tY%3D", "uri": "tos-cn-i-6w9my0ksvp/b6f796487d2a47d69205d5bb87a5198f~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/b735ff22832e4b6e92229844f4cb585f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417489119&x-orig-sign=MAFq2fHfgGoVzb%2BZ8YLhi0Qp9Nw%3D", "uri": "tos-cn-i-6w9my0ksvp/b735ff22832e4b6e92229844f4cb585f~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/603e1431701949769c2ac756f0e0a0dd~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417489120&x-orig-sign=Xe0KZCqIYRmpQ%2BlPZWsU8V%2FQGnI%3D", "uri": "tos-cn-i-6w9my0ksvp/603e1431701949769c2ac756f0e0a0dd~tplv-obj.image"}];
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 3}));
+        data.append('pgc_feed_covers', JSON.stringify(covers));
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count,
+            cover_count: covers.length
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});
