@@ -1,0 +1,62 @@
+return (async function() {
+    var art = {"index": 18, "title": "国乒怎么了，输球引讨论，王朝也会动摇吗", "content": "<p>国乒输球的消息一出来，网上的讨论立刻就炸了。多年来国乒赢球是常态，输球才是新闻，这种固有印象让任何一次失利都被放到放大镜下审视。\"国乒怎么了\"这个话题能冲上热搜，本身就说明大家对这支队伍的期待有多高。可竞技体育从来没有永远的赢家，国乒也不例外。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/ffc8d32ffa8443cbb1ae2de6bee912cd~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471579&x-orig-sign=QYA0TgpyPR%2BMozC3hXajU%2BNJZfo%3D\" alt=\"图片来源于网络\">\n<p>这次的输球，具体原因要具体分析。是对手真的变强了，还是我们自己出了问题？这两个问题混在一起讨论，容易把事情说偏。从对手角度看，日本、欧洲这几年的进步是实打实的，青训体系成熟，新人辈出。从我们自身看，主力老化、新人接班慢、训练体系是否跟上变化，这些都值得复盘。</p>\n<p>国乒多年的统治力，靠的不是一两个人，而是一整套体系。从基层选拔到国家队培养，从技战术创新到心理建设，环环相扣。这套体系运转顺畅的时候，冠军像流水线产品一样稳定输出。可一旦某个环节出了问题，连锁反应就会显现。输一场球不可怕，可怕的是看不到问题出在哪。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/84dc47cc0359429ab842f41576ed3d66~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471580&x-orig-sign=YMVfoQSth2A67tqJUsTR%2BOalQjc%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/14a939a445c44313a468b6384694930e~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471581&x-orig-sign=59dUDDIRe1HnViN2T8ttxD9j9C8%3D\" alt=\"图片来源于网络\">\n<p>球迷的焦虑可以理解。国乒承载的不只是体育成绩，还有民族荣誉的成分在里面。每次大赛，国乒都是夺冠的最大热门，输一场就被认为是大事。这种期待既是动力也是压力，压在运动员和教练组身上，分量比外人想象的要重。赛场上的一个失误，背后可能是几个月的训练和无数双眼睛的注视。</p>\n<p>不过也得给这支队伍一些空间。王朝的更替在体育史上是常态，没有哪支队伍能永远站在巅峰。国乒现在的处境，与其说是危机，不如说是转型期的阵痛。老将退役、新人成长、对手追赶，这些因素叠加在一起，难免会有起伏。关键是怎么在起伏中找到新的平衡点，而不是被一次失利打乱节奏。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/a7f7335025e643e89b721eff3981b037~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471582&x-orig-sign=1VOkh8APy67rYHxD5kTv8MhcG%2BA%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/0d152c399b1f47c8910a2731d85da55b~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471583&x-orig-sign=mp9oPPMddl7NaSKeKFlEpp2vk7o%3D\" alt=\"图片来源于网络\">\n<p>国乒怎么了？这个问题没有简单答案。它可能是一次正常的波动，也可能是深层问题的信号。无论哪种，都需要专业的人去做专业的判断。球迷能做的，是在赢的时候不盲目吹捧，在输的时候不一棍子打死。给这支队伍一点耐心，比急着下结论更有意义。</p>", "word_cnt": 747, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var covers = [{"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/ffc8d32ffa8443cbb1ae2de6bee912cd~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471579&x-orig-sign=QYA0TgpyPR%2BMozC3hXajU%2BNJZfo%3D", "uri": "tos-cn-i-6w9my0ksvp/ffc8d32ffa8443cbb1ae2de6bee912cd~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/84dc47cc0359429ab842f41576ed3d66~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471580&x-orig-sign=YMVfoQSth2A67tqJUsTR%2BOalQjc%3D", "uri": "tos-cn-i-6w9my0ksvp/84dc47cc0359429ab842f41576ed3d66~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/14a939a445c44313a468b6384694930e~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471581&x-orig-sign=59dUDDIRe1HnViN2T8ttxD9j9C8%3D", "uri": "tos-cn-i-6w9my0ksvp/14a939a445c44313a468b6384694930e~tplv-obj.image"}];
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 3}));
+        data.append('pgc_feed_covers', JSON.stringify(covers));
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count,
+            cover_count: covers.length
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});

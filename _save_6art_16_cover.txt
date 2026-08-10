@@ -1,0 +1,62 @@
+return (async function() {
+    var art = {"index": 16, "title": "张凌赫热成啥样了，明星也怕热，画面太真实", "content": "<p>张凌赫最近因为一张照片被热议。照片里的他满头是汗，衣服湿透贴在身上，整个人像是刚从水里捞出来。话题\"张凌赫热成啥样了\"一下子就冲上了热搜，粉丝们一边心疼一边又忍不住笑。明星也是人，这个道理说了一万遍，可每次看到他们狼狈的样子，大家还是觉得新鲜。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/f9512ee4ae7e4c6e8d7ca6c1ff2ab612~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471572&x-orig-sign=y7skk9gPR2sdTUypp3fashNL%2FNY%3D\" alt=\"图片来源于网络\">\n<p>这种新鲜感背后，其实是种反差。平日里看到的明星，都是精修图里光鲜亮丽的模样，妆容完美，造型一丝不苟。突然来一张汗流浃背的生图，反差太大，自然就吸引了眼球。张凌赫本身的形象又偏清爽干净，这回被热成这样，落差更明显。</p>\n<p>夏天拍戏的辛苦，外行人很难体会。片场的灯一打，温度比室外还高几度。演员穿着厚重的戏服，一遍遍重复镜头，不能脱不能歇，还得保持表情管理。一场戏拍下来，衣服能拧出水是常事。这跟在空调房里敲键盘的上班族，完全是两种世界。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/a78907e675044efa8fc4b15268a032e4~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471573&x-orig-sign=3c7G602Dt%2FYT4joslyXAdBY3Ffo%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/684c61574bbc401b933bf91b02681b4f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471574&x-orig-sign=JSUc1aWJNk0cdDOPTVXP%2B85MHfU%3D\" alt=\"图片来源于网络\">\n<p>粉丝看着心疼，但心疼之余也别忘了，这是职业的一部分。演员这个行当，光鲜是给观众看的，辛苦是自己扛的。高温天拍古装、冬天拍夏戏、淋雨戏拍到感冒，这些都是行业常态。张凌赫被热成这样，恰恰说明他在认真工作，没耍大牌要求特殊待遇。</p>\n<p>反过来想，这种\"狼狈\"其实挺加分。它把明星从神坛上拉了下来，让人觉得真实可亲。现在的观众早就不吃完美人设那一套了，越是无瑕疵的形象越容易翻车。偶尔露出点疲态、狼狈样，反而让人觉得这个人是活的，不是流水线生产出来的商品。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/3016e2f1713b4c95a64232bd3fc27fe6~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471574&x-orig-sign=8JOHw23K5GOLbW2h55QgeMq36Bc%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/b49c6e6523d2400b9501408276d9eb78~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471575&x-orig-sign=7KlQoyRdwdIzcblbY0mw3KBX0yk%3D\" alt=\"图片来源于网络\">\n<p>张凌赫这次的热搜，来的有点意外，但效果不错。没有刻意的营销，没有精心设计的桥段，就是一张普通的生图。这种真实感，比任何通稿都管用。明星怕热这件事，说到底和普通人没两样。能让大家会心一笑，也算这张照片没白挨这身汗。</p>", "word_cnt": 661, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var covers = [{"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/f9512ee4ae7e4c6e8d7ca6c1ff2ab612~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471572&x-orig-sign=y7skk9gPR2sdTUypp3fashNL%2FNY%3D", "uri": "tos-cn-i-6w9my0ksvp/f9512ee4ae7e4c6e8d7ca6c1ff2ab612~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/a78907e675044efa8fc4b15268a032e4~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471573&x-orig-sign=3c7G602Dt%2FYT4joslyXAdBY3Ffo%3D", "uri": "tos-cn-i-6w9my0ksvp/a78907e675044efa8fc4b15268a032e4~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/684c61574bbc401b933bf91b02681b4f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471574&x-orig-sign=JSUc1aWJNk0cdDOPTVXP%2B85MHfU%3D", "uri": "tos-cn-i-6w9my0ksvp/684c61574bbc401b933bf91b02681b4f~tplv-obj.image"}];
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 3}));
+        data.append('pgc_feed_covers', JSON.stringify(covers));
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count,
+            cover_count: covers.length
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});

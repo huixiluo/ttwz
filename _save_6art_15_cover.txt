@@ -1,0 +1,62 @@
+return (async function() {
+    var art = {"index": 15, "title": "程晓玥体面收场，豪门婚姻散了，体面还在", "content": "<p>程晓玥的名字再次被提起，是因为一段婚姻的结束。豪门阔太的身份没维持几年，两人就走向了分岔路。要说这事最让人意外的，不是分开本身，而是分开之后她还被人评价\"体面\"。在娱乐圈的分分合合里，能拿到这个词的评价，比拿到一份财产分割协议难得多。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/de05930d58cf486c8bae96a1755e74c5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471568&x-orig-sign=gLfcwcDloVLGEj4BT48WB%2BoFPwQ%3D\" alt=\"图片来源于网络\">\n<p>豪门婚姻向来是话题富矿。嫁进去的时候铺天盖地的祝福，分开的时候往往伴随一地鸡毛。互撕、爆料、对簿公堂，这些戏码观众看过太多。程晓玥这次没走老路，没在社交平台上阴阳怪气，没接受专访控诉对方，甚至连一条含沙射影的动态都没发。安静得让人有些不习惯。</p>\n<p>这种安静背后，是另一种活法。她有自己的事业底子，做博主、做品牌，这些年攒下的资源让她不至于在婚姻结束后手足无措。经济独立这件事，在婚姻存续时看着是锦上添花，到了散场那一刻就成了底气。不用靠撕扯换抚养权，不用靠爆料争财产，自然也就没必要把体面丢在地上。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/e5ab1194e501414fb31f4fb42c3ead29~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471569&x-orig-sign=6P36lEqxosAI8SmUxdwxCKx7upY%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/91ee709afd4c4e678b827b9cd26c58e5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471570&x-orig-sign=CVqwmx2u2BTwpdu7Bmulo%2BJhQKM%3D\" alt=\"图片来源于网络\">\n<p>围观群众总爱替当事人算账，觉得不发声就是吃亏了。其实有些账外人算不明白。公开撕扯或许能换来一时的舆论支持，但代价是把自己最私密的部分摊开给所有人看。这种消耗，比静悄悄散场要大得多。程晓玥选择不撕，未必是软弱，更可能是算清了这笔账。</p>\n<p>再说她本就不是那种靠话题维持曝光的人。从当年恋爱综艺被认识，到后来嫁入豪门淡出视线，她的轨迹一直比较克制。这种性格放在娱乐圈不算讨喜，因为没有故事可讲。可到了关键时刻，恰恰是这种性格让她能全身而退。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/4ccd8d3ca6454160b6455be0d9fdc979~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471571&x-orig-sign=ZlzwdAdmgkKuiH6gtGSbmgEhPp8%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/09e0c914fbd647ed81f2f421a48f69c3~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471572&x-orig-sign=k8aOnl1hCrgVMl%2Fo3PP9xRd3%2BS0%3D\" alt=\"图片来源于网络\">\n<p>体面这两个字，说来简单，做起来要付代价。它要求人在最想发泄的时候闭嘴，在最想解释的时候沉默。程晓玥这次的体面，不是表演给谁看的，是她自己选的活法。婚姻散了，人还在，路还得继续走。把过去放下，比把过去翻出来反复咀嚼，更对得起自己。</p>", "word_cnt": 691, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var covers = [{"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/de05930d58cf486c8bae96a1755e74c5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471568&x-orig-sign=gLfcwcDloVLGEj4BT48WB%2BoFPwQ%3D", "uri": "tos-cn-i-6w9my0ksvp/de05930d58cf486c8bae96a1755e74c5~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/e5ab1194e501414fb31f4fb42c3ead29~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471569&x-orig-sign=6P36lEqxosAI8SmUxdwxCKx7upY%3D", "uri": "tos-cn-i-6w9my0ksvp/e5ab1194e501414fb31f4fb42c3ead29~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/91ee709afd4c4e678b827b9cd26c58e5~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471570&x-orig-sign=CVqwmx2u2BTwpdu7Bmulo%2BJhQKM%3D", "uri": "tos-cn-i-6w9my0ksvp/91ee709afd4c4e678b827b9cd26c58e5~tplv-obj.image"}];
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 3}));
+        data.append('pgc_feed_covers', JSON.stringify(covers));
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count,
+            cover_count: covers.length
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});

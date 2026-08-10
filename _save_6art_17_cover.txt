@@ -1,0 +1,62 @@
+return (async function() {
+    var art = {"index": 17, "title": "女演员自曝破产失业，光环背后，日子真难过", "content": "<p>朱锐这个名字，对很多人来说不算熟悉。可她这一开口，就把演艺圈的另一面摊开了。破产、失业，这两个词放在普通人身上已经够沉重，放在一个曾经站在镜头前的女演员身上，分量又加了不止一倍。光鲜的表象下，藏着的可能是普通人难以想象的窘迫。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/37f2b621ab914b00812d2bbc78a3f7eb~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471576&x-orig-sign=rKx5uXPGTKK1DDY24jWDhrNtk68%3D\" alt=\"图片来源于网络\">\n<p>演艺圈的钱，没外面想的那么好赚。顶流明星一部戏几千万，那是金字塔尖的少数。大部分中腰部演员，片酬没想象中高，工作还不稳定。一部戏杀青之后，下一部什么时候来谁也说不准。中间的空窗期，房租、生活开销一样不少，存款扛不住几个月就见底。朱锐的情况，就是这个群体生存状态的一个缩影。</p>\n<p>失业这件事，在演艺圈更隐蔽。普通人失业还有失业金、有求职渠道，演员失业往往是悄无声息的。经纪人不接电话了，试镜机会越来越少，连群演的活都轮不到。这种渐变的边缘化，比突然被裁员更折磨人，因为你不知道是该等下去还是该转身离开。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/0224e1841cbd445cbc1596e03ac302a9~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471576&x-orig-sign=ld%2Bk070OqEDWpemArIt4VGlZR%2B0%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/679a99c19478443eb428aea72442b259~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471577&x-orig-sign=9xgZlsutwDdowfsW7SvKWXMNY0k%3D\" alt=\"图片来源于网络\">\n<p>破产的原因可能更复杂。投资失败、被合作方拖欠款项、家庭变故，任何一项都能把多年的积蓄清空。演艺圈里的人，看着人脉广资源多，真遇到事的时候，能伸手的未必有几个。光环在的时候朋友遍天下，光环一暗，身边安静得可怕。这种人情冷暖，朱锐大概是尝了个遍。</p>\n<p>她选择公开，本身就需要勇气。自曝破产失业，等于把最脆弱的部分暴露给所有人。网络上的声音向来杂，有人同情，也有人嘲讽。能承受这些把实情讲出来，不是每个人都做得到。这种坦诚，反倒比那些硬撑人设的显得体面。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/8e8f4a8075814129b2a6fbed9418fb4c~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471578&x-orig-sign=MnHwNb%2FIzF8U534IE9OGsRFMmHk%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/4e4da40152604f45919285e432f02beb~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471578&x-orig-sign=OD5fZlAZglsyJE%2FcoZxp2m4I%2Fs4%3D\" alt=\"图片来源于网络\">\n<p>这事更大的意义，是撕开了行业的一层包装。大家总看到台前的风光，看不到幕后的飘摇。朱锐的遭遇，让一些想做明星梦的年轻人能冷静下来想想：这条路的概率有多大，抗风险能力有多强。梦想是要追的，但追之前得把最坏的情况算进去。光环褪去之后的日子，才是真正考验人的时候。</p>", "word_cnt": 709, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var covers = [{"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/37f2b621ab914b00812d2bbc78a3f7eb~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471576&x-orig-sign=rKx5uXPGTKK1DDY24jWDhrNtk68%3D", "uri": "tos-cn-i-6w9my0ksvp/37f2b621ab914b00812d2bbc78a3f7eb~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/0224e1841cbd445cbc1596e03ac302a9~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471576&x-orig-sign=ld%2Bk070OqEDWpemArIt4VGlZR%2B0%3D", "uri": "tos-cn-i-6w9my0ksvp/0224e1841cbd445cbc1596e03ac302a9~tplv-obj.image"}, {"url": "https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/679a99c19478443eb428aea72442b259~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471577&x-orig-sign=9xgZlsutwDdowfsW7SvKWXMNY0k%3D", "uri": "tos-cn-i-6w9my0ksvp/679a99c19478443eb428aea72442b259~tplv-obj.image"}];
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 3}));
+        data.append('pgc_feed_covers', JSON.stringify(covers));
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count,
+            cover_count: covers.length
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});

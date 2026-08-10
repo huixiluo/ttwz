@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 19, "title": "阿森纳碰多特蒙德，强强对话，谁能占上风", "content": "<p>阿森纳对阵多特蒙德，这种对阵单看名字就够吸引人。两支欧洲足坛的老牌劲旅，打法各有特色，碰撞在一起从来不缺看点。球迷对这种比赛的期待，从来不只是看个结果，而是看双方怎么过招，看战术博弈的细节。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/f4d9995b137a4051a17413da96223c47~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471584&x-orig-sign=fTHLsBTpdGjIymcThR7xA8qF6oE%3D\" alt=\"图片来源于网络\">\n<p>阿森纳这几个赛季的上升势头明显。主帅的调教让球队找回了进攻足球的灵魂，年轻球员的成长也超出了预期。从争四到争冠，从欧冠小组赛出线到更深轮次的角逐，这支队伍正在一步步回到它应有的位置。打法上的观赏性，也让他们在场外圈了不少粉。</p>\n<p>多特蒙德这边走的是另一条路。德国球队的严谨加上多特特有的青春风暴，构成了他们独特的标签。\"黄黑军团\"这些年卖人卖得不少，可青训和球探体系始终能补上缺口。新面孔一茬接一茬地冒出来，打法活力十足。这种可持续的运营模式，是很多俱乐部学不来的。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/a8575f7cd41a43d3bbfc86d46dae0f6b~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471586&x-orig-sign=CJvIpkNfjts7kjLAsnXhzOdKAFg%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/ddba6a99bd214fc7946e91a37a3e115f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471587&x-orig-sign=KJh%2FFDQZO3Vc3As7P48pEUUch0Y%3D\" alt=\"图片来源于网络\">\n<p>两队交锋，看点在于风格的对撞。阿森纳偏重控球和渗透，多特蒙德更强调速度和转换。一种是用技术压制对手，一种是用节奏冲击对手。这两种风格相遇，谁能把自己的节奏强加给对方，谁就掌握了主动。中场的争夺往往是这种比赛的关键，控制了中场就控制了比赛的大方向。</p>\n<p>球员对决也是重头戏。阿森纳的进攻核心对上多特蒙德的防线，多特蒙德的快马对上阿森纳的后卫，这些局部的胜负直接影响整体走势。这种比赛里，一个细节的失误就可能改变结局。顶级的较量从来不靠大开大合，靠的是关键时刻谁能少犯错。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/0fbd75e1ceed4066bddd01c9ef1df1c7~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471588&x-orig-sign=HeuEvp%2FkzlSXCE7ncqizuoln27I%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/93781245334d413dba023df1b9e6b21a~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471588&x-orig-sign=%2Bpr3svPT8gxBZaVfG7mopxoiIAM%3D\" alt=\"图片来源于网络\">\n<p>这种强强对话，结果难料，过程值得期待。无论谁赢，球迷都是赢家。看两支讲究进攻的球队真刀真枪地干一场，比看一边倒的碾压要过瘾得多。欧洲足坛的魅力，很大一部分就藏在这种对决里。两队各自的拥趸心里都捏着一把汗，这正是足球最迷人的地方。</p>", "word_cnt": 670, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});

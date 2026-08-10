@@ -1,0 +1,60 @@
+return (async function() {
+    var art = {"index": 20, "title": "印度提要求被吐槽，情绪这事，能靠施压解决吗", "content": "<p>印度这边又出了个让人哭笑不得的消息，要求中国抑制所谓的厌印情绪，还顺便提了印人来华就业的问题。这种操作一出，网上的吐槽声立刻就起来了。把民间的情绪问题当成可以靠外交施压解决的事，这种思路本身就值得琢磨。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/eade4c0aa11544d0b7f74a53df10fcfc~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471589&x-orig-sign=HSYVLVY8lyUDS074uzu51OF0gW8%3D\" alt=\"图片来源于网络\">\n<p>情绪这种东西，从来不是凭空产生的。民众对某个国家的看法，根子上是基于这个国家的行为和形象。印度这些年的一些操作，从边境摩擦到签证政策，从对华企业限制到舆论场上的种种言论，桩桩件件都被看在眼里。民众的情绪是这些行为的累积反应，不是谁几句口号就能煽动起来的。</p>\n<p>把情绪问题拿到外交场合提，本身就有点本末倒置。你让人家怎么抑制？发个通知让大家别讨厌？还是搞个宣传运动让大家改变印象？这种自上而下的操作，在民间情绪面前基本无效。情绪的源头在事实，不在宣传。事实不改，情绪就不会变。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/40b89f2868354afc9b8f557f6ed05c73~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471590&x-orig-sign=K2%2BZR4Ei%2F%2ByzBZlv7sKSMnJlZro%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/351fc75c240349b8b9d8730b375fe9da~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471591&x-orig-sign=bYf5ToDRSlkh9sC4p04ly4733F8%3D\" alt=\"图片来源于网络\">\n<p>再说说就业这事。印人来华就业，本来是个双向选择的问题。中国的就业市场开放，但不等于无门槛。无论是哪个国家的公民来华工作，都要遵守相关的法律法规，符合岗位的需求。把这跟情绪问题绑在一起提，让人感觉有点夹带私货。</p>\n<p>其实国与国之间的关系，跟人与人之间有相似的地方。你想让别人对你印象好，得先把自己的事做好。一味地要求别人改变态度，却不反思自己的行为，这种思路走不通。国际社会的通行规则是相互尊重、互利共赢，不是谁声音大谁就有理。</p>\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/214640226d5f4c9dbf5dfcae45bf976f~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471591&x-orig-sign=kidmivL%2Ff4oO9D5oamUSCFvkN2w%3D\" alt=\"图片来源于网络\">\n<img src=\"https://image-tt-private.toutiao.com/tos-cn-i-6w9my0ksvp/dda0dc27894246299c2702201bfe1f59~tplv-obj.image?_iz=115383&c=811c9dc5&from=image_upload&lk3s=72284de7&policy=eyJ2bSI6MywidWlkIjoiMzAyNzQwOTI5Njk1NDYyMCJ9&x-orig-authkey=5a21e4afda5945d9a206a695e4c78a63&x-orig-expires=2417471592&x-orig-sign=gbBpt7TrnxSrcLfhIfTNOSGxq5Y%3D\" alt=\"图片来源于网络\">\n<p>这事被吐槽，本质上是因为大家看穿了其中的荒诞。情绪是结果不是原因，就业是市场不是施舍。把这些搅在一起提要求，解决不了任何实际问题。真想改善关系，得从根源上做起，靠一纸要求让别人改变想法，这想法本身就挺天真。</p>", "word_cnt": 648, "img_count": 5};
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    try {
+        var extra = {
+            'content_source': '100000000402',
+            'content_word_cnt': art.word_cnt,
+            'is_multi_title': 0,
+            'sub_titles': [],
+            'gd_ext': {'entrance': '', 'from_page': 'publisher_mp', 'enter_from': 'PC', 'device_platform': 'mp', 'is_message': 0},
+            'tuwen_wtt_transfer_switch': '1'
+        };
+        var ts = Date.now();
+        var data = new URLSearchParams();
+        data.append('source', '29');
+        data.append('extra', JSON.stringify(extra));
+        data.append('content', art.content);
+        data.append('title', art.title);
+        data.append('search_creation_info', JSON.stringify({'searchTopOne': 0, 'abstract': '', 'clue_id': ''}));
+        data.append('title_id', ts + '_' + (ts * 1000));
+        data.append('mp_editor_stat', '{}');
+        data.append('is_refute_rumor', '0');
+        data.append('save', '0');
+        data.append('entrance', '');
+        data.append('timer_status', '0');
+        data.append('timer_time', '');
+        data.append('educluecard', '');
+        data.append('draft_form_data', JSON.stringify({'coverType': 2}));
+        data.append('pgc_feed_covers', '[]');
+        data.append('article_ad_type', '3');
+        data.append('claim_exclusive', '0');
+        data.append('is_fans_article', '0');
+        data.append('govern_forward', '0');
+        data.append('praise', '0');
+        data.append('disable_praise', '0');
+        data.append('tree_plan_article', '0');
+        data.append('star_order_id', '');
+        data.append('star_order_name', '');
+        data.append('customer_nick_name', '');
+        data.append('activity_tag', '0');
+        data.append('trends_writing_tag', '0');
+        var resp = await fetch(SAVE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: data.toString()
+        });
+        var j = await resp.json();
+        return JSON.stringify({
+            index: art.index,
+            title: art.title,
+            code: j.code,
+            message: j.message || '',
+            pgc_id: (j.data && j.data.pgc_id) ? j.data.pgc_id : null,
+            img_count: art.img_count
+        });
+    } catch(e) {
+        return JSON.stringify({index: art.index, error: 'JS_ERROR: ' + e.message});
+    }
+});
