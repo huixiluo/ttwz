@@ -56,12 +56,14 @@ Fetches up to 8 original posts per topic from `_preview_result.json`, saves to `
 ### Batch generate articles
 
 ```bash
-python batch_generate.py    # 9 articles (3 entertainment + 3 sports + 3 society)
-python generate_9.py        # 9 articles, no DeepSeek dependency
-python generate_single.py   # Single article
+python batch_generate.py    # 9 articles via DeepSeek API (needs config.json)
+python generate_9.py         # Editor-authored articles, NO DeepSeek needed, NO config.json needed
+python generate_single.py    # Single editor-authored article
 ```
 
-Each article goes through: post text fetch -> authoring (DeepSeek or editor) -> human-editor polish -> image fetch -> HTML + cover save. Results saved to `./output/batch_manifest.json` or `articles_9.json`.
+`generate_9.py` reads editor-authored articles from `_manual_articles.json` (list format, recommended — self-contained with category/keyword) or `articles_9.json` (dict format, needs `_preview_result.json` for category). Does NOT call `load_config()` — uses sensible defaults (`output_dir=./output`, `image_count=5`). Applies `clean_erhua()` + three-part-title/word-count validation, saves covers via `save_cover_images()`.
+
+Each article goes through: post text fetch (optional) -> authoring (DeepSeek or editor) -> human-editor polish -> image fetch -> HTML + cover save. Results saved to `./output/batch_manifest.json`.
 
 ### Batch upload to Toutiao drafts
 

@@ -31,13 +31,9 @@ def main():
     print(f"选定资讯：[{item_cat}] {item['title']}（热搜排名{rank}，热度{item.get('num', 0)}）")
     print("=" * 60)
 
-    # 2. 加载配置
-    config = hnw.load_config()
-    api_key = config["api_key"]
-    model = config.get("model", "deepseek-chat")
-    api_url = config.get("api_url", "https://api.deepseek.com/v1/chat/completions")
-    output_dir = os.path.join(BASE_DIR, config.get("output_dir", "./output"))
-    image_count = config.get("image_count", 5)
+    # 2. 配置（编辑直写模式，不依赖config.json，不需要API key）
+    output_dir = os.path.join(BASE_DIR, "output")
+    image_count = 5
     os.makedirs(output_dir, exist_ok=True)
 
     # 3. 获取访客session
