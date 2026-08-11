@@ -365,6 +365,7 @@ def main():
     # 启动浏览器
     print("[1] 启动浏览器...")
     co = ChromiumOptions()
+    co.set_browser_path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
     co.set_argument("--no-sandbox")
     co.set_argument("--disable-gpu")
     page = ChromiumPage(co)

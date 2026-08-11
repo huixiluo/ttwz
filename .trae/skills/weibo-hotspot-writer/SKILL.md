@@ -74,7 +74,7 @@ Reads `batch_manifest.json`, uploads each article via `upload_visible.py` to the
 
 ### Config
 
-Edit `config.json` in the project root (optional when using direct editor mode):
+Edit `config.json` in the project root (create it if missing — it is not shipped with the skill; optional when using direct editor mode):
 
 ```json
 {
@@ -87,6 +87,8 @@ Edit `config.json` in the project root (optional when using direct editor mode):
 ```
 
 When DeepSeek API key is missing or balance insufficient (402), the skill automatically falls back to direct editor authoring mode.
+
+Field defaults (used when key absent): `model`=`deepseek-chat`, `api_url`=`https://api.deepseek.com/v1/chat/completions`, `output_dir`=`./output`, `image_count`=`3`. Note: the image-layout algorithm and all rules in this doc are designed around **5 images** — set `image_count: 5` explicitly to match.
 
 ## Output Requirements (enforced in prompt and code)
 
@@ -108,7 +110,7 @@ When DeepSeek API key is missing or balance insufficient (402), the skill automa
 
 ### Article (>600 words, strictly enforced)
 
-- **>600 words (hard requirement)**, ideal range 650-850 words, 6-8 paragraphs (each <=150 chars);
+- **>600 words (hard requirement)**, ideal range 650-850 words, 6-8 paragraphs, at least 6 (each <=150 chars);
 - Article content must be based on fetched Weibo original post text, not fabricated;
 - Positive tone, reader-resonant, ends with a comment-prompting hook;
 - Neutral and objective, no favoring or attacking specific persons;
@@ -144,6 +146,7 @@ Must grab the reader within the first three sentences. No roundabout padding.
 - Vary sentence length. Mix long and short;
 - Personal perspective and emotion allowed: 说实话/老实讲/说起来;
 - Ban erhua (儿化音): never use 事儿/点儿/地儿/哥们儿/玩意儿. Use standard forms. Enforced both in prompt and via `clean_erhua()` post-processing.
+- **Code-level double insurance**: `clean_erhua()` runs after both rewrite and polish — replaces via `_ERHUA_MAP` (long-match first, 24 groups), then regex strips residual `汉字+儿` suffixes (excluding legitimate word-initial 儿 like 儿女/儿童/儿子).
 
 ### Human-Editor Polish (second pass)
 
@@ -159,7 +162,9 @@ After the initial draft, `polish_article()` runs a second DeepSeek pass (or edit
 
 ### Images
 
-- 5 images per article, sourced from Weibo original posts first (via `/ajax/statuses/search` -> `pic_infos` -> original/largest/large URL), Baidu Images as fallback;
+- 5 images per article. Sourcing strategy (topic-aware, in priority order):
+  1. **Weibo topic original posts** — search via `/ajax/statuses/search?q=#{keyword}#` (use the `word_scheme` topic tag like `#哪吒159亿票房为何换不来全体起立#`, NOT the raw `word`). This ensures we only fetch images from posts inside the trending topic itself, avoiding irrelevant bloggers' content. Extract `pic_infos` original/largest/large URLs.
+  2. **Baidu Images fallback** — when the topic search returns fewer than `count` images (common for discussion-only topics where users post text-only opinions; e.g. a topic with 50 posts may have only 1 with an image). Baidu does real image-content search and will surface related posters/stills/etc.
 - Filter low-res images: skip images <8KB or width<500 or height<300 (ensures people in images are clearly visible);
 - Preserve original aspect ratio — no cropping (keeps full image content);
 - Filters (contrast +12%, sharpness +30%, color +8%, unsharp mask 90%);

@@ -65,3 +65,5 @@ _preview_result.json
 
 # 临时测试脚本
 _test_*.py
+gen_*.py
+.workbuddy/

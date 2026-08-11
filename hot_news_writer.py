@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 微博热搜改写工具
-功能：获取微博热搜 → 智谱GLM改写 → 百度图片搜索配图 → Pillow处理 → 输出HTML
+功能：获取微博热搜 → DeepSeek改写 → 真人编辑润色 → 微博原帖图(百度回退)配图 → Pillow处理 → 输出HTML
 用法：python hot_news_writer.py [娱乐|体育|社会]
 """
 
@@ -485,12 +485,15 @@ def fetch_weibo_posts_text(session, keyword, count=8):
 
 
 def fetch_images_from_weibo(session, keyword, count=3):
-    """从微博搜索结果中提取原帖高清图片，优先原图，过滤低清小图，返回base64列表"""
+    """从微博话题原帖提取配图。用话题标签(#关键词#)搜索，确保只取话题原帖图片，
+    避免模糊文本搜索匹配到无关博主。话题原帖带图少时返回少量，由调用方降级百度补足。"""
     from urllib.parse import quote as url_quote
     images = []
+    # 用话题标签搜（#关键词#），只搜话题原帖，不搜到无关博主
+    topic_query = f"#{keyword}#"
     search_url = (
         f"https://weibo.com/ajax/statuses/search"
-        f"?q={url_quote(keyword)}"
+        f"?q={url_quote(topic_query)}"
     )
     try:
         resp = session.get(search_url, headers={
