@@ -3,10 +3,17 @@ config.json
 
 # 临时数据文件
 articles_9.json
+articles_9_tt.json
 article_content.json
 _weibo_posts_raw.json
+_toutiao_posts_raw.json
+_manual_articles.json
+_manual_articles_tt.json
+_preview_result.json
+_preview_tt_result.json
 fix_article9_images.py
 _test_fetch_posts.py
+_test_weibo_imgs/
 
 # Python
 __pycache__/
@@ -57,11 +64,14 @@ output/toutiao_qr.html
 
 # 运行产物（生成的文章、封面图、临时图片、清单）
 output/hot_*.html
+output/tt_hot_*.html
 output/covers/
 output/tmp/
 output/batch_manifest.json
+output/batch_manifest_tt.json
 single_manifest.json
 _preview_result.json
+_preview_tt_result.json
 
 # 临时测试脚本
 _test_*.py

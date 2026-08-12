@@ -9,9 +9,11 @@ This skill fetches Weibo category hot searches, fetches original post text as so
 
 ## When to Invoke
 
-- User asks to generate rewritten articles from Weibo hot trends
-- User wants to produce entertainment/sports/society news content from current trends
-- User asks to batch-generate multiple articles and upload to Toutiao drafts
+**This skill only runs when the user EXPLICITLY specifies Weibo as the source.** When the platform is not specified, the default skill (`toutiao-hotspot-writer`) runs instead.
+
+- User explicitly asks to generate rewritten articles from **Weibo** hot trends
+- User explicitly mentions "微博" / "Weibo" as the data source
+- User wants to produce entertainment/sports/society news content from **Weibo** trends (not generic "trends" — that defaults to Toutiao)
 
 ## How It Works
 
