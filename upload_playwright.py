@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""混合方案：Playwright上传图片 + API保存草稿"""
-import os, re, json, time, base64, asyncio, io, requests
+"""通过 Playwright 浏览器自动化上传文章到头条草稿箱（Linux）
+图片上传策略：先逐张粘贴图片触发上传，获取URL后再组装内容
+"""
+import os, re, json, time, base64, asyncio, io
 from playwright.async_api import async_playwright
 from PIL import Image
 
@@ -24,6 +26,7 @@ def extract_html_text_and_images(html_path):
     return paragraphs, images
 
 def compress_image_to_bytes(data_url, max_width=800):
+    """压缩图片并返回JPEG字节"""
     try:
         header, b64 = data_url.split(',', 1)
         img_data = base64.b64decode(b64)
@@ -40,8 +43,9 @@ def compress_image_to_bytes(data_url, max_width=800):
     except:
         return None
 
-async def upload_image_and_get_url(page, img_bytes):
-    """通过粘贴上传单张图片，返回服务器URL"""
+async def upload_single_image(page, img_bytes, img_index):
+    """通过粘贴文件上传单张图片，返回服务器URL"""
+    # 清空编辑器
     await page.evaluate("""
         () => {
             const editor = document.querySelector('.ProseMirror');
@@ -52,9 +56,12 @@ async def upload_image_and_get_url(page, img_bytes):
         }
     """)
     await asyncio.sleep(0.5)
+
+    # 聚焦编辑器
     await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) e.focus(); }")
     await asyncio.sleep(0.3)
 
+    # 通过创建一个File对象并触发paste事件来上传
     b64_str = base64.b64encode(img_bytes).decode('ascii')
     await page.evaluate(f"""
         () => {{
@@ -67,7 +74,7 @@ async def upload_image_and_get_url(page, img_bytes):
             const ia = new Uint8Array(ab);
             for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
             const blob = new Blob([ab], {{type: 'image/jpeg'}});
-            const file = new File([blob], 'img.jpg', {{type: 'image/jpeg'}});
+            const file = new File([blob], 'image_{img_index}.jpg', {{type: 'image/jpeg'}});
             const pasteEvent = new ClipboardEvent('paste', {{
                 bubbles: true, cancelable: true
             }});
@@ -83,11 +90,15 @@ async def upload_image_and_get_url(page, img_bytes):
             editor.dispatchEvent(pasteEvent);
         }}
     """)
+
+    # 等待图片出现
     for _ in range(30):
         await asyncio.sleep(1)
         has_img = await page.evaluate("() => document.querySelectorAll('.ProseMirror img').length > 0")
         if has_img:
             break
+
+    # 等待图片URL变为服务器URL
     img_url = ""
     for _ in range(60):
         await asyncio.sleep(1)
@@ -99,9 +110,10 @@ async def upload_image_and_get_url(page, img_bytes):
         """)
         if img_url and not img_url.startswith('blob:') and not img_url.startswith('data:'):
             return img_url
+
     return img_url
 
-async def upload_article_with_api(page, session, art, index, total):
+async def upload_article(page, art, index, total):
     title = art["title"]
     html_path = art["html_file"]
 
@@ -115,6 +127,7 @@ async def upload_article_with_api(page, session, art, index, total):
         return False
 
     # 压缩图片
+    print(f"  压缩图片...")
     img_bytes_list = []
     for img in images:
         compressed = compress_image_to_bytes(img)
@@ -123,6 +136,7 @@ async def upload_article_with_api(page, session, art, index, total):
     print(f"  压缩完成: {len(img_bytes_list)}张")
 
     # 导航到发布页面
+    print(f"  导航到发布页面...")
     await page.goto("https://mp.toutiao.com/profile_v4/graphic/publish", wait_until="domcontentloaded", timeout=20000)
     await asyncio.sleep(3)
 
@@ -139,43 +153,53 @@ async def upload_article_with_api(page, session, art, index, total):
     # 等待编辑器
     try:
         await page.wait_for_selector(".ProseMirror", timeout=15000)
+        print("  [OK] 编辑器已就绪")
     except:
         print("  [ERROR] 编辑器未就绪")
         return False
 
     # 填标题
+    print(f"  填标题...")
     title_el = page.locator('textarea[placeholder*="文章标题"]').first
     await title_el.click()
     await asyncio.sleep(0.5)
     await title_el.fill(title)
     await asyncio.sleep(2)
 
-    # 上传图片获取URL
-    image_urls = []
+    # 清除编辑器
     editor = page.locator(".ProseMirror").first
+    await editor.click()
+    await asyncio.sleep(0.5)
+    await page.keyboard.press("Control+a")
+    await asyncio.sleep(0.3)
+    await page.keyboard.press("Backspace")
+    await asyncio.sleep(0.5)
+
+    # 逐张上传图片，获取URL
+    image_urls = []
     if img_bytes_list:
         print(f"  上传{len(img_bytes_list)}张图片...")
         for img_idx, img_bytes in enumerate(img_bytes_list):
-            await upload_image_and_get_url(page, img_bytes)
+            print(f"    图片{img_idx+1}: 上传中...")
+            img_url = await upload_single_image(page, img_bytes, img_idx + 1)
+            if img_url:
+                image_urls.append(img_url)
+                print(f"    图片{img_idx+1}: ✓ {img_url[:80]}...")
+            else:
+                print(f"    图片{img_idx+1}: ✗ 上传失败")
+                image_urls.append("")
             await asyncio.sleep(1)
-        # 获取所有图片的URL
-        image_urls = await page.evaluate("""
-            () => {
-                const imgs = document.querySelectorAll('.ProseMirror img');
-                return Array.from(imgs).map(img => img.src).filter(src => src && !src.startsWith('blob:') && !src.startsWith('data:'));
-            }
-        """)
-        print(f"  获取到 {len(image_urls)} 个图片URL")
+        print(f"  上传完成: {len([u for u in image_urls if u])}/{len(img_bytes_list)}张成功")
 
-        # 清除编辑器
-        await editor.click()
-        await asyncio.sleep(0.3)
-        await page.keyboard.press("Control+a")
-        await asyncio.sleep(0.3)
-        await page.keyboard.press("Backspace")
-        await asyncio.sleep(0.5)
+    # 清除编辑器
+    await editor.click()
+    await asyncio.sleep(0.5)
+    await page.keyboard.press("Control+a")
+    await asyncio.sleep(0.3)
+    await page.keyboard.press("Backspace")
+    await asyncio.sleep(0.5)
 
-    # 构建内容HTML
+    # 构建最终内容HTML（用服务器URL）
     content_parts = []
     img_idx = 0
     n_imgs = len(image_urls)
@@ -198,89 +222,81 @@ async def upload_article_with_api(page, session, art, index, total):
                     img_idx += 1
 
     content_html = "\n".join(content_parts)
-    word_count = sum(len(p) for p in paragraphs)
 
-    # 通过API保存草稿
-    print(f"  API保存草稿 ({word_count}字, {n_imgs}图)...")
-    csrf = session.cookies.get('passport_csrf_token', '')
-    
-    # 先获取pgc_id
-    pgc_resp = session.get("https://mp.toutiao.com/mp/agw/article/new", params={
-        "article_type": 0, "format": "json", "compat": 1, "column_no": "",
-    })
-    pgc_id = ""
+    # 设置内容 - 使用 innerHTML（已验证可以正确渲染）
+    print(f"  设置最终内容 ({len(content_html)}字符)...")
+    await page.evaluate("""
+        (content) => {
+            const editor = document.querySelector('.ProseMirror');
+            if (editor) {
+                editor.innerHTML = content;
+                editor.dispatchEvent(new Event('input', {bubbles: true}));
+            }
+        }
+    """, content_html)
+    await asyncio.sleep(2)
+
+    # 在编辑器中触发实际修改，确保ProseMirror检测到变更
+    await editor.click()
+    await asyncio.sleep(0.5)
+    await page.keyboard.press("End")
+    await asyncio.sleep(0.3)
+    await page.keyboard.type(" ", delay=50)
+    await asyncio.sleep(0.3)
+    await page.keyboard.press("Backspace")
+    await asyncio.sleep(0.5)
+
+    # 关闭可能出现的弹窗/抽屉
     try:
-        pgc_data = pgc_resp.json()
-        if pgc_data.get("code") == 0:
-            # 尝试从不同路径获取pgc_id
-            pgc_id = pgc_data.get("data", {}).get("pgc_id", "")
-            if not pgc_id:
-                media_id = pgc_data.get("data", {}).get("media", {}).get("id", "")
-                pgc_id = str(media_id)
+        # 关闭 "恢复草稿" 弹窗
+        for btn_text in ["不恢复", "关闭", "取消"]:
+            btn = page.locator(f"button:has-text('{btn_text}')").first
+            if await btn.is_visible(timeout=2000):
+                await btn.click()
+                await asyncio.sleep(1)
+                break
+        # 关闭 drawer mask
+        mask = page.locator(".byte-drawer-mask").first
+        if await mask.is_visible(timeout=2000):
+            await page.evaluate("() => { const m = document.querySelector('.byte-drawer-mask'); if(m) m.remove(); }")
+            await asyncio.sleep(0.5)
     except:
         pass
 
-    if not pgc_id:
-        print("  [WARN] 无法获取pgc_id，尝试无pgc_id保存")
-        pgc_id = ""
-
-    extra = json.dumps({
-        "content_source": 100000000402,
-        "content_word_cnt": word_count,
-    })
-
-    form_data = {
-        "article_type": "0",
-        "pgc_id": pgc_id,
-        "source": "29",
-        "title": title,
-        "content": content_html,
-        "save": "0",
-        "entrance": "main",
-        "timer_status": "0",
-        "timer_time": "",
-        "extra": extra,
-        "title_id": "",
-        "ic_uri_list": "[]",
-        "search_creation_info": "",
-        "is_refute_rumor": "0",
-        "appid_list": "[]",
-        "stock_ids": "[]",
-        "concern_list": "[]",
-        "comic_attr": "",
-        "is_app_preview": "",
-        "externalLinkChecked": "false",
-        "externalLink": "",
-        "claimOrigin": "0",
-        "copyRightChecked": "1",
-        "subTitle": "",
-        "subCoverList": "[]",
-        "coverList": "[]",
-        "coverType": "0",
-        "articleAdType": "0",
-        "isFansArticle": "0",
-        "activityId": "",
-        "communitySync": "0",
-    }
-
-    api_url = "https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231"
+    # 再次点击标题区域触发blur（可能触发auto-save）
     try:
-        resp = session.post(api_url, data=form_data, headers={
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-CSRFToken": csrf,
-        })
-        result = resp.json()
-        code = result.get('code', -1)
-        msg = result.get('message', '')
-        if code == 0 or msg == 'success':
-            print(f"  [SUCCESS] API保存成功!")
-            return True
-        else:
-            print(f"  [FAIL] API返回: code={code}, msg={msg}")
-            print(f"  响应: {resp.text[:300]}")
-    except Exception as e:
-        print(f"  [ERROR] API异常: {e}")
+        await title_el.click(force=True, timeout=5000)
+    except:
+        # 如果force click也失败，用JS点击
+        await page.evaluate("() => { const t = document.querySelector('textarea[placeholder*=\"文章标题\"]'); if(t) t.focus(); }")
+    await asyncio.sleep(0.5)
+    await page.keyboard.type(" ", delay=50)
+    await asyncio.sleep(0.3)
+    await page.keyboard.press("Backspace")
+    await asyncio.sleep(0.5)
+
+    # 等待自动保存（足够长的时间）
+    print(f"  等待自动保存...")
+    await asyncio.sleep(10)
+
+    # 直接导航到草稿页验证
+    await page.goto("https://mp.toutiao.com/profile_v4/manage/draft", wait_until="domcontentloaded", timeout=20000)
+    await asyncio.sleep(5)
+    draft_text = await page.evaluate("() => document.body.innerText || ''")
     
+    if title[:8] in draft_text:
+        print(f"  [SUCCESS] 文章已在草稿箱中!")
+        return True
+    
+    # 重试：等待更长时间
+    print(f"  首次验证失败，等待后重试...")
+    await asyncio.sleep(10)
+    draft_text = await page.evaluate("() => document.body.innerText || ''")
+    if title[:8] in draft_text:
+        print(f"  [SUCCESS] 文章已在草稿箱中!")
+        return True
+        
+    print(f"  [FAIL] 未在草稿箱中找到 (页面长度: {len(draft_text)})")
     return False
 
 async def main():
@@ -292,18 +308,6 @@ async def main():
     print(f"共 {len(articles)} 篇文章待上传到草稿箱")
     print("=" * 60)
 
-    # 创建API session
-    session = requests.Session()
-    session.headers.update({
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-        "Referer": "https://mp.toutiao.com/",
-        "Origin": "https://mp.toutiao.com",
-    })
-    for name, value in cookies.items():
-        session.cookies.set(name, value, domain=".toutiao.com", path="/")
-
     async with async_playwright() as p:
         browser = await p.chromium.launch(
             headless=True,
@@ -314,11 +318,14 @@ async def main():
             viewport={"width": 1920, "height": 1080},
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         )
+        await context.grant_permissions(["clipboard-read", "clipboard-write"])
         cookie_list = [{"name": k, "value": v, "domain": ".toutiao.com", "path": "/"} for k, v in cookies.items()]
         await context.add_cookies(cookie_list)
+
         page = await context.new_page()
 
         # 验证登录
+        print("验证登录状态...")
         await page.goto("https://mp.toutiao.com/profile_v4/manage/draft", wait_until="domcontentloaded", timeout=20000)
         await asyncio.sleep(2)
         if "登录" in (await page.title()):
@@ -330,7 +337,7 @@ async def main():
         success = 0
         for i, art in enumerate(articles, 1):
             try:
-                ok = await upload_article_with_api(page, session, art, i, len(articles))
+                ok = await upload_article(page, art, i, len(articles))
                 if ok:
                     success += 1
             except Exception as e:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""方案：浏览器上传图片 + 键盘输入内容 + 浏览器提取pgc_id后API保存"""
+"""组合方案：Playwright上传图片获取URL，API保存草稿"""
 import os, re, json, time, base64, asyncio, io, urllib.parse
 import requests
 from playwright.async_api import async_playwright
@@ -45,34 +45,62 @@ def compress_image_to_bytes(data_url, max_width=800):
     except:
         return None
 
-async def get_pgc_id_from_page(page):
-    """从浏览器页面中提取pgc_id"""
-    # 方法1: 从URL中提取
-    url = page.url
-    m = re.search(r'pgc_id=(\w+)', url)
-    if m:
-        return m.group(1)
-
-    # 方法2: 从页面JS变量中提取
-    pgc_id = await page.evaluate("""
-        () => {
-            // 尝试从redux store获取
-            if (window.__REDUX_STORE__) {
-                const state = window.__REDUX_STORE__.getState();
-                if (state && state.article && state.article.pgc_id)
-                    return state.article.pgc_id;
+async def upload_images_via_browser(page, img_bytes_list):
+    """通过浏览器上传图片，返回服务器URL列表"""
+    image_urls = []
+    for img_idx, img_bytes in enumerate(img_bytes_list):
+        # 清空编辑器
+        await page.evaluate("""
+            () => {
+                const editor = document.querySelector('.ProseMirror');
+                if (editor) {
+                    editor.innerHTML = '<p></p>';
+                    editor.dispatchEvent(new Event('input', {bubbles: true}));
+                }
             }
-            // 尝试从URL获取
-            const m = location.href.match(/pgc_id=(\\w+)/);
-            if (m) return m[1];
-            return '';
-        }
-    """)
-    if pgc_id:
-        return pgc_id
+        """)
+        await asyncio.sleep(0.5)
+        await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) e.focus(); }")
+        await asyncio.sleep(0.3)
 
-    # 方法3: 拦截网络请求
-    return ""
+        # 上传图片
+        b64_str = base64.b64encode(img_bytes).decode('ascii')
+        await page.evaluate(f"""
+            () => {{
+                const editor = document.querySelector('.ProseMirror');
+                if (!editor) return;
+                editor.focus();
+                const b = "{b64_str}";
+                const bs = atob(b);
+                const ab = new ArrayBuffer(bs.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < bs.length; i++) ia[i] = bs.charCodeAt(i);
+                const blob = new Blob([ab], {{type: 'image/jpeg'}});
+                const file = new File([blob], 'img_{img_idx}.jpg', {{type: 'image/jpeg'}});
+                const ev = new ClipboardEvent('paste', {{bubbles: true, cancelable: true}});
+                const fd = {{files: [file], items: [], types: ['Files'],
+                    getData: function() {{ return ''; }}, setData: function() {{}}, clearData: function() {{}}}};
+                Object.defineProperty(ev, 'clipboardData', {{value: fd}});
+                editor.dispatchEvent(ev);
+            }}
+        """)
+
+        # 等待服务器URL
+        img_url = ""
+        for _ in range(60):
+            await asyncio.sleep(1)
+            img_url = await page.evaluate("""
+                () => {
+                    const img = document.querySelector('.ProseMirror img');
+                    return img ? img.src : '';
+                }
+            """)
+            if img_url and not img_url.startswith('blob:') and not img_url.startswith('data:'):
+                break
+        image_urls.append(img_url)
+        print(f"    图片{img_idx+1}: {'OK' if img_url else 'FAIL'}")
+        await asyncio.sleep(1)
+    return image_urls
 
 def save_draft_via_api(session, pgc_id, title, content_html, word_count):
     """通过API保存草稿"""
@@ -131,59 +159,17 @@ def save_draft_via_api(session, pgc_id, title, content_html, word_count):
     except Exception as e:
         return False, {"error": str(e)}
 
-async def upload_images_via_browser(page, img_bytes_list):
-    """通过浏览器上传图片，返回服务器URL列表"""
-    image_urls = []
-    for img_idx, img_bytes in enumerate(img_bytes_list):
-        await page.evaluate("""
-            () => {
-                const editor = document.querySelector('.ProseMirror');
-                if (editor) {
-                    editor.innerHTML = '<p></p>';
-                    editor.dispatchEvent(new Event('input', {bubbles: true}));
-                }
-            }
-        """)
-        await asyncio.sleep(0.5)
-        await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) e.focus(); }")
-        await asyncio.sleep(0.3)
-
-        b64_str = base64.b64encode(img_bytes).decode('ascii')
-        await page.evaluate(f"""
-            () => {{
-                const editor = document.querySelector('.ProseMirror');
-                if (!editor) return;
-                editor.focus();
-                const b = "{b64_str}";
-                const bs = atob(b);
-                const ab = new ArrayBuffer(bs.length);
-                const ia = new Uint8Array(ab);
-                for (let i = 0; i < bs.length; i++) ia[i] = bs.charCodeAt(i);
-                const blob = new Blob([ab], {{type: 'image/jpeg'}});
-                const file = new File([blob], 'img_{img_idx}.jpg', {{type: 'image/jpeg'}});
-                const ev = new ClipboardEvent('paste', {{bubbles: true, cancelable: true}});
-                const fd = {{files: [file], items: [], types: ['Files'],
-                    getData: function() {{ return ''; }}, setData: function() {{}}, clearData: function() {{}}}};
-                Object.defineProperty(ev, 'clipboardData', {{value: fd}});
-                editor.dispatchEvent(ev);
-            }}
-        """)
-
-        img_url = ""
-        for _ in range(60):
-            await asyncio.sleep(1)
-            img_url = await page.evaluate("""
-                () => {
-                    const img = document.querySelector('.ProseMirror img');
-                    return img ? img.src : '';
-                }
-            """)
-            if img_url and not img_url.startswith('blob:') and not img_url.startswith('data:'):
-                break
-        image_urls.append(img_url)
-        print(f"    图片{img_idx+1}: {'OK' if img_url else 'FAIL'}")
-        await asyncio.sleep(1)
-    return image_urls
+def get_new_pgc_id(session):
+    """获取新建文章的pgc_id"""
+    resp = session.get("https://mp.toutiao.com/mp/agw/article/new", params={
+        "article_type": 0, "format": "json", "compat": 1, "column_no": "",
+    }, timeout=15)
+    try:
+        data = resp.json()
+        pgc_id = data.get("data", {}).get("pgc_id", "")
+        return pgc_id
+    except:
+        return ""
 
 async def process_article(page, session, art, index, total):
     title = art["title"]
@@ -260,22 +246,8 @@ async def process_article(page, session, art, index, total):
     content_html = "\n".join(content_parts)
     word_count = sum(len(p) for p in paragraphs)
 
-    # 从浏览器页面提取pgc_id
-    pgc_id = await get_pgc_id_from_page(page)
-    print(f"  浏览器pgc_id: {pgc_id or '未找到'}")
-
-    if not pgc_id:
-        # 尝试通过拦截网络请求获取
-        # 先填写标题触发自动保存，从而捕获pgc_id
-        title_el = page.locator('textarea[placeholder*="文章标题"]').first
-        await title_el.click()
-        await asyncio.sleep(0.5)
-        await title_el.fill(title)
-        await asyncio.sleep(3)
-
-        pgc_id = await get_pgc_id_from_page(page)
-        print(f"  重试pgc_id: {pgc_id or '仍未找到'}")
-
+    # 获取pgc_id
+    pgc_id = get_new_pgc_id(session)
     if not pgc_id:
         print("  [ERROR] 无法获取pgc_id")
         return False

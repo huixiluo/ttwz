@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""测试：查找并调用页面JS保存函数"""
+"""只上传第2篇验证"""
 import os, re, json, base64, asyncio, io
 from playwright.async_api import async_playwright
 from PIL import Image
@@ -41,7 +41,7 @@ async def main():
     with open(COOKIE_FILE, "r", encoding="utf-8") as f:
         cookies = json.load(f)
 
-    art = articles[0]  # 测试第1篇
+    art = articles[1]  # 只测试第2篇
     title = art["title"]
     html_path = art["html_file"]
     paragraphs, images = extract_html_text_and_images(html_path)
@@ -63,20 +63,10 @@ async def main():
         await context.add_cookies(cookie_list)
         page = await context.new_page()
 
-        # 监听所有网络请求
-        save_requests = []
-        async def on_request(request):
-            if "publish" in request.url or "save" in request.url or "draft" in request.url:
-                save_requests.append({
-                    "url": request.url,
-                    "method": request.method,
-                    "post_data": request.post_data,
-                })
-
-        page.on("request", on_request)
-
         await page.goto("https://mp.toutiao.com/profile_v4/manage/draft", wait_until="domcontentloaded", timeout=20000)
         await asyncio.sleep(2)
+        if "登录" in (await page.title()):
+            print("[ERROR] Cookie已过期"); await browser.close(); return
         print("[OK] 登录有效\n")
 
         await page.goto("https://mp.toutiao.com/profile_v4/graphic/publish", wait_until="domcontentloaded", timeout=30000)
@@ -96,10 +86,12 @@ async def main():
         except:
             print("[ERROR] 编辑器未就绪"); await browser.close(); return
 
+        # 填标题
         title_el = page.locator('textarea[placeholder*="文章标题"]').first
         await title_el.fill(title)
         await asyncio.sleep(2)
 
+        # 上传图片
         editor = page.locator(".ProseMirror").first
         image_urls = []
         for img_bytes in img_bytes_list:
@@ -139,6 +131,7 @@ async def main():
 
         print(f"  图片URL: {len(image_urls)}个")
 
+        # 清除编辑器
         await editor.click(); await asyncio.sleep(0.3)
         await page.keyboard.press("Control+a"); await asyncio.sleep(0.3)
         await page.keyboard.press("Backspace"); await asyncio.sleep(0.5)
@@ -165,37 +158,6 @@ async def main():
         """, content_html)
         await asyncio.sleep(3)
 
-        # 打印捕获的保存请求
-        print(f"\n  捕获的保存相关请求:")
-        for req in save_requests:
-            print(f"    {req['method']} {req['url'][:100]}")
-            if req['post_data']:
-                print(f"      data: {req['post_data'][:200]}")
-
-        # 尝试查找页面上的保存方法
-        save_methods = await page.evaluate("""
-            () => {
-                const methods = [];
-                // 查找window上的保存相关方法
-                for (const key of Object.keys(window)) {
-                    if (key.toLowerCase().includes('save') || key.toLowerCase().includes('draft') || key.toLowerCase().includes('publish')) {
-                        methods.push('window.' + key);
-                    }
-                }
-                // 查找所有按钮
-                const btns = document.querySelectorAll('button, a, span[role="button"], div[role="button"]');
-                const btnTexts = Array.from(btns).map(b => ({
-                    text: b.innerText?.trim() || '',
-                    tag: b.tagName,
-                    class: b.className?.substring(0, 50) || '',
-                })).filter(b => b.text);
-                return {methods, btnTexts: btnTexts.slice(0, 20)};
-            }
-        """)
-        print(f"\n  Window保存方法: {save_methods['methods']}")
-        print(f"  页面按钮: {json.dumps(save_methods['btnTexts'], ensure_ascii=False, indent=2)}")
-
-        # 触发保存
         await editor.click(); await asyncio.sleep(0.5)
         await page.keyboard.press("End"); await asyncio.sleep(0.3)
         await page.keyboard.type("X", delay=50); await asyncio.sleep(0.3)
@@ -204,19 +166,22 @@ async def main():
         await page.evaluate("() => { const t = document.querySelector('textarea[placeholder*=\"文章标题\"]'); if(t) { t.focus(); t.dispatchEvent(new Event('input', {bubbles: true})); } }")
         await asyncio.sleep(1)
 
-        # 等待并检查新请求
-        print(f"\n  等待保存后捕获的新请求:")
-        await asyncio.sleep(10)
-        for req in save_requests:
-            print(f"    {req['method']} {req['url'][:120]}")
+        print(f"  等待保存...")
+        await asyncio.sleep(15)
 
         await page.goto("https://mp.toutiao.com/profile_v4/manage/draft", wait_until="domcontentloaded", timeout=20000)
         await asyncio.sleep(5)
         dt = await page.evaluate("() => document.body.innerText || ''")
         if title[:8] in dt:
-            print(f"\n  [SUCCESS] 已在草稿箱!")
+            print(f"  [SUCCESS] 已在草稿箱!")
         else:
-            print(f"\n  [FAIL] (页面{len(dt)}字符)")
+            await asyncio.sleep(10)
+            dt = await page.evaluate("() => document.body.innerText || ''")
+            if title[:8] in dt:
+                print(f"  [SUCCESS] 已在草稿箱!")
+            else:
+                print(f"  [FAIL] (页面{len(dt)}字符)")
+                print(f"  页面内容: {dt[:500]}")
 
         await browser.close()
 

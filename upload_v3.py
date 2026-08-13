@@ -1,256 +1,293 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""最终策略：每步操作后通过修改标题(.input)触发保存"""
-import os, re, json, time
-from DrissionPage import ChromiumPage, ChromiumOptions
+"""方案：Playwright上传图片 + 捕获pgc_id + API保存草稿"""
+import os, re, json, time, base64, asyncio, io, requests
+from playwright.async_api import async_playwright
+from PIL import Image
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_FILE = os.path.join(BASE_DIR, "toutiao_cookies.json")
-MANIFEST_FILE = os.path.join(BASE_DIR, "single_manifest.json")
-PUBLISH_URL = "https://mp.toutiao.com/profile_v4/graphic/publish"
+MANIFEST_FILE = os.path.join(BASE_DIR, "output", "batch_manifest_tt.json")
+CHROME_PATH = "/root/.cache/puppeteer/chrome/linux-151.0.7922.71/chrome-linux64/chrome"
 
-def init_browser():
-    co = ChromiumOptions()
-    co.set_argument("--no-sandbox")
-    co.set_argument("--disable-gpu")
-    co.headless(True)
-    page = ChromiumPage(co)
-    page.get("https://mp.toutiao.com")
-    time.sleep(2)
-    cookies = json.load(open(COOKIE_FILE, "r", encoding="utf-8"))
-    for name, value in cookies.items():
-        try:
-            page.set.cookies({"name": name, "value": value, "domain": ".toutiao.com", "path": "/"})
-        except:
-            pass
-    page.get("https://mp.toutiao.com")
-    time.sleep(3)
-    if "profile" not in page.url.lower():
-        page.quit()
-        raise RuntimeError("Cookie登录失败")
-    print("[OK] 登录成功")
-    return page
-
-def trigger_save_via_title(page):
-    """通过修改标题来触发保存"""
-    title_el = page.ele('tag:textarea@placeholder=请输入文章标题（2～30个字）', timeout=5)
-    if not title_el:
-        title_el = page.ele('tag:textarea@placeholder:文章标题', timeout=5)
-    if not title_el:
-        return False
-    
-    # 点击标题区域
-    title_el.click()
-    time.sleep(0.3)
-    # 在末尾加一个空格
-    title_el.input(" ")
-    time.sleep(0.3)
-    # 删除空格
-    page.run_js("""
-var el = document.querySelector('textarea[placeholder*="文章标题"]');
-if (el) {
-    el.dispatchEvent(new KeyboardEvent('keydown', {key: 'Backspace', bubbles: true}));
-    el.dispatchEvent(new Event('input', {bubbles: true}));
-    el.blur();
-    el.dispatchEvent(new Event('change', {bubbles: true}));
-}
-""")
-    time.sleep(0.5)
-    return True
-
-def wait_for_save(page, timeout=30):
-    """等待保存完成"""
-    for i in range(timeout // 2):
-        time.sleep(2)
-        status = page.run_js("""
-var body = document.body.innerText;
-if (body.indexOf('草稿已保存') !== -1) return 'SAVED';
-if (body.indexOf('保存成功') !== -1) return 'SAVED';
-return 'WAIT';
-""")
-        if status == 'SAVED':
-            return True
-    return False
-
-def main():
-    with open(MANIFEST_FILE, "r", encoding="utf-8") as f:
-        articles = json.load(f)
-    art = articles[0]
-    real_title = art.get("title", "")[:30]
-    cover_files = art.get("cover_files", [])
-    html_path = art.get("html_file", "")
-
-    print(f"标题: {real_title}")
-
-    # 读取HTML正文
+def extract_html_text_and_images(html_path):
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
-    body_match = re.search(r'<body[^>]*>(.*?)</body>', html, re.DOTALL)
-    body_html = ""
-    if body_match:
-        body = body_match.group(1)
-        result_parts = []
-        for m in re.finditer(
-            r'(<p>(.*?)</p>)|'
-            r'(<div\s+class="img-wrap">\s*<img[^>]*src="(data:image/[^"]*;base64,[^"]*)"[^>]*>\s*</div>)',
-            body, re.DOTALL
-        ):
-            if m.group(1):
-                para_text = re.sub(r'<[^>]+>', '', m.group(2))
-                result_parts.append(f'<p>{para_text}</p>')
-            elif m.group(4):
-                result_parts.append(f'<p><img src="{m.group(4)}" /></p>')
-        body_html = "\n".join(result_parts)
+    paragraphs, images = [], []
+    for m in re.finditer(r'<p>([^<]+)</p>', html):
+        text = m.group(1).strip()
+        if text: paragraphs.append(text)
+    for m in re.finditer(r'<img[^>]*src="(data:image/[^"]*)"', html):
+        images.append(m.group(1))
+    return paragraphs, images
 
-    page = init_browser()
-    page.get(PUBLISH_URL)
-    time.sleep(6)
-
-    for i in range(10):
-        pm = page.run_js("return document.querySelectorAll('.ProseMirror').length;")
-        if pm > 0:
-            break
-        time.sleep(1)
-
+def compress_image_to_bytes(data_url, max_width=800):
     try:
-        close_btn = page.ele("text:关闭", timeout=2)
-        if close_btn:
-            close_btn.click()
-            time.sleep(1)
-    except:
-        pass
+        header, b64 = data_url.split(',', 1)
+        img_data = base64.b64decode(b64)
+        img = Image.open(io.BytesIO(img_data))
+        if img.mode in ('RGBA', 'P'): img = img.convert('RGB')
+        w, h = img.size
+        if w > max_width:
+            ratio = max_width / w
+            img = img.resize((max_width, int(h * ratio)), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=80)
+        return buf.getvalue()
+    except: return None
 
-    # === 步骤1: 填标题 + 等待保存 ===
-    print("\n[1] 填标题...")
-    title_el = page.ele('tag:textarea@placeholder=请输入文章标题（2～30个字）', timeout=10)
-    if not title_el:
-        title_el = page.ele('tag:textarea@placeholder:文章标题', timeout=5)
-    title_el.click()
-    time.sleep(0.3)
-    title_el.input(real_title)
-    time.sleep(1)
-    # blur触发保存
-    page.run_js("""
-var el = document.querySelector('textarea[placeholder*="文章标题"]');
-if (el) { el.blur(); el.dispatchEvent(new Event('change', {bubbles: true})); }
-""")
-    print(f"  标题: {real_title}")
+async def upload_images_get_urls(page, img_bytes_list):
+    """上传图片并获取CDN URL"""
+    image_urls = []
+    for img_bytes in img_bytes_list:
+        await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) { e.innerHTML = '<p></p>'; e.dispatchEvent(new Event('input', {bubbles: true})); } }")
+        await asyncio.sleep(0.3)
+        await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) e.focus(); }")
+        await asyncio.sleep(0.3)
+        b64_str = base64.b64encode(img_bytes).decode('ascii')
+        await page.evaluate(f"""
+            () => {{
+                const editor = document.querySelector('.ProseMirror');
+                if (!editor) return;
+                editor.focus();
+                const b64 = "{b64_str}";
+                const byteString = atob(b64);
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                const blob = new Blob([ab], {{type: 'image/jpeg'}});
+                const file = new File([blob], 'img.jpg', {{type: 'image/jpeg'}});
+                const de = new ClipboardEvent('paste', {{bubbles: true, cancelable: true}});
+                const fd = {{files: [file], items: [], types: ['Files'], getData: function() {{ return ''; }}, setData: function() {{}}, clearData: function() {{}}}};
+                Object.defineProperty(de, 'clipboardData', {{value: fd, writable: false, configurable: true}});
+                editor.dispatchEvent(de);
+            }}
+        """)
+        for _ in range(30):
+            await asyncio.sleep(1)
+            if await page.evaluate("() => document.querySelectorAll('.ProseMirror img').length > 0"): break
+        for _ in range(60):
+            await asyncio.sleep(1)
+            url = await page.evaluate("() => { const img = document.querySelector('.ProseMirror img'); return img ? img.src : ''; }")
+            if url and not url.startswith('blob:') and not url.startswith('data:'):
+                image_urls.append(url)
+                break
+        await asyncio.sleep(1)
+    return image_urls
 
-    print("  等待保存...")
-    if wait_for_save(page, 20):
-        print("  [OK] 标题已保存")
-    else:
-        print("  [警告] 标题保存未确认，但继续...")
+async def main():
+    with open(MANIFEST_FILE, "r", encoding="utf-8") as f:
+        articles = json.load(f)
+    with open(COOKIE_FILE, "r", encoding="utf-8") as f:
+        cookies = json.load(f)
 
-    # === 步骤2: 填正文(paste) + 触发保存 ===
-    print("\n[2] 填正文...")
-    page.run_js(f"""
-var editor = document.querySelector('.ProseMirror');
-if (editor) {{
-    editor.focus();
-    editor.innerHTML = '';
-    var dt = new DataTransfer();
-    dt.setData('text/html', {json.dumps(body_html)});
-    editor.dispatchEvent(new ClipboardEvent('paste', {{
-        bubbles: true, cancelable: true, clipboardData: dt
-    }}));
-    editor.dispatchEvent(new Event('input', {{bubbles: true}}));
-    editor.dispatchEvent(new Event('change', {{bubbles: true}}));
-}}
-""")
-    time.sleep(2)
-    chars = page.run_js("return document.querySelector('.ProseMirror').innerText.length;")
-    imgs = page.run_js("return document.querySelectorAll('.ProseMirror img').length;")
-    print(f"  正文: {chars}字, {imgs}张图片")
+    print(f"共 {len(articles)} 篇文章待上传\n{'='*60}")
 
-    # 触发保存：通过修改标题
-    print("  触发保存...")
-    trigger_save_via_title(page)
-    if wait_for_save(page, 20):
-        print("  [OK] 正文已保存")
-    else:
-        print("  [警告] 正文保存未确认")
+    # API session
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "zh-CN,zh;q=0.9",
+        "Referer": "https://mp.toutiao.com/",
+        "Origin": "https://mp.toutiao.com",
+    })
+    for name, value in cookies.items():
+        session.cookies.set(name, value, domain=".toutiao.com", path="/")
 
-    # === 步骤3: 上传封面 + 触发保存 ===
-    print("\n[3] 上传封面图...")
-    valid = [cf for cf in cover_files[:3] if os.path.exists(cf)]
-    if valid:
-        page.run_js("window.scrollTo(0, 0);")
-        time.sleep(1)
-        page.run_js("""
-var cover = document.querySelector('.article-cover');
-if (cover) cover.scrollIntoView({block: 'center'});
-""")
-        time.sleep(2)
-        page.run_js("""
-var radios = document.querySelectorAll('input[type="radio"]');
-for (var i = 0; i < radios.length; i++) {
-    if (radios[i].value === '3') {
-        radios[i].click();
-        radios[i].checked = true;
-        radios[i].dispatchEvent(new Event('change', {bubbles: true}));
-        return;
-    }
-}
-""")
-        time.sleep(3)
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(
+            headless=True, executable_path=CHROME_PATH,
+            args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+        )
+        context = await browser.new_context(
+            viewport={"width": 1920, "height": 1080},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        )
+        cookie_list = [{"name": k, "value": v, "domain": ".toutiao.com", "path": "/"} for k, v in cookies.items()]
+        await context.add_cookies(cookie_list)
+        page = await context.new_page()
 
-        for ci, cf in enumerate(valid):
-            page.run_js("""
-var add = document.querySelector('.article-cover-add');
-if (add) {
-    add.scrollIntoView({block: 'center'});
-    ['mousedown', 'mouseup', 'click'].forEach(function(type) {
-        add.dispatchEvent(new MouseEvent(type, {bubbles: true, cancelable: true, view: window}));
-    });
-}
-""")
-            time.sleep(2)
-            file_input = None
-            for _ in range(15):
-                all_inputs = page.eles('tag:input@type=file')
-                for fi in all_inputs:
-                    try:
-                        if 'image' in (fi.attr('accept') or ''):
-                            if fi.rect.size[0] > 0:
-                                file_input = fi
-                                break
-                    except:
-                        pass
-                if file_input:
-                    break
-                time.sleep(0.5)
-            if file_input:
-                file_input.input(cf)
-                time.sleep(3)
-                print(f"  封面{ci+1}: ✓")
-            else:
-                print(f"  封面{ci+1}: 未找到控件")
+        # 拦截网络请求，捕获 pgc_id
+        pgc_id_captured = []
+        
+        async def handle_response(response):
+            if "/mp/agw/article/new" in response.url and response.status == 200:
+                try:
+                    data = await response.json()
+                    pgc_id = data.get("data", {}).get("pgc_id", "")
+                    if pgc_id:
+                        pgc_id_captured.append(pgc_id)
+                        print(f"  [捕获] pgc_id: {pgc_id}")
+                except: pass
+            # 也捕获可能的 save API 返回
+            if "/mp/agw/article/publish" in response.url and response.status == 200:
+                try:
+                    data = await response.json()
+                    print(f"  [API响应] {json.dumps(data, ensure_ascii=False)[:200]}")
+                except: pass
 
-    # 触发保存
-    print("  触发保存...")
-    trigger_save_via_title(page)
-    if wait_for_save(page, 30):
-        print("  [OK] 封面已保存")
-    else:
-        print("  [警告] 封面保存未确认")
+        page.on("response", handle_response)
 
-    # === 最终验证 ===
-    print("\n[4] 最终验证...")
-    trigger_save_via_title(page)
-    if wait_for_save(page, 30):
-        print("\n[SUCCESS] 草稿保存成功！")
-    else:
-        print("\n检查草稿箱...")
-        page.get("https://mp.toutiao.com/profile_v4/manage/draft")
-        time.sleep(5)
-        draft_text = page.run_js("return document.body.innerText.substring(0, 800);")
-        if real_title[:10] in draft_text:
-            print("[SUCCESS] 文章已在草稿箱中！")
-        else:
-            print("[FAIL] 文章中未找到")
+        # 验证登录
+        await page.goto("https://mp.toutiao.com/profile_v4/manage/draft", wait_until="domcontentloaded", timeout=20000)
+        await asyncio.sleep(2)
+        if "登录" in (await page.title()):
+            print("[ERROR] Cookie已过期")
+            await browser.close()
+            return
+        print("[OK] 登录状态有效\n")
 
-    page.quit()
-    print("DONE")
+        success = 0
+        for i, art in enumerate(articles, 1):
+            title = art["title"]
+            html_path = art["html_file"]
+            paragraphs, images = extract_html_text_and_images(html_path)
+            
+            print(f"[{i}/{len(articles)}] {title}")
+            print(f"  段落: {len(paragraphs)}段, 图片: {len(images)}张")
+
+            img_bytes_list = [compress_image_to_bytes(img) for img in images if compress_image_to_bytes(img)]
+            print(f"  压缩: {len(img_bytes_list)}张")
+
+            # 导航到发布页面
+            pgc_id_captured.clear()
+            await page.goto("https://mp.toutiao.com/profile_v4/graphic/publish", wait_until="domcontentloaded", timeout=20000)
+            await asyncio.sleep(3)
+
+            # 关闭弹窗
+            try:
+                for btn_text in ["关闭", "不恢复", "取消"]:
+                    btn = page.locator(f"button:has-text('{btn_text}')").first
+                    if await btn.is_visible(timeout=2000):
+                        await btn.click()
+                        await asyncio.sleep(1)
+                # 关闭 drawer
+                mask = page.locator(".byte-drawer-mask").first
+                if await mask.is_visible(timeout=2000):
+                    await page.evaluate("() => { const m = document.querySelector('.byte-drawer-mask'); if(m) m.remove(); }")
+            except: pass
+
+            try:
+                await page.wait_for_selector(".ProseMirror", timeout=15000)
+            except:
+                print("  [ERROR] 编辑器未就绪")
+                continue
+
+            # 填标题
+            title_el = page.locator('textarea[placeholder*="文章标题"]').first
+            await title_el.fill(title)
+            await asyncio.sleep(2)
+
+            # 上传图片
+            image_urls = await upload_images_get_urls(page, img_bytes_list)
+            print(f"  图片URL: {len(image_urls)}个")
+
+            # 清除编辑器
+            editor = page.locator(".ProseMirror").first
+            await editor.click()
+            await asyncio.sleep(0.3)
+            await page.keyboard.press("Control+a")
+            await asyncio.sleep(0.3)
+            await page.keyboard.press("Backspace")
+            await asyncio.sleep(0.5)
+
+            # 构建HTML内容
+            content_parts = []
+            img_idx, n_imgs = 0, len(image_urls)
+            image_layout = {1: 1, 3: 2, 5: 2} if n_imgs >= 5 else ({1: 1, 3: 2} if n_imgs >= 3 else {1: 1})
+            for para_idx, para_text in enumerate(paragraphs):
+                content_parts.append(f"<p>{para_text}</p>")
+                if (para_idx + 1) in image_layout:
+                    for _ in range(image_layout[para_idx + 1]):
+                        if img_idx < n_imgs and image_urls[img_idx]:
+                            content_parts.append(f'<p><img src="{image_urls[img_idx]}" alt=""></p>')
+                            img_idx += 1
+
+            content_html = "\n".join(content_parts)
+            word_count = sum(len(p) for p in paragraphs)
+
+            # 获取 pgc_id
+            pgc_id = pgc_id_captured[0] if pgc_id_captured else ""
+            if not pgc_id:
+                # 尝试从页面获取
+                pgc_id = await page.evaluate("""
+                    () => {
+                        // 尝试从各种可能的位置获取 pgc_id
+                        const url = new URL(window.location.href);
+                        const fromUrl = url.searchParams.get('pgc_id') || '';
+                        if (fromUrl) return fromUrl;
+                        // 尝试从 window.__INITIAL_STATE__ 获取
+                        const state = window.__INITIAL_STATE__;
+                        if (state && state.article && state.article.pgc_id) return state.article.pgc_id;
+                        return '';
+                    }
+                """)
+            
+            if not pgc_id:
+                print(f"  [WARN] 未获取到pgc_id，尝试API获取")
+                resp = session.get("https://mp.toutiao.com/mp/agw/article/new", params={
+                    "article_type": 0, "format": "json", "compat": 1, "column_no": "",
+                })
+                try:
+                    data = resp.json()
+                    pgc_id = data.get("data", {}).get("pgc_id", "")
+                except: pass
+
+            if not pgc_id:
+                print(f"  [ERROR] 无法获取pgc_id，跳过")
+                continue
+
+            print(f"  pgc_id: {pgc_id}")
+
+            # 通过API保存
+            csrf = session.cookies.get('passport_csrf_token', '')
+            extra = json.dumps({"content_source": 100000000402, "content_word_cnt": word_count})
+            
+            form_data = {
+                "article_type": "0", "pgc_id": pgc_id, "source": "29",
+                "title": title, "content": content_html, "save": "0",
+                "entrance": "main", "timer_status": "0", "timer_time": "",
+                "extra": extra, "title_id": "", "ic_uri_list": "[]",
+                "search_creation_info": "", "is_refute_rumor": "0",
+                "appid_list": "[]", "stock_ids": "[]", "concern_list": "[]",
+                "comic_attr": "", "is_app_preview": "", "externalLinkChecked": "false",
+                "externalLink": "", "claimOrigin": "0", "copyRightChecked": "1",
+                "subTitle": "", "subCoverList": "[]", "coverList": "[]",
+                "coverType": "0", "articleAdType": "0", "isFansArticle": "0",
+                "activityId": "", "communitySync": "0",
+            }
+
+            print(f"  API保存 ({word_count}字, {n_imgs}图)...")
+            try:
+                resp = session.post(
+                    "https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231",
+                    data=form_data,
+                    headers={"Content-Type": "application/x-www-form-urlencoded", "X-CSRFToken": csrf},
+                )
+                result = resp.json()
+                code = result.get('code', -1)
+                msg = result.get('message', '')
+                if code == 0 or msg == 'success':
+                    print(f"  [SUCCESS] 保存成功!")
+                    success += 1
+                else:
+                    print(f"  [FAIL] code={code}, msg={msg}")
+                    print(f"  响应: {resp.text[:300]}")
+            except Exception as e:
+                print(f"  [ERROR] {e}")
+
+            await asyncio.sleep(2)
+
+        await browser.close()
+
+    # 验证
+    print(f"\n{'='*60}")
+    print(f"验证草稿箱...")
+    resp = session.get("https://mp.toutiao.com/profile_v4/manage/draft")
+    draft_count = resp.text.count('编辑删除')
+    print(f"  草稿箱文章数(估算): {draft_count}")
+    print(f"上传完成: {success}/{len(articles)} 篇")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

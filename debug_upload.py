@@ -1,220 +1,222 @@
-# -*- coding: utf-8 -*-
-"""调试上传：监控网络请求，深入分析保存失败原因"""
-import os, json, time, re
-from DrissionPage import ChromiumPage, ChromiumOptions
+#!/usr/bin/env python
+"""Debug: check if content is properly set in editor"""
+import os, re, json, base64, asyncio, io
+from playwright.async_api import async_playwright
+from PIL import Image
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_FILE = os.path.join(BASE_DIR, "toutiao_cookies.json")
-MANIFEST_FILE = os.path.join(BASE_DIR, "single_manifest.json")
+MANIFEST_FILE = os.path.join(BASE_DIR, "output", "batch_manifest_tt.json")
+CHROME_PATH = "/root/.cache/puppeteer/chrome/linux-151.0.7922.71/chrome-linux64/chrome"
 
-with open(COOKIE_FILE, "r", encoding="utf-8") as f:
-    cookies = json.load(f)
+def extract_html_text_and_images(html_path):
+    with open(html_path, "r", encoding="utf-8") as f:
+        html = f.read()
+    paragraphs = []
+    images = []
+    for m in re.finditer(r'<p>([^<]+)</p>', html):
+        text = m.group(1).strip()
+        if text:
+            paragraphs.append(text)
+    for m in re.finditer(r'<img[^>]*src="(data:image/[^"]*)"', html):
+        images.append(m.group(1))
+    return paragraphs, images
 
-with open(MANIFEST_FILE, "r", encoding="utf-8") as f:
-    manifest = json.load(f)
-
-art = manifest[0]
-title = art["title"]
-html_path = art["html_file"]
-
-print(f"文章: {title}")
-print(f"HTML: {html_path}")
-
-# 启动浏览器
-co = ChromiumOptions()
-co.headless(True)
-co.set_argument("--no-sandbox")
-co.set_argument("--disable-gpu")
-
-page = ChromiumPage(co)
-page.get("https://mp.toutiao.com")
-time.sleep(2)
-
-for name, value in cookies.items():
+def compress_image_to_bytes(data_url, max_width=800):
     try:
-        page.set.cookies({"name": name, "value": value, "domain": ".toutiao.com", "path": "/"})
-    except Exception:
-        pass
+        header, b64 = data_url.split(',', 1)
+        img_data = base64.b64decode(b64)
+        img = Image.open(io.BytesIO(img_data))
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+        w, h = img.size
+        if w > max_width:
+            ratio = max_width / w
+            img = img.resize((max_width, int(h * ratio)), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format='JPEG', quality=80)
+        return buf.getvalue()
+    except:
+        return None
 
-page.get("https://mp.toutiao.com/profile_v4/graphic/publish")
-time.sleep(4)
+async def debug_article(page, art, tag):
+    title = art["title"]
+    html_path = art["html_file"]
+    paragraphs, images = extract_html_text_and_images(html_path)
+    print(f"  {tag}: {len(paragraphs)}段, {len(images)}张图")
 
-# 关闭弹窗
-try:
-    close_btn = page.ele('text:关闭', timeout=2)
-    if close_btn:
-        close_btn.click()
-        time.sleep(1)
-except Exception:
-    pass
+    img_bytes_list = []
+    for img in images:
+        compressed = compress_image_to_bytes(img)
+        if compressed:
+            img_bytes_list.append(compressed)
 
-# 注入fetch和XHR拦截器
-page.run_js("""
-window.__apiLogs = [];
+    await page.goto("https://mp.toutiao.com/profile_v4/graphic/publish", wait_until="domcontentloaded", timeout=30000)
+    await asyncio.sleep(3)
 
-// 拦截 fetch
-var originalFetch = window.fetch;
-window.fetch = function(url, options) {
-    var urlStr = typeof url === 'string' ? url : (url.url || '');
-    var method = (options && options.method) || 'GET';
-    var body = (options && options.body) ? options.body.substring(0, 500) : '';
-    var logEntry = {url: urlStr, method: method, time: new Date().toISOString(), type: 'fetch'};
-    window.__apiLogs.push(logEntry);
-    return originalFetch.apply(this, arguments).then(function(response) {
-        var clone = response.clone();
-        clone.text().then(function(text) {
-            logEntry.status = response.status;
-            logEntry.response = text.substring(0, 500);
-        }).catch(function(){});
-        return response;
-    });
-};
+    try:
+        await page.wait_for_selector(".ProseMirror", timeout=15000)
+    except:
+        print("  Editor not ready")
+        return
 
-// 拦截 XHR
-var origXHROpen = XMLHttpRequest.prototype.open;
-XMLHttpRequest.prototype.open = function(method, url) {
-    this._method = method;
-    this._url = typeof url === 'string' ? url : (url.toString ? url.toString() : '');
-    return origXHROpen.apply(this, arguments);
-};
-var origXHRSend = XMLHttpRequest.prototype.send;
-XMLHttpRequest.prototype.send = function(body) {
-    var xhr = this;
-    var urlStr = xhr._url || '';
-    var method = xhr._method || 'GET';
-    var logEntry = {url: urlStr, method: method, time: new Date().toISOString(), type: 'xhr'};
-    if (body) {
-        if (typeof body === 'string') {
-            logEntry.reqBody = body.substring(0, 3000);
-        } else if (body instanceof FormData) {
-            var parts = [];
-            body.forEach(function(v, k) { parts.push(k + '=' + (typeof v === 'string' ? v.substring(0, 200) : '[binary]')); });
-            logEntry.reqBody = 'FormData: ' + parts.join('&').substring(0, 3000);
-        } else {
-            logEntry.reqBody = 'typeof=' + typeof body;
+    # Fill title
+    title_el = page.locator('textarea[placeholder*="文章标题"]').first
+    await title_el.fill(title)
+    await asyncio.sleep(2)
+
+    # Upload images
+    editor = page.locator(".ProseMirror").first
+    image_urls = []
+    for img_bytes in img_bytes_list:
+        await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) { e.innerHTML = '<p></p>'; e.dispatchEvent(new Event('input', {bubbles: true})); } }")
+        await asyncio.sleep(0.3)
+        await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) e.focus(); }")
+        await asyncio.sleep(0.3)
+        b64_str = base64.b64encode(img_bytes).decode('ascii')
+        await page.evaluate(f"""
+            () => {{
+                const editor = document.querySelector('.ProseMirror');
+                if (!editor) return;
+                editor.focus();
+                const b64 = "{b64_str}";
+                const byteString = atob(b64);
+                const ab = new ArrayBuffer(byteString.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+                const blob = new Blob([ab], {{type: 'image/jpeg'}});
+                const file = new File([blob], 'img.jpg', {{type: 'image/jpeg'}});
+                const pasteEvent = new ClipboardEvent('paste', {{bubbles: true, cancelable: true}});
+                const fakeData = {{files: [file], items: [], types: ['Files'], getData: function() {{ return ''; }}, setData: function() {{}}, clearData: function() {{}}}};
+                Object.defineProperty(pasteEvent, 'clipboardData', {{value: fakeData, writable: false, configurable: true}});
+                editor.dispatchEvent(pasteEvent);
+            }}
+        """)
+        for _ in range(30):
+            await asyncio.sleep(1)
+            has_img = await page.evaluate("() => document.querySelectorAll('.ProseMirror img').length > 0")
+            if has_img:
+                break
+        for _ in range(60):
+            await asyncio.sleep(1)
+            url = await page.evaluate("() => { const img = document.querySelector('.ProseMirror img'); return img ? img.src : ''; }")
+            if url and not url.startswith('blob:') and not url.startswith('data:'):
+                image_urls.append(url)
+                break
+        await asyncio.sleep(1)
+
+    print(f"  Got {len(image_urls)} image URLs")
+
+    # Clear editor
+    await editor.click()
+    await asyncio.sleep(0.3)
+    await page.keyboard.press("Control+a")
+    await asyncio.sleep(0.3)
+    await page.keyboard.press("Backspace")
+    await asyncio.sleep(0.5)
+
+    # Build content
+    content_parts = []
+    img_idx = 0
+    n_imgs = len(image_urls)
+    image_layout = {1: 1, 3: 2, 5: 2} if n_imgs >= 5 else ({1: 1, 3: 2} if n_imgs >= 3 else {1: 1})
+    for para_idx, para_text in enumerate(paragraphs):
+        content_parts.append(f"<p>{para_text}</p>")
+        target_para = para_idx + 1
+        if target_para in image_layout:
+            for _ in range(image_layout[target_para]):
+                if img_idx < n_imgs and image_urls[img_idx]:
+                    content_parts.append(f'<p><img src="{image_urls[img_idx]}" alt=""></p>')
+                    img_idx += 1
+
+    content_html = "\n".join(content_parts)
+    print(f"  Content HTML length: {len(content_html)}")
+
+    # Method 1: innerHTML
+    await page.evaluate("""
+        (content) => {
+            const editor = document.querySelector('.ProseMirror');
+            if (editor) {
+                editor.innerHTML = content;
+                editor.dispatchEvent(new Event('input', {bubbles: true}));
+            }
         }
-    }
-    window.__apiLogs.push(logEntry);
-    xhr.addEventListener('load', function() {
-        logEntry.status = xhr.status;
-        logEntry.response = (xhr.responseText || '').substring(0, 500);
-    });
-    return origXHRSend.apply(this, arguments);
-};
+    """, content_html)
+    await asyncio.sleep(3)
 
-console.log('[DEBUG] fetch + XHR interceptors installed');
-""")
+    # Check what's in the editor
+    editor_html = await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); return e ? e.innerHTML.substring(0, 500) : 'NO EDITOR'; }")
+    editor_text = await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); return e ? e.innerText.substring(0, 500) : 'NO EDITOR'; }")
+    print(f"  Editor innerHTML (first 500): {editor_html}")
+    print(f"  Editor innerText (first 500): {editor_text}")
 
-# 填写标题
-print("\n[1] 填写标题...")
-title_text = title[:30]
-title_el = page.ele('tag:textarea@placeholder=请输入文章标题（2～30个字）', timeout=10)
-if not title_el:
-    title_el = page.ele('tag:textarea@placeholder:文章标题', timeout=5)
-if title_el:
-    title_el.clear()
-    title_el.input(title_text)
-    time.sleep(0.5)
-    # 触发React事件
-    page.run_js("""
-var el = document.querySelector('textarea[placeholder*="文章标题"]');
-if (el) {
-    el.dispatchEvent(new Event('blur', {bubbles: true}));
-    el.dispatchEvent(new Event('change', {bubbles: true}));
-    el.dispatchEvent(new Event('input', {bubbles: true}));
-}
-""")
-    print(f"  标题: {title_text}")
-else:
-    print("  找不到标题输入框")
+    await page.screenshot(path=f"/workspace/debug_{tag}_after_set.png", full_page=False)
+    print(f"  Screenshot saved: debug_{tag}_after_set.png")
 
-# 填写正文
-print("\n[2] 填写正文...")
-with open(html_path, "r", encoding="utf-8") as f:
-    html = f.read()
+    # Trigger save
+    await editor.click()
+    await asyncio.sleep(0.5)
+    await page.keyboard.press("End")
+    await asyncio.sleep(0.3)
+    await page.keyboard.type(" ", delay=50)
+    await asyncio.sleep(0.3)
+    await page.keyboard.press("Backspace")
+    await asyncio.sleep(0.5)
 
-# 提取body内容
-body_match = re.search(r'<body[^>]*>(.*?)</body>', html, re.DOTALL)
-if body_match:
-    body = body_match.group(1)
-    result_parts = []
-    for m in re.finditer(
-        r'(<p>(.*?)</p>)|'
-        r'(<div\s+class="img-wrap">\s*<img[^>]*src="(data:image/[^"]*;base64,[^"]*)"[^>]*>\s*</div>)',
-        body, re.DOTALL
-    ):
-        if m.group(1):
-            para_text = m.group(2)
-            para_text = re.sub(r'<[^>]+>', '', para_text)
-            result_parts.append(f'<p>{para_text}</p>')
-        elif m.group(4):
-            result_parts.append(f'<p><img src="{m.group(4)}" /></p>')
-    
-    body_html = "\n".join(result_parts)
-    
-    result = page.run_js(f"""
-var editor = document.querySelector('.ProseMirror');
-if (!editor) return 'not_found';
-editor.innerHTML = '';
-editor.focus();
-var dt = new DataTransfer();
-dt.setData('text/html', {json.dumps(body_html)});
-var pasteEvent = new ClipboardEvent('paste', {{
-  bubbles: true,
-  cancelable: true,
-  clipboardData: dt
-}});
-editor.dispatchEvent(pasteEvent);
-return 'ok';
-""")
-    print(f"  正文结果: {result}")
-    
-    # 检查内容
-    para_count = page.run_js("return document.querySelectorAll('.ProseMirror p').length;")
-    img_count = page.run_js("return document.querySelectorAll('.ProseMirror img').length;")
-    print(f"  段落数: {para_count}, 图片数: {img_count}")
+    # Check if save button exists
+    save_btns = await page.evaluate("""
+        () => {
+            const btns = document.querySelectorAll('button');
+            return Array.from(btns).map(b => b.innerText).filter(t => t.includes('存') || t.includes('保存') || t.includes('草稿'));
+        }
+    """)
+    print(f"  Save buttons found: {save_btns}")
 
-# 等待自动保存
-print("\n[3] 等待并监控保存...")
-for i in range(15):
-    time.sleep(2)
-    status = page.run_js("""
-var body = document.body.innerText;
-var results = [];
-if (body.indexOf('草稿已保存') !== -1) results.push('SAVED: 草稿已保存');
-if (body.indexOf('已保存') !== -1) results.push('SAVED: 已保存');
-if (body.indexOf('保存成功') !== -1) results.push('SAVED: 保存成功');
-if (body.indexOf('草稿保存中') !== -1) results.push('SAVING: 草稿保存中');
-if (body.indexOf('保存失败') !== -1) results.push('FAIL: 保存失败');
+    # Wait for save
+    for _ in range(30):
+        await asyncio.sleep(1)
+        saved = await page.evaluate("() => { const b = document.body.innerText || ''; return b.includes('草稿已保存') || b.includes('保存成功') || b.includes('已保存'); }")
+        if saved:
+            print(f"  Save confirmed!")
+            break
+    else:
+        print(f"  Save NOT confirmed")
 
-// 获取API日志（只显示publish相关的）
-var apiLogs = window.__apiLogs || [];
-var saveLogs = [];
-for (var j = 0; j < apiLogs.length; j++) {
-    var log = apiLogs[j];
-    if (log.url.indexOf('publish') !== -1 || log.url.indexOf('save') !== -1) {
-        saveLogs.push(log.method + ' ' + log.url.substring(0, 80) + ' status=' + (log.status || 'pending') + ' reqBody=' + (log.reqBody || 'none').substring(0, 300) + ' resp=' + (log.response || 'none').substring(0, 200));
-    }
-}
-if (results.length === 0) results.push('idle');
-results.push('API_LOGS: ' + (saveLogs.length > 0 ? saveLogs.join(' | ') : 'none'));
-return results.join('\\n');
-""")
-    print(f"  [{i+1}] {status}")
-    if 'SAVED' in status:
-        break
+    await page.screenshot(path=f"/workspace/debug_{tag}_after_save.png", full_page=False)
+    print(f"  Screenshot saved: debug_{tag}_after_save.png")
 
-# 查看所有API日志
-print("\n[4] 所有API日志:")
-all_logs = page.run_js("""
-var logs = window.__apiLogs || [];
-var results = [];
-for (var i = 0; i < logs.length; i++) {
-    var log = logs[i];
-    results.push(log.method + ' ' + log.url.substring(0, 100) + ' status=' + (log.status || 'pending'));
-}
-return results.join('\\n');
-""")
-print(all_logs)
+async def main():
+    with open(MANIFEST_FILE, "r", encoding="utf-8") as f:
+        articles = json.load(f)
+    with open(COOKIE_FILE, "r", encoding="utf-8") as f:
+        cookies = json.load(f)
 
-page.quit()
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(
+            headless=True,
+            executable_path=CHROME_PATH,
+            args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+        )
+        context = await browser.new_context(
+            viewport={"width": 1920, "height": 1080},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        )
+        cookie_list = [{"name": k, "value": v, "domain": ".toutiao.com", "path": "/"} for k, v in cookies.items()]
+        await context.add_cookies(cookie_list)
+        page = await context.new_page()
+
+        await page.goto("https://mp.toutiao.com/profile_v4/manage/draft", wait_until="domcontentloaded", timeout=20000)
+        await asyncio.sleep(2)
+        print("[OK] Logged in\n")
+
+        # Debug article 1 (fails)
+        print("=== DEBUG Article 1 ===")
+        await debug_article(page, articles[0], "art1")
+
+        # Debug article 2 (succeeds)
+        print("\n=== DEBUG Article 2 ===")
+        await debug_article(page, articles[1], "art2")
+
+        await browser.close()
+
+asyncio.run(main())
