@@ -1,0 +1,41 @@
+{
+  "银行能办结婚证了": {
+    "index": 1,
+    "category": "娱乐",
+    "source": "头条(1张) + 微博(4张)",
+    "image_paths": [
+      "/workspace/output/body_imgs/body_img_1_1.jpg",
+      "/workspace/output/body_imgs/body_img_1_2.jpg",
+      "/workspace/output/body_imgs/body_img_1_3.jpg",
+      "/workspace/output/body_imgs/body_img_1_4.jpg",
+      "/workspace/output/body_imgs/body_img_1_5.jpg"
+    ],
+    "image_count": 5
+  },
+  "中国男篮热身赛险胜乌拉圭": {
+    "index": 2,
+    "category": "体育",
+    "source": "头条(1张) + 新闻图片(4张)",
+    "image_paths": [
+      "/workspace/output/body_imgs/body_img_2_1.jpg",
+      "/workspace/output/body_imgs/body_img_2_2.jpg",
+      "/workspace/output/body_imgs/body_img_2_3.jpg",
+      "/workspace/output/body_imgs/body_img_2_4.jpg",
+      "/workspace/output/body_imgs/body_img_2_5.jpg"
+    ],
+    "image_count": 5
+  },
+  "深圳高温达极端等级": {
+    "index": 3,
+    "category": "社会",
+    "source": "头条(1张) + 微博(2张) + 新闻图片(2张)",
+    "image_paths": [
+      "/workspace/output/body_imgs/body_img_3_1.jpg",
+      "/workspace/output/body_imgs/body_img_3_2.jpg",
+      "/workspace/output/body_imgs/body_img_3_3.jpg",
+      "/workspace/output/body_imgs/body_img_3_4.jpg",
+      "/workspace/output/body_imgs/body_img_3_5.jpg"
+    ],
+    "image_count": 5
+  }
+}

@@ -1,0 +1,69 @@
+// 保存3篇文章到草稿箱（在浏览器中运行）
+// 在mp.toutiao.com页面执行此脚本
+
+return (async function() {
+    var articles = [
+        {"index":1,"title":"银行也能领证了，结婚变简单，婚姻就轻了？","content":"<p>周末的银行大厅里，一对年轻人站在柜台前，手里拿的不是存折，而是户口本。他们不是来办贷款的，是来领结婚证的。这画面放在几年前，谁听了都觉得离谱，可如今，银行真的能办结婚证了。消息一出，网上直接炸了锅，有人拍手叫好，也有人摇头叹气。</p>\n<p>事情本身不复杂。多地开始试点，把婚姻登记窗口搬进了银行网点，周末也能办，不用再专门请假跑民政局。初衷没毛病，方便群众嘛。可问题在于，评论区的反应比政策本身精彩得多。有人说，结婚少不是因为办证麻烦，是因为房子、彩礼、五金压得人喘不过气。就算上门办证，也改变不了年轻人不敢结婚的现实。话说得扎心，但确实是大实话。</p>\n<p>把结婚登记搬到银行，这个选址本身就挺耐人寻味的。银行是管钱的地方，结婚证是管感情的凭证。两者搁一块，总让人忍不住多想一层。有网友调侃说，以后离婚证是不是也能在银行领？还有人说，在银行领证，寓意不太好，结婚老离不开钱。这些玩笑话背后，其实是大家对婚姻越来越务实的焦虑。</p>\n<p>说到底，简化办证流程是好事，但它解决不了真正让年轻人恐婚的原因。房价高企、养育成本居高不下、职场对已婚未育女性的隐形歧视，这些才是压在婚育意愿上的大山。搬个窗口就能提高结婚率，那也太看得起一张结婚证的分量了。</p>\n<p>换个角度看，银行能办结婚证也折射出一些有意思的变化。公共服务正在从坐等上门变成主动触达，这是好事。但婚姻这件事，从来不是一道行政手续题。它需要两个人准备好共同面对生活里的一切，需要经济基础，需要情感支撑，需要彼此愿意为对方妥协和坚持。这些都不是换个窗口就能解决的。</p>\n<p>说到底，银行能办结婚证，只是换了个地方盖章，换不了婚姻的分量。真正该被看见的，不是场景，而是责任和担当。你觉得办证变方便了，会让人更愿意结婚吗？</p>","word_cnt":709},
+        {"index":2,"title":"男篮险胜乌拉圭，三分投疯了，防守还是软肋","content":"<p>比分定格在83比78，终场哨响的那一刻，中国男篮的球员们没有太多庆祝。一场热身赛，对手是乌拉圭，赢得磕磕绊绊。贺希宁扔进4记三分，焦泊乔在替补席上打出了梦幻脚步，可看完比赛的人心里都清楚，要不是三分命中率飙到40%，这场球未必拿得下来。</p>\n<p>先说好的那一面。进攻端确实比之前敢打了，不再是过半场就找外援、没人敢出手的尴尬局面。贺希宁手感发烫，全场最高分，三分线外接球就投，毫不拖泥带水。焦泊乔替补出场砍下14分，低位脚步、接球劈扣、对抗后2+1，远投近筐全在线，在胡金秋下场休息时撑起了内线得分。郭士强赛后说他打出了可喜的变化，这话一点不夸张。</p>\n<p>但问题也很明显。防守端漏洞不少，乌拉圭一个简单的传切配合，就能找到空位。第三节球队进攻断电，被对手打出一波11比1反超，这已经是老毛病了。领先时容易松懈，一松懈就丢分，一丢分就慌，一慌就更乱。这种连锁反应，放在热身赛可以靠手感补救，放到正式比赛里就是致命的。</p>\n<p>裁判的哨子也成了赛后球迷讨论的焦点。主场哨明显，乌拉圭球员几次明显的身体对抗没吹，反过来中国队稍微碰一下就响哨。有球迷说得直白：看了全程直播，裁判偏哨明显，赢得很无聊。热身赛的目的本来是为了练兵，如果裁判的尺度不统一，练兵的效果就要打个折扣。球队需要的是适应高强度对抗，不是适应主场哨的保护。</p>\n<p>把目光放远一点，这场热身赛只是前菜。世预赛中国队3胜3负，F组排第五，8月27号就要客场打卡塔尔，容错率基本为零。曾凡博因为腿伤积水已经离队，杨瀚森8月中旬才归队，人员都不齐整。郭士强手上的牌本来就不多，每一场热身赛都是在为世预赛摸底。输赢不是最重要的，找到问题、解决问题才是关键。</p>\n<p>赢球当然值得高兴，尤其是看到年轻球员敢打敢拼的样子。但球迷要的不是一场热身赛的胜利，而是在亚洲赛场甚至世界赛场上能挺直腰杆。防守质量能不能提上来，心态能不能稳住，这些才是决定中国男篮能走多远的东西。你觉得这届男篮最大的问题，是进攻不够还是防守不稳？</p>","word_cnt":809},
+        {"index":3,"title":"深圳高温破纪录，手机只报35度，体感却超40","content":"<p>42度。这是昨天下午两点，深圳一辆停在路边的车顶上测出来的温度。同一时间，手机上的天气预报写着35度。7度的温差，不是仪表盘坏了，是体感温度和标准气温之间的真实差距。深圳高温达到极端等级的消息冲上热搜，一条高赞留言点破了大家的困惑：现在的天气预报压根不敢报真的。</p>\n<p>气象部门的解释其实很标准：气温测量有统一规范，离地1.5米、通风遮阳、草坪开阔环境下的空气温度，全球通用。你车顶上的温度、马路上的体感温度、手机在太阳底下晒出来的读数，都不算标准气温。道理谁都懂，但热是真的热。当你在没有空调的公交站等车，衣服湿透贴在背上，谁还在乎那个百叶箱里的温度到底是多少度。</p>\n<p>网友的讨论里藏着不少现实问题。有人说，天气预报报不到40度是因为到了40度就要触发高温停工、高温补贴，所以不能报。这种说法未必准确，但反映出一种普遍的不信任。当数据跟实际感受对不上，大家自然会往坏处想。广东今年躲过了凉夏，却迎来了酷秋，35度以上的天气连着一周不带停，体感温度更是直奔40度往上。这种天气出门，就是在跟太阳赌命。</p>\n<p>高温之下，城市的运转模式也在悄悄改变。外卖骑手中午时段订单暴增，但平台的高温补贴有多少能真正落到骑手手里，一直是个问号。环卫工人、建筑工人、快递员，这些必须在户外工作的人，每天顶着烈日干活，防护措施到底够不够？一座城市的温度，从来不止是天气预报里的那个数字，还体现在它对高温下劳动者的保障力度上。</p>\n<p>气候变化让极端天气越来越频繁。过去几年，多个城市经历了破纪录的高温，深圳这次只是其中之一。高温不是一两天的事，而是持续性的考验。城市基础设施能不能扛住，电网负荷够不够，老年人、户外工作者这些脆弱群体有没有保障，每一个问题都等不起。等天气凉快了再去想，就晚了。</p>\n<p>空调能吹凉一间屋子，但吹不凉一座城市。深圳这次高温，与其说是天气的极端，不如说是城市治理的考卷。下一次高温来袭，能不能让数字更贴近真实感受，能不能让烈日下的劳动者多一份保障，这些才是真正该被追问的事情。你所在的城市今天多少度，体感还好吗？</p>","word_cnt":839}
+    ];
+    
+    var SAVE_URL = 'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0';
+    var results = [];
+    
+    for (var i = 0; i < articles.length; i++) {
+        var art = articles[i];
+        try {
+            var extra = {
+                content_source: '100000000402',
+                content_word_cnt: art.word_cnt,
+                is_multi_title: 0,
+                sub_titles: [],
+                gd_ext: {entrance: '', from_page: 'publisher_mp', enter_from: 'PC', device_platform: 'mp', is_message: 0},
+                tuwen_wtt_transfer_switch: '1'
+            };
+            var ts = Date.now();
+            var formData = new URLSearchParams();
+            formData.append('source', '29');
+            formData.append('extra', JSON.stringify(extra));
+            formData.append('content', art.content);
+            formData.append('title', art.title);
+            formData.append('search_creation_info', JSON.stringify({searchTopOne:0, abstract:'', clue_id:''}));
+            formData.append('title_id', ts + '_' + (ts * 1000));
+            formData.append('mp_editor_stat', '{}');
+            formData.append('is_refute_rumor', '0');
+            formData.append('save', '0');
+            formData.append('entrance', '');
+            formData.append('timer_status', '0');
+            formData.append('timer_time', '');
+            formData.append('educluecard', '');
+            formData.append('draft_form_data', JSON.stringify({coverType:3}));
+            formData.append('pgc_feed_covers', '[]');
+            formData.append('article_ad_type', '3');
+            formData.append('claim_exclusive', '0');
+            formData.append('is_fans_article', '0');
+            formData.append('govern_forward', '0');
+            formData.append('praise', '0');
+            formData.append('disable_praise', '0');
+            formData.append('tree_plan_article', '0');
+            formData.append('star_order_id', '');
+            formData.append('star_order_name', '');
+            formData.append('customer_nick_name', '');
+            formData.append('link_show_type', '0');
+            
+            var resp = await fetch(SAVE_URL, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: formData.toString(),
+                credentials: 'include'
+            });
+            var data = await resp.json();
+            results.push({index: art.index, code: data.code, message: data.message, pgc_id: data.data?.pgc_id});
+            console.log('Article ' + art.index + ': code=' + data.code + ', pgc_id=' + (data.data?.pgc_id || 'N/A'));
+        } catch (e) {
+            results.push({index: art.index, error: e.message});
+            console.log('Article ' + art.index + ' ERROR: ' + e.message);
+        }
+    }
+    return JSON.stringify(results);
+})();
