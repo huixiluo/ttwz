@@ -11,22 +11,23 @@ COOKIE_FILE = os.path.join(BASE_DIR, "toutiao_cookies.json")
 PUBLISH_URL = "https://mp.toutiao.com/profile_v4/graphic/publish"
 DRAFT_URL = "https://mp.toutiao.com/profile_v4/manage/draft"
 IMAGE_COUNT = 5
-IMAGE_LAYOUT = {1: 1, 3: 2, 5: 2}
 
 def dlog(msg):
     print(f"  [{time.strftime('%H:%M:%S')}] {msg}")
 
 def author_article(keyword, posts_text):
-    """直接编辑器撰写文章（基于抓取的头条话题文本）"""
+    """直接编辑器撰写文章（基于抓取的头条话题文本）
+    遵守skill约束：
+    - 开头7种技巧，禁用"刷到/看到/点开+热搜"等模板
+    - >600字，6-8段
+    - 无AI味，无儿化音
+    """
     # 从抓取的素材中提取关键信息
     snippets = []
     for p in (posts_text or []):
         t = p.get("text", "").strip()
         if t and len(t) > 15:
             snippets.append(t)
-
-    # 组合素材摘要
-    material = "\n".join(snippets[:5]) if snippets else keyword
 
     # 根据素材生成三段式标题（<=25字）
     kw = keyword.strip()
@@ -39,24 +40,34 @@ def author_article(keyword, posts_text):
     if len(title) > 25:
         title = title[:25]
 
-    # 根据素材生成文章（>600字）
-    p1 = f'刚才刷到一条消息，{kw}。说实话，第一眼看到这个标题，我愣了几秒，然后赶紧点进去看了详情。'
-
+    # 开头：用"细节切入"或"场景切入"，禁止"刷到/看到/点开+热搜"
     if snippets:
-        p2 = f'据了解，事情的经过大概是这样的。{snippets[0][:100]}'
-        if len(snippets) > 1:
-            p2 += f' 另有网友提到，{snippets[1][:80]}'
-        p2 += ' 光看这些描述，就能感受到事情不简单。'
+        # 细节切入：从最抓人的素材细节开始
+        first_snippet = snippets[0][:80]
+        p1 = f'{first_snippet}。这几个字看着不起眼，但仔细一琢磨，背后的东西比想象中复杂得多。'
     else:
-        p2 = f'说起来，{kw}这个话题，其实不是突然冒出来的。仔细了解之后才发现，里面的门道比想象中多得多。有网友分享了自己的经历，也有人从不同角度分析了这件事，评论区各种观点碰撞。'
+        # 场景切入：具体生活场景
+        p1 = f'下午三点，手机屏幕亮了一下，推送栏弹出一行字：{kw}。放下手机，我盯着窗外发了一会儿呆。'
 
-    p3 = f'其实类似的事情，之前也不是没出现过。只不过这次热度更高，传播更广，引发了更多人的关注。从目前公开的信息来看，大家关注的点并不一致。有人在意过程，有人在意结果，还有人从这件事延伸到了更深层的话题讨论。这就导致评论区各种观点碰撞，谁也说服不了谁。'
+    # 第二段：展开事件背景
+    if snippets and len(snippets) > 1:
+        p2 = f'有网友梳理了事情的来龙去脉。{snippets[1][:100]} 另有人补充了不同角度的信息，评论区很快分成几派，各说各的理。'
+    elif snippets:
+        p2 = f'把事情的来龙去脉拼凑起来，大概是这样的。{snippets[0][:100]} 信息不算多，但足够让人产生一堆问号。'
+    else:
+        p2 = f'把事情的前因后果捋了一遍，发现里面牵扯的环节不少。{kw}，光看字面意思可能觉得简单，实际往深了挖，每层都有说道。'
 
-    p4 = f'老实讲，现在热搜来得快去得也快。今天大家还在讨论{kw}，明天可能就被新的话题盖过去了。但这并不意味着这事不值得关注。恰恰相反，正因为信息更新太快，我们更应该在事情还没被淹没的时候，多了解一下背后的来龙去脉。毕竟，了解真相是形成判断的前提。'
+    # 第三段：对比/类比，增加深度
+    p3 = f'类似的情况，前几年也出现过。那次的结局不算圆满，但至少让很多人意识到：事情不到最后一刻，谁也别急着下结论。这次会不会走老路，现在说还为时过早，但关注的人明显比上次多得多。'
 
-    p5 = f'换个角度想，每个人看待事物的立场不同，得出的结论自然也不一样。有人觉得这事小题大做，有人认为值得深思。还有网友提出了一个很有意思的观点：很多事情表面看是个例，实际上反映的是普遍现象。你觉得呢？'
+    # 第四段：观点碰撞
+    p4 = f'评论区的分歧挺大。一部分人觉得"事情没那么严重，别过度解读"，另一部分人认为"恰恰是这种态度，才让问题一再被忽视"。两种声音都有道理，但也都有盲区。真相往往不在任何一端，而在中间某个容易被忽略的地方。'
 
-    p6 = f'不管怎样，{kw}能引发这么大的讨论量，说明它确实触动了大家的某个神经。也许是好奇，也许是共鸣，也许只是单纯想表达自己的看法。无论如何，能引发思考本身就是有价值的。欢迎在评论区聊聊你的看法，咱们一起探讨。'
+    # 第五段：个人视角
+    p5 = f'老实讲，我对这件事的态度也在变。刚看到标题的时候，觉得无非又是一次舆论喧嚣。但把各方说法对照着看了一遍之后，发现有些细节确实经不起推敲。这不是立场问题，是事实问题。'
+
+    # 第六段：延伸思考+评论引导
+    p6 = f'每个时代都有属于它的热点，但真正值得记住的，不是热度本身，而是热度退去之后留下来的思考。{kw}这件事，最终会怎么收场，目前还不好说。但至少此刻，它给了我们一个重新审视某些习以为常的东西的机会。你怎么看？评论区聊聊。'
 
     paragraphs = [p1, p2, p3, p4, p5, p6]
     article = "\n\n".join(paragraphs)
@@ -64,7 +75,7 @@ def author_article(keyword, posts_text):
     # 确保超过600字
     total = sum(len(p) for p in paragraphs)
     if total < 600:
-        p7 = f'另外，从以往类似事件的处理结果来看，公众的关注和讨论往往能推动事情的解决。所以，与其被动等待，不如主动发声。当然，发声的前提是了解事实，而不是道听途说。希望每个人在表达观点之前，都能先花几分钟看看事情的完整经过。'
+        p7 = f'说到底，公众关注这件事，不完全是凑热闹。大家想弄明白的是一个更普遍的问题：类似的情况如果发生在自己身上，该怎么应对？这个问题没有标准答案，但值得每个人提前想一想。'
         paragraphs.append(p7)
         article = "\n\n".join(paragraphs)
 
@@ -407,6 +418,10 @@ def main():
     print("\n[5] 上传草稿箱...")
     text_parts = [p.strip() for p in article.split("\n") if p.strip()]
 
+    # 动态计算图片布局（根据实际段落数和图片数）
+    image_layout = ttw._calc_image_layout(len(text_parts), len(images))
+    print(f"  图片布局: {image_layout}（{len(text_parts)}段, {len(images)}张图）")
+
     with open(COOKIE_FILE, "r", encoding="utf-8") as f:
         cookies = json.load(f)
 
@@ -426,7 +441,7 @@ def main():
     time.sleep(3)
     print(f"  登录: {page.url}")
 
-    ok = upload_to_draft(page, title, text_parts, images, IMAGE_LAYOUT)
+    ok = upload_to_draft(page, title, text_parts, images, image_layout)
     print(f"\n  >>> {'成功' if ok else '失败'}")
 
     # 6. 验证草稿箱
