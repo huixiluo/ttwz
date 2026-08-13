@@ -17,7 +17,7 @@ This skill fetches Weibo category hot searches, fetches original post text as so
 
 ## How It Works
 
-The core pipeline has 6 steps:
+The core pipeline has 7 steps:
 
 1. **Fetch Weibo category hot search**: Simulates the Weibo visitor system to get a SUB cookie, then calls official category APIs (`/ajax/statuses/entertainment`, `/ajax/statuses/sport`, `/ajax/statuses/social`) to get 50 trending topics per category. No login required.
 2. **Fetch Weibo original post text**: Calls `/ajax/statuses/search` API to fetch original post text (up to 8 posts per topic) as source material for article rewriting. Saved to `_weibo_posts_raw.json`. This ensures article content is based on real Weibo posts, not fabricated.
@@ -26,7 +26,8 @@ The core pipeline has 6 steps:
    - **Direct editor mode** (when DeepSeek API is unavailable or balance insufficient): The assistant directly authors the article based on the fetched Weibo post text, following the same standards (three-part title, >600 words, diverse opening, no AI flavor, no erhua).
 4. **Human-editor polish**: A second LLM pass (or editor pass) acts as a real human copy editor. Preserves all facts and core viewpoints, deletes empty pleasantries / mechanical connectors / flowery parallelism / repetitive conclusions / textbook-style endings, adjusts sentence rhythm, restores natural human writing feel. No meme-stacking, no forced slang, no fabricated stories.
 5. **Image fetch & processing**: Prioritizes Weibo original post images (via `/ajax/statuses/search` API, extracts `pic_infos` large/largest/original URLs), falls back to Baidu Images if insufficient. Applies Pillow processing (preserve original aspect ratio — no cropping, contrast/sharpness/color enhancement, unsharp mask, max width 1200px, JPEG quality 92). 5 images per article. Filters low-res images (width<500 or height<300).
-6. **HTML output**: Embeds images as base64 into a styled HTML file. Saves to `./output/hot_<category>_<index>_<timestamp>.html`. Cover images saved separately to `./output/covers/`.
+6. **Pre-upload self-check & regenerate loop (MANDATORY, per-article)**: **Before any article is saved or uploaded to the draft box, a full self-check MUST run.** The check has three priority dimensions: (A) Opening quality, (B) Human-editor polish quality, (C) Image compliance. If ANY dimension fails, the article is NOT uploaded — the specific failing step is re-run (regenerate opening / re-polish / refetch & re-layout images), the self-check runs again, and the loop repeats until all three dimensions pass. Max 3 regenerate attempts; if still failing after 3 attempts, the article is logged as rejected and the batch proceeds to the next one. See the full checklist in the "Pre-Upload Self-Check" section below.
+7. **HTML output**: Embeds images as base64 into a styled HTML file. Saves to `./output/hot_<category>_<index>_<timestamp>.html`. Cover images saved separately to `./output/covers/`.
 
 ## Usage
 
@@ -200,12 +201,88 @@ Each returns `data.band_list` with ~50 items. `_parse_band_list()` normalizes th
 
 `fetch_weibo_posts_text()` in `hot_news_writer.py` is the core function. It handles Weibo search API pagination and text extraction from `text_raw` or `text` fields.
 
+## Pre-Upload Self-Check & Regenerate Loop (MANDATORY, runs per-article BEFORE save)
+
+**This is a hard gate.** No article may be saved to the draft box (whether via browser automation or direct API) until all three dimensions below pass. If a dimension fails, the corresponding step is regenerated and the full self-check runs again — up to 3 attempts per article. If still failing after 3 attempts, the article is skipped and logged with failure reasons (does NOT block remaining articles in a batch).
+
+### Dimension A — Opening Quality (highest priority, checked first)
+
+Run these checks against the **first three sentences** of the article (the opening):
+
+| # | Check Item | Pass Rule | Fail Action |
+|---|-----------|----------|------------|
+| A1 | **No banned patterns** | Opening does NOT contain: 刷到/看到/点开+热搜/榜单/话题；朋友圈里/群里/评论区；热搜第X位；近日/近日来；话说回来/闲来无事 | Regenerate opening, switching to a different opening technique from the 7 below |
+| A2 | **Uses one of 7 techniques** | The opening clearly matches one of: 场景切入 / 细节切入 / 提问切入 / 观点切入 / 对比切入 / 故事切入 / 情感切入 | Regenerate opening with explicit technique assignment |
+| A3 | **Grabs attention within 3 sentences** | No roundabout padding; the first 3 sentences contain a concrete scene, detail, question, opinion, contrast, story beat, or emotion hook | Rewrite opening to be tighter, drop filler sentences |
+| A4 | **Technique diversity** | Across a batch (3+ articles), no two adjacent articles use the same opening technique | Shuffle technique assignment for the failing article |
+| A5 | **No AI flavor in opening** | No 首先/其次/最后/不难看出/值得一提的是；no parallel-clause stacking (是…也是…更是…)；no empty adjectives (令人深思) | Re-polish opening only |
+| A6 | **No erhua** | No 事儿/点儿/地儿/哥们儿/玩意儿 in the opening (run `clean_erhua()` and re-check) | Apply `clean_erhua()` + manual review |
+
+### Dimension B — Human-Editor Polish Quality (checked second)
+
+Verify the **full article body** (after the polish step) against these rules:
+
+| # | Check Item | Pass Rule | Fail Action |
+|---|-----------|----------|------------|
+| B1 | **Mechanical connectors removed** | Zero occurrences of: 首先 / 其次 / 最后 / 总之 / 综上所述 / 不难看出 / 值得一提的是 | Re-run `polish_article()` with explicit focus on deleting connectors |
+| B2 | **No flowery parallelism** | No 是…也是…更是… / 不仅…而且…还… clause stacking anywhere | Re-polish: break stacks into separate short sentences |
+| B3 | **No empty adjective stacking** | No 令人深思、发人深省、意义深远 type clusters | Re-polish: delete or replace with concrete observation |
+| B4 | **No repetitive / textbook endings** | Last paragraph is NOT a summary ("总的来说… / 综上所述…") but a comment-prompting hook (e.g., a question, a personal take, or an open reflection) | Rewrite last 1-2 paragraphs |
+| B5 | **Word count preserved** | Polished article >600 words (same hard requirement as initial draft); if polish reduced below 600, supplement content | Expand a middle paragraph with extra background or context, then re-polish |
+| B6 | **Facts & viewpoints unchanged** | All original factual claims and core viewpoints from step 3 are still present in the polished text; nothing was fabricated during polish | Diff the two versions, restore any accidentally deleted factual content |
+| B7 | **No meme-stacking / forced slang** | No piled-up internet slang; language is colloquial but natural, like chatting with a friend | Re-polish to natural tone |
+| B8 | **Natural sentence rhythm** | Mix of long and short sentences; no run-on paragraphs (>150 chars per paragraph on average) | Re-polish sentence breaks |
+| B9 | **Erhua clean** | Full article has no 儿化音 residue (run `clean_erhua()` final pass; verify against `_ERHUA_MAP` 24 groups + regex fallback) | Run `clean_erhua()` + manual sweep |
+
+### Dimension C — Image Compliance (checked third)
+
+Verify the **5 body images + 3 cover images + layout + captions**:
+
+| # | Check Item | Pass Rule | Fail Action |
+|---|-----------|----------|------------|
+| C1 | **Exactly 5 body images** (or 3 if `image_count=3` explicitly set) | Count matches the configured `image_count` (default 5); not 4, not 6 | If short: continue image pipeline to next source layer; if excess: remove last group and re-layout |
+| C2 | **Image resolution** | All 5 images pass: file size ≥8KB, width ≥500px, height ≥300px. People (if any) are clearly visible | Reject low-res images and fetch replacements from next pipeline layer |
+| C3 | **Aspect ratio preserved** | No cropping. Pillow processing keeps original ratio (max-width 1200px downscale only, never upscale) | Re-run Pillow processing without crop step |
+| C4 | **Image-relevance check** | Each image visually matches the article topic (not a generic placeholder). If Baidu fallback was used heavily, verify keyword accuracy | Refine search keywords and refetch; if 2+ images are off-topic, refetch the whole set |
+| C5 | **Dynamic layout correct** | Using `calc_image_layout(total_paragraphs, 5)` rules: (a) 1 image after paragraph 1; (b) remaining 2-image groups placed with max pure-text gap ≤3 paragraphs between adjacent groups; (c) tail pure-text = 2 or 3 paragraphs; (d) no image touches the article end (tail ≥1) | Re-run layout algorithm and verify against the 4 rules |
+| C6 | **Captions present & centered** | Every body image has a `<p style="text-align:center;font-size:12px;color:#999;">图片来源于网络</p>` caption **immediately below** the `<img>` tag. Zero images are missing captions | Insert captions for any image lacking one; verify HTML/DOM order |
+| C7 | **Cover images: exactly 3** | `./output/covers/` has 3 distinct JPEG cover files per article; all are ≥8KB & ≥500×300 | Regenerate covers from the best 3 of the 5 body images, or refetch extras |
+| C8 | **No stale temp files** | Before upload, `output/tmp/body_img_*` must be cleaned so the current article's images are used (not leftover from a previous article) | Delete all `body_img_*` from tmp dir before extraction |
+| C9 | **Source diversity recorded** | Manifest `image_source` field reports actual layer composition (e.g. `微博(4张) + 百度(1张)`); not left blank or generic | Re-run fetch with source-tracking enabled |
+
+### Regenerate Loop Logic (pseudo-code)
+
+```
+for each article in manifest order:
+  attempts = 0
+  while attempts < 3:
+    checks = run_self_check_A_B_C(article)
+    if checks.all_pass:
+      proceed_to_upload(article)
+      break
+    else:
+      attempts += 1
+      if checks.fail_A:
+        article = regenerate_opening(article, checks.fail_A_details, force_new_technique=True)
+      if checks.fail_B:
+        article = re_polish_article(article, checks.fail_B_details)
+      if checks.fail_C:
+        article = refetch_relayout_images(article, checks.fail_C_details)
+      # Re-check includes regenerated parts — full A+B+C every iteration
+  else:
+    log_to_batch_result("SKIPPED (3 attempts failed)", article.title, checks.failure_summary)
+    continue to next article
+```
+
+---
+
 ## Toutiao Draft Upload
 
 The skill includes `upload_visible.py` for uploading generated articles to the Toutiao creator platform draft box. It uses DrissionPage to drive a real Chrome browser (non-headless).
 
 ### Upload Flow
 
+0. **Pre-upload self-check (MANDATORY — runs BEFORE opening the publish page)**: Execute the full A+B+C self-check above for this specific article. If any dimension fails, enter the regenerate loop. **Do NOT open the browser or call save API until self-check passes.**
 1. **Login**: Load cookies from `toutiao_cookies.json` and navigate to `mp.toutiao.com`.
 2. **Create new article**: Open the publish page, wait for the ProseMirror editor to mount.
 3. **Fill title**: Use native `value setter` + `input`/`change` events to trigger React state update (DrissionPage's `input()` doesn't work for React-controlled title textarea).
@@ -213,7 +290,9 @@ The skill includes `upload_visible.py` for uploading generated articles to the T
    - Stage 1: Upload all images one-by-one by pasting Blob via `ClipboardEvent('paste')`, capturing returned server URLs.
    - Stage 2: Set all content (text + images) at once via ProseMirror `view.dispatch()` API with properly structured image nodes.
 5. **Upload covers**: By default `SKIP_COVER=0` uploads 3 covers via file input. Set `SKIP_COVER=1` to skip.
-6. **Verify**: Check draft list for the article.
+6. **Pre-save re-check (lightweight, in-page)**: Before clicking Save / calling the publish API, do a quick DOM check: (a) title has 2 commas / 3 segments; (b) 5 images present in DOM; (c) each `<img>` is immediately followed by a caption `<p>` node. If any mismatch, fix in-page before saving.
+7. **Save / auto-save to draft box**: Trigger save (or let auto-save commit). The save request must include: `save='1'`, `draft_form_data={"coverType":3}`, `pgc_feed_covers=[3 cover URLs]`.
+8. **Verify**: Check draft list for the article; confirm the saved article's title matches and images are present.
 
 ### Critical: Image Node Attribute
 
@@ -243,13 +322,15 @@ Dynamic layout via `calc_image_layout(total_paragraphs, num_images=5)` — respe
 
 ### Batch Upload with Breakpoint Recovery
 
-`batch_upload.py` reads `batch_manifest.json` and uploads each article sequentially. Supports a command-line start index for resuming after interruptions:
+`batch_upload.py` reads `batch_manifest.json` and uploads each article sequentially. **For every single article in the manifest, the pre-upload A+B+C self-check runs BEFORE the upload subprocess is spawned.** If an article fails self-check after 3 regenerate attempts, it is skipped (logged) and the batch moves to the next article — the batch never stalls on one failing article.
+
+Supports a command-line start index for resuming after interruptions:
 
 ```bash
-python batch_upload.py 4   # Resume from 4th article
+python batch_upload.py 4   # Resume from 4th article (self-check still runs for 4th+)
 ```
 
-Each article upload runs as a subprocess with a 180s timeout. Logs are written to `batch_upload.log` with timestamps.
+Each article upload runs as a subprocess with a 180s timeout. Logs are written to `batch_upload.log` with timestamps, including self-check pass/fail per article and (if applicable) which dimension failed and what regeneration step was run.
 
 ## Dependencies
 
@@ -265,7 +346,8 @@ Each article upload runs as a subprocess with a 180s timeout. Logs are written t
 - If Weibo original post images are insufficient: falls back to Baidu Images.
 - If DeepSeek API fails (402 = insufficient balance, missing key): falls back to direct editor authoring mode.
 - If title fails three-part validation: automatically retries once.
-- If batch upload stalls: use `python batch_upload.py <start_index>` to resume.
+- **Pre-upload self-check failure loop**: If an article fails opening / polish / image compliance check after 3 regenerate attempts, it is skipped (logged) and the batch proceeds — one bad article never blocks the rest.
+- If batch upload stalls: use `python batch_upload.py <start_index>` to resume (self-check still runs for resumed articles).
 - If cover upload fails: article content is still saved; covers can be manually added later. Set `SKIP_COVER=1` to skip cover upload entirely.
 - **Stale temp images**: `upload_visible.py` saves body images to `output/tmp/body_img_N.jpg` before uploading. If these files persist from a previous article, they will be reused by mistake, causing the wrong images to appear in the new article. Fixed: all `body_img_*` files are cleared before each upload, forcing fresh extraction from the current article's base64 data.
 - **Baidu image encrypted objURL**: Some Baidu image results return encrypted `objURL` that cannot be directly downloaded. Fixed: prioritize `middleURL`/`thumbURL` (always accessible) over `objURL`.
