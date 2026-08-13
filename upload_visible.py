@@ -2,7 +2,7 @@
 """完整上传：非headless模式 + 标题.input() + 正文paste + 封面上传
 
 图片上传策略（分批粘贴，避免光标定位问题）：
-1. 按 IMAGE_LAYOUT 分批：文字批次 → 图片批次 交替
+1. 按 image_layout 分批：文字批次 → 图片批次 交替
 2. 每次粘贴文字后光标自动在末尾，立即粘贴图片到该位置
 3. 图片布局：第1段后1张、第3段后2张、第5段后2张
 """
@@ -20,8 +20,88 @@ def dlog(msg):
     with open(DEBUG_LOG, "a", encoding="utf-8") as f:
         f.write(f"{time.strftime('%H:%M:%S')} {msg}\n")
 
-# 图片布局：第1段后1张、第3段后2张、第5段后2张
-IMAGE_LAYOUT = {1: 1, 3: 2, 5: 2}
+def calc_image_layout(total_paragraphs, num_images=5):
+    """动态计算图片布局（5张图上限）——均匀分布，避免中间大片文字空档。
+    原则：
+    - 第1段后固定1张（用掉1张）——记为位置A
+    - 剩下的所有图组（每组2张）+ 最后一组位置 = 优先固定在 total_paragraphs - 2
+      （保证结尾恰好2段纯文字）
+    - 所有配图位置从 A 到 最后一组 之间做等步长均匀分布
+    - 若保持结尾2段导致中间"纯文字空档">3段，则尝试放宽结尾为3段换取空档≤3段
+      （中间空窗比结尾多1段纯文字更影响阅读体验）
+    - 若最后一组之后纯文字<1段（图紧贴最后一行），则删除该组避免结尾贴图
+    返回 dict: {段落号: 图片数量}
+    """
+    if total_paragraphs < 1:
+        return {}
+
+    n_groups = (num_images - 1) // 2  # 5张图→2组，3张→1组，3张以下→0组
+    if n_groups <= 0:
+        return {1: 1} if num_images >= 1 else {}
+
+    first = 1
+
+    def _build_positions(last):
+        """给定最后一组位置last，返回均匀分布的positions列表（含first）"""
+        if last < 3:
+            return [first]
+        pos_list = [first]
+        if n_groups == 1:
+            pos_list.append(last)
+        else:
+            step = (last - first) / n_groups
+            for k in range(1, n_groups + 1):
+                if k == n_groups:
+                    raw = last
+                else:
+                    raw = first + step * k
+                pos = int(round(raw))
+                min_pos = pos_list[-1] + 2
+                remaining_after = n_groups - k
+                max_pos = last - 2 * remaining_after
+                pos = max(min_pos, min(max_pos, pos))
+                pos_list.append(pos)
+        # 结尾贴图修正
+        while len(pos_list) > 1 and (total_paragraphs - pos_list[-1] < 1):
+            pos_list.pop()
+        return pos_list
+
+    def _max_gap(pos_list):
+        """计算相邻配图之间的最大纯文字空档"""
+        if len(pos_list) < 2:
+            return 0
+        return max(pos_list[i+1] - pos_list[i] - 1 for i in range(len(pos_list) - 1))
+
+    # 候选方案：结尾保2段 vs 结尾保3段（3段仅在2段方案空档>3时才考虑）
+    candidates = []
+    for tail_target in [2, 3]:
+        last_cand = total_paragraphs - tail_target
+        if last_cand >= 3:
+            positions = _build_positions(last_cand)
+            if len(positions) >= 2:
+                actual_tail = total_paragraphs - positions[-1]
+                gap = _max_gap(positions)
+                candidates.append((gap, actual_tail, positions))
+
+    if not candidates:
+        return {1: 1}
+
+    # 排序优先级：
+    # 1) 最大空档≤3 的方案 优于 >3 的
+    # 2) 结尾纯文字≤2 的方案 优于 >2 的  （空档合格的前提下，优先结尾更紧凑）
+    # 3) 空档更小 优于 更大
+    # 4) 结尾纯文字更小 优于 更大
+    def _score(c):
+        gap, tail, pos = c
+        return (0 if gap <= 3 else 1, 0 if tail <= 2 else 1, gap, tail)
+
+    candidates.sort(key=_score)
+    best_positions = candidates[0][2]
+
+    layout = {}
+    for i, p in enumerate(best_positions):
+        layout[p] = 1 if i == 0 else 2
+    return dict(sorted(layout.items()))
 
 
 def set_clipboard_html(html_content):
@@ -278,11 +358,14 @@ def main():
         text_only_html = "\n".join(text_parts)
 
     print(f"  正文: {len(text_parts)}段, {len(image_srcs)}张图片")
+    image_layout = calc_image_layout(len(text_parts), len(image_srcs))
+    print(f"  图片布局: {image_layout}")
     text_plain = re.sub(r'<[^>]+>', '', text_only_html).strip()
 
     # 启动浏览器
     print("[1] 启动浏览器...")
     co = ChromiumOptions()
+    co.set_browser_path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe")
     co.set_argument("--no-sandbox")
     co.set_argument("--disable-gpu")
     page = ChromiumPage(co)
@@ -362,18 +445,23 @@ XMLHttpRequest.prototype.open=function(method,url){
 
     # === 第2步：填标题 ===
     print("\n[2] 填标题...")
-    title_el = page.ele('tag:textarea@placeholder=请输入文章标题（2～30个字）', timeout=10)
-    if not title_el:
-        title_el = page.ele('tag:textarea@placeholder:文章标题', timeout=5)
-    title_el.click()
-    time.sleep(0.5)
-    title_el.input(title)
-    time.sleep(1)
-    page.run_js("""
-var el = document.querySelector('textarea[placeholder*="文章标题"]');
-if (el) { el.blur(); el.dispatchEvent(new Event('change', {bubbles: true})); }
+    import json as _json
+    title_json = _json.dumps(title)
+    # 使用React兼容方式：原生value setter + input事件触发状态更新
+    title_set = page.run_js(f"""
+var el = document.querySelector('textarea[placeholder*="文章标题"]') ||
+         document.querySelector('textarea[placeholder*="请输入文章标题"]');
+if (!el) return 'not_found';
+el.focus();
+var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+nativeSetter.call(el, {title_json});
+el.dispatchEvent(new Event('input', {{bubbles: true}}));
+el.dispatchEvent(new Event('change', {{bubbles: true}}));
+el.blur();
+return el.value;
 """)
     print(f"  标题: {title}")
+    dlog(f"标题设置结果: title_set={repr(title_set)}")
     time.sleep(3)
 
     if wait_for_save(page, timeout=10):
@@ -402,7 +490,7 @@ if (el) { el.blur(); el.dispatchEvent(new Event('change', {bubbles: true})); }
     time.sleep(1)
 
     # [3a] 分批粘贴：文字批次 → 图片批次 交替（避免光标定位问题）
-    # 按 IMAGE_LAYOUT 分批：例如 {1:1, 3:2, 5:2} + 6段文字
+    # 按 image_layout 分批：例如 {1:1, 3:2, 5:2} + 6段文字
     # 批次1: 粘贴段落[0:1] → 图片1
     # 批次2: 粘贴段落[1:3] → 图片2,3
     # 批次3: 粘贴段落[3:5] → 图片4,5
@@ -410,8 +498,8 @@ if (el) { el.blur(); el.dispatchEvent(new Event('change', {bubbles: true})); }
     batches = []  # [(text_slice, num_imgs, start_img_idx)]
     last_para = 0
     img_idx = 0
-    for target_para in sorted(IMAGE_LAYOUT.keys()):
-        num_imgs = IMAGE_LAYOUT[target_para]
+    for target_para in sorted(image_layout.keys()):
+        num_imgs = image_layout[target_para]
         text_slice = text_parts[last_para:target_para]
         batches.append((text_slice, num_imgs, img_idx))
         last_para = target_para
@@ -425,17 +513,19 @@ if (el) { el.blur(); el.dispatchEvent(new Event('change', {bubbles: true})); }
     try:
         tmp_files = []
         tmp_dir = os.path.join(BASE_DIR, "output", "tmp")
+        os.makedirs(tmp_dir, exist_ok=True)
+        # 清空旧临时文件，避免复用上一篇残留图片
+        for old_f in os.listdir(tmp_dir):
+            if old_f.startswith("body_img_"):
+                try:
+                    os.remove(os.path.join(tmp_dir, old_f))
+                except Exception:
+                    pass
         for img_i, data_url in enumerate(image_srcs):
-            fname = f"body_img_{img_i+1}.jpg"
-            fpath = os.path.join(tmp_dir, fname)
-            if os.path.exists(fpath) and os.path.getsize(fpath) > 1000:
-                dlog(f"图片{img_i+1}: 使用已有临时文件 {fpath} ({os.path.getsize(fpath)}字节)")
-                tmp_files.append(fpath)
-            else:
-                dlog(f"图片{img_i+1}: 保存新临时文件...")
-                fpath = save_base64_to_temp(data_url, img_i)
-                tmp_files.append(fpath)
-                dlog(f"图片{img_i+1}保存完成: {fpath}")
+            dlog(f"图片{img_i+1}: 保存新临时文件...")
+            fpath = save_base64_to_temp(data_url, img_i)
+            tmp_files.append(fpath)
+            dlog(f"图片{img_i+1}保存完成: {fpath}")
         dlog(f"临时文件准备完成: {len(tmp_files)}个")
     except BaseException as e:
         import traceback
@@ -582,7 +672,7 @@ for (var i = imgs.length - 1; i > 0; i--) {
     print(f"  [3a] 完成: {len(valid_urls)}/{len(tmp_files)}张图片已上传")
     dlog(f"图片上传阶段完成: {len(valid_urls)}/{len(tmp_files)}张, URLs={image_urls}")
 
-    # [3b] 构建最终HTML（文字+图片，按IMAGE_LAYOUT布局）
+    # [3b] 构建最终HTML（文字+图片，按image_layout布局）
     print(f"  [3b] 构建最终内容（{len(text_parts)}段文字, {len(valid_urls)}张图片）...")
     dlog("构建最终HTML开始")
     final_html = ""
@@ -590,8 +680,8 @@ for (var i = imgs.length - 1; i > 0; i--) {
     for para_idx, para_html in enumerate(text_parts):
         final_html += para_html
         target_para = para_idx + 1  # 段落从1开始
-        if target_para in IMAGE_LAYOUT:
-            num_imgs = IMAGE_LAYOUT[target_para]
+        if target_para in image_layout:
+            num_imgs = image_layout[target_para]
             for _ in range(num_imgs):
                 if url_idx < len(image_urls) and image_urls[url_idx]:
                     # 用p+img标签，避免figure标签兼容性问题
@@ -614,7 +704,7 @@ for (var i = imgs.length - 1; i > 0; i--) {
     # 必须通过view.dispatch()事务来更新内容，才能确保保存时图片不丢失
 
     # 步骤1：通过window._pmData传递数据（避免JSON数据混入JS代码导致语法错误）
-    data_json = json.dumps({"tp": text_plain_parts, "iu": image_urls, "il": IMAGE_LAYOUT}, ensure_ascii=False)
+    data_json = json.dumps({"tp": text_plain_parts, "iu": image_urls, "il": image_layout}, ensure_ascii=False)
     page.run_js("window._pmData=" + data_json + ";")
     dlog("已设置window._pmData")
 
