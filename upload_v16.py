@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""头条草稿箱上传 - Linux版 (基于 upload_visible.py 的PM API方案)
+"""v16: 修复PM状态同步 + 图片去重 + 每篇文章独立页面
 
-核心策略：
-1. 先逐张上传图片获取服务器URL
-2. 通过ProseMirror view.dispatch()一次性设置完整内容（文字+图片）
-3. 确保图片节点使用正确的schema（data对象属性）
-4. 触发自动保存后验证草稿箱
+核心修复：
+1. 上传图片后用PM API清空编辑器（而非DOM操作）
+2. 确保PM状态和DOM一致
+3. 每篇文章用带时间戳的URL打开独立发布页
+4. 增强封面图上传
 """
 import os, re, json, time, base64, asyncio, io
 from playwright.async_api import async_playwright
@@ -21,20 +21,14 @@ DRAFT_URL = "https://mp.toutiao.com/profile_v4/manage/draft"
 
 
 def calc_image_layout(total_paragraphs, num_images=5):
-    """动态计算图片布局（5张图上限）——均匀分布，避免中间大片文字空档。"""
-    if total_paragraphs < 1:
-        return {}
+    if total_paragraphs < 1: return {}
     n_groups = (num_images - 1) // 2
-    if n_groups <= 0:
-        return {1: 1} if num_images >= 1 else {}
+    if n_groups <= 0: return {1: 1} if num_images >= 1 else {}
     first = 1
-
     def _build_positions(last):
-        if last < 3:
-            return [first]
+        if last < 3: return [first]
         pos_list = [first]
-        if n_groups == 1:
-            pos_list.append(last)
+        if n_groups == 1: pos_list.append(last)
         else:
             step = (last - first) / n_groups
             for k in range(1, n_groups + 1):
@@ -46,14 +40,11 @@ def calc_image_layout(total_paragraphs, num_images=5):
                 max_pos = last - 2 * remaining_after
                 pos = max(min_pos, min(max_pos, pos))
                 pos_list.append(pos)
-        while len(pos_list) > 1 and (total_paragraphs - pos_list[-1] < 1):
-            pos_list.pop()
+        while len(pos_list) > 1 and (total_paragraphs - pos_list[-1] < 1): pos_list.pop()
         return pos_list
-
     def _max_gap(pos_list):
         if len(pos_list) < 2: return 0
         return max(pos_list[i+1] - pos_list[i] - 1 for i in range(len(pos_list) - 1))
-
     candidates = []
     for tail_target in [2, 3]:
         last_cand = total_paragraphs - tail_target
@@ -63,67 +54,48 @@ def calc_image_layout(total_paragraphs, num_images=5):
                 actual_tail = total_paragraphs - positions[-1]
                 gap = _max_gap(positions)
                 candidates.append((gap, actual_tail, positions))
-    if not candidates:
-        return {1: 1}
-
+    if not candidates: return {1: 1}
     def _score(c):
         gap, tail, pos = c
         return (0 if gap <= 3 else 1, 0 if tail <= 2 else 1, gap, tail)
     candidates.sort(key=_score)
     best_positions = candidates[0][2]
     layout = {}
-    for i, p in enumerate(best_positions):
-        layout[p] = 1 if i == 0 else 2
+    for i, p in enumerate(best_positions): layout[p] = 1 if i == 0 else 2
     return dict(sorted(layout.items()))
 
 
 def extract_html_text_and_images(html_path):
-    """从HTML文件中提取段落文字和图片base64"""
     with open(html_path, "r", encoding="utf-8") as f:
         html = f.read()
     paragraphs, images = [], []
     body_match = re.search(r'<body[^>]*>(.*?)</body>', html, re.DOTALL)
     body = body_match.group(1) if body_match else html
-    # 按顺序提取段落和图片
     for m in re.finditer(r'<p>([^<]+)</p>', body):
         text = m.group(1).strip()
-        if text:
-            paragraphs.append(text)
+        if text: paragraphs.append(text)
     for m in re.finditer(r'<img[^>]*src="(data:image/[^"]*)"', body):
         images.append(m.group(1))
     return paragraphs, images
 
 
 def compress_image_to_bytes(data_url, max_width=800):
-    """压缩图片并返回JPEG bytes"""
     try:
         header, b64 = data_url.split(',', 1)
         img = Image.open(io.BytesIO(base64.b64decode(b64)))
-        if img.mode in ('RGBA', 'P'):
-            img = img.convert('RGB')
+        if img.mode in ('RGBA', 'P'): img = img.convert('RGB')
         w, h = img.size
-        if w > max_width:
-            img = img.resize((max_width, int(h * max_width / w)), Image.LANCZOS)
+        if w > max_width: img = img.resize((max_width, int(h * max_width / w)), Image.LANCZOS)
         buf = io.BytesIO()
         img.save(buf, format='JPEG', quality=80)
         return buf.getvalue()
-    except Exception as e:
-        print(f"    [WARN] 图片压缩失败: {e}")
-        return None
+    except: return None
 
 
 async def remove_overlays(page):
-    """移除所有遮罩层和弹窗"""
     await page.evaluate("""
         () => {
-            const style = document.createElement('style');
-            style.textContent = `
-                .byte-drawer-mask, .byte-modal-mask, .byte-overlay,
-                .byte-drawer-wrapper, .byte-modal-wrapper,
-                [class*="drawer-mask"], [class*="modal-mask"] { display: none !important; pointer-events: none !important; }
-            `;
-            document.head.appendChild(style);
-            document.querySelectorAll('.byte-drawer-mask, .byte-modal-mask, .byte-overlay, .byte-drawer-wrapper, .byte-modal-wrapper').forEach(m => {
+            document.querySelectorAll('.byte-drawer-mask, .byte-modal-mask, .byte-overlay, .byte-drawer-wrapper, .byte-modal-wrapper, [class*="drawer-mask"], [class*="modal-mask"]').forEach(m => {
                 if (m && m.parentNode) m.parentNode.removeChild(m);
             });
         }
@@ -132,87 +104,19 @@ async def remove_overlays(page):
 
 
 async def dismiss_notifications(page):
-    """关闭各种通知弹窗"""
     await remove_overlays(page)
     for btn_text in ["关闭", "不恢复", "知道了", "确定", "取消"]:
         try:
             btn = page.locator(f"text={btn_text}").first
-            if await btn.is_visible(timeout=2000):
+            if await btn.is_visible(timeout=1500):
                 await btn.click()
-                await asyncio.sleep(0.5)
-        except:
-            pass
+                await asyncio.sleep(0.3)
+        except: pass
 
 
-async def upload_images_to_server(page, img_bytes_list):
-    """逐张上传图片到头条服务器，返回服务器URL列表"""
-    image_urls = []
-    for img_idx, img_bytes in enumerate(img_bytes_list):
-        print(f"    图片{img_idx+1}/{len(img_bytes_list)}: ", end="", flush=True)
+# ---- PM API 工具函数 (内联findView避免Python字符串冲突) ----
 
-        # 清空编辑器
-        await page.evaluate("""
-            () => { const ed = document.querySelector('.ProseMirror'); if (ed) { ed.innerHTML = '<p></p>'; ed.focus(); } }
-        """)
-        await asyncio.sleep(0.3)
-
-        # 通过paste事件上传图片
-        b64 = base64.b64encode(img_bytes).decode('ascii')
-        await page.evaluate(f"""
-            () => {{
-                const ed = document.querySelector('.ProseMirror');
-                if (!ed) return;
-                ed.focus();
-                const bs = atob("{b64}");
-                const ab = new ArrayBuffer(bs.length);
-                const ia = new Uint8Array(ab);
-                for (let i = 0; i < bs.length; i++) ia[i] = bs.charCodeAt(i);
-                const blob = new Blob([ab], {{type: 'image/jpeg'}});
-                const file = new File([blob], 'img.jpg', {{type: 'image/jpeg'}});
-                const ev = new ClipboardEvent('paste', {{bubbles: true, cancelable: true}});
-                Object.defineProperty(ev, 'clipboardData', {{
-                    value: {{files: [file], items: [], types: ['Files'],
-                        getData: function() {{ return ''; }}, setData: function() {{}}, clearData: function() {{}}}}
-                }});
-                ed.dispatchEvent(ev);
-            }}
-        """)
-
-        # 等待图片URL变为服务器URL
-        img_url = ""
-        for wait_i in range(60):
-            await asyncio.sleep(0.5)
-            img_url = await page.evaluate("""
-                () => { const img = document.querySelector('.ProseMirror img'); return img ? img.src : ''; }
-            """)
-            if img_url and not img_url.startswith('blob:') and not img_url.startswith('data:'):
-                break
-
-        if img_url and not img_url.startswith('blob:') and not img_url.startswith('data:'):
-            print(f"OK ({img_url[:50]}...)")
-            image_urls.append(img_url)
-        else:
-            print(f"FAIL (url={img_url[:50] if img_url else 'none'})")
-            image_urls.append("")
-
-        await asyncio.sleep(0.3)
-
-    return image_urls
-
-
-async def set_content_via_pm_api(page, text_paragraphs, image_urls, image_layout):
-    """通过ProseMirror view.dispatch() API一次性设置完整内容"""
-    data_json = json.dumps({
-        "tp": text_paragraphs,
-        "iu": image_urls,
-        "il": image_layout
-    }, ensure_ascii=False)
-
-    # 设置数据到window
-    await page.evaluate("window._pmData=" + data_json + ";")
-
-    # 查找ProseMirror view并设置内容
-    pm_result = await page.evaluate("""(function(){
+FIND_VIEW_BODY = '''
 function findView(){
   var editor=document.querySelector('.ProseMirror');
   if(!editor)return null;
@@ -234,7 +138,29 @@ function findView(){
     el=el.parentElement;
   }
   return null;
-}
+}'''
+
+
+async def clear_editor_via_pm(page):
+    """通过PM API清空编辑器（保持状态同步）"""
+    js = FIND_VIEW_BODY + '''
+var view=findView();
+if(!view)return 'no_view';
+var schema=view.state.schema;
+var emptyDoc=schema.nodes.doc.createAndFill();
+var tr=view.state.tr;
+tr.replaceWith(0,view.state.doc.content.size,emptyDoc.content);
+view.dispatch(tr);
+return 'ok';'''
+    return await page.evaluate(js)
+
+
+async def set_content_via_pm_api(page, text_paragraphs, image_urls, image_layout):
+    """通过PM API一次性设置完整内容（文字+图片）"""
+    data_json = json.dumps({"tp": text_paragraphs, "iu": image_urls, "il": image_layout}, ensure_ascii=False)
+    await page.evaluate("window._pmData=" + data_json + ";")
+
+    js = FIND_VIEW_BODY + '''
 var view=findView();
 if(!view)return JSON.stringify({status:'no_view'});
 var schema=view.state.schema;
@@ -249,15 +175,12 @@ if(!im)nts.forEach(function(k){if(k.toLowerCase().indexOf('image')>=0||k.toLower
 if(!pn)nts.forEach(function(k){if(k.toLowerCase().indexOf('para')>=0)pn=k;});
 if(!dn)nts.forEach(function(k){if(k==='doc'||k==='document'||k==='article')dn=k;});
 if(!pn||!dn)return JSON.stringify({status:'no_types',nodes:nts});
-var urlAttr='src';
 var imAttrs={};
 if(im){
   var imSpec=schema.nodes[im];
   if(imSpec&&imSpec.spec&&imSpec.spec.attrs){
     Object.keys(imSpec.spec.attrs).forEach(function(an){
-      var a=imSpec.spec.attrs[an];
-      if(an==='src'||an==='url'||an==='href')urlAttr=an;
-      imAttrs[an]=a&&a.default!==undefined?a.default:'[no-default]';
+      imAttrs[an]=imSpec.spec.attrs[an]&&imSpec.spec.attrs[an].default!==undefined?imSpec.spec.attrs[an].default:'[no-default]';
     });
   }
 }
@@ -276,7 +199,7 @@ for(var i=0;i<data.tp.length;i++){
         if(hasDataAttr){
           attrs.data={url:imgUrl,icUri:imgUrl,catchErrorUrl:"",link:"",caption:"图片来源于网络",ic:false,naturalHeight:0,naturalWidth:0,srcType:"",captionLenErr:false,needCheck:false};
         }else{
-          attrs[urlAttr]=imgUrl;
+          attrs.src=imgUrl;
           attrs.alt='图片来源于网络';
         }
         content.push({type:im,attrs:attrs});
@@ -290,17 +213,68 @@ try{
   view.dispatch(view.state.tr.replaceWith(0,view.state.doc.content.size,doc.content));
   var ic=0;
   view.state.doc.descendants(function(node){if(node.type.name===im)ic++;return true;});
-  return JSON.stringify({status:'ok',imgs:ic,chars:view.state.doc.textContent.length,nodes:nts,pn:pn,in:im,urlAttr:urlAttr,imAttrs:imAttrs});
+  return JSON.stringify({status:'ok',imgs:ic,chars:view.state.doc.textContent.length,hasDataAttr:hasDataAttr});
 }catch(e){
-  return JSON.stringify({status:'error',error:e.message,nodes:nts,pn:pn,in:im,urlAttr:urlAttr});
-}
-})()""")
+  return JSON.stringify({status:'error',error:e.message});
+}'''
+    return await page.evaluate(js)
 
-    return pm_result
+
+async def upload_images_to_server(page, img_bytes_list):
+    """逐张上传图片到服务器，返回URL列表"""
+    image_urls = []
+    for img_idx, img_bytes in enumerate(img_bytes_list):
+        print(f"    图片{img_idx+1}/{len(img_bytes_list)}: ", end="", flush=True)
+
+        # 用PM API清空编辑器
+        await clear_editor_via_pm(page)
+        await asyncio.sleep(0.3)
+
+        # 通过paste事件上传
+        b64 = base64.b64encode(img_bytes).decode('ascii')
+        await page.evaluate(f"""
+            () => {{
+                const ed = document.querySelector('.ProseMirror');
+                if (!ed) return;
+                ed.focus();
+                const bs = atob("{b64}");
+                const ab = new ArrayBuffer(bs.length);
+                const ia = new Uint8Array(ab);
+                for (let i = 0; i < bs.length; i++) ia[i] = bs.charCodeAt(i);
+                const blob = new Blob([ab], {{type: 'image/jpeg'}});
+                const file = new File([blob], 'img.jpg', {{type: 'image/jpeg'}});
+                const ev = new ClipboardEvent('paste', {{bubbles: true, cancelable: true}});
+                Object.defineProperty(ev, 'clipboardData', {{
+                    value: {{files: [file], items: [], types: ['Files'],
+                        getData: function() {{ return ''; }}, setData: function() {{}}, clearData: function() {{}}}}
+                }});
+                ed.dispatchEvent(ev);
+            }}
+        """)
+
+        # 等待服务器URL
+        img_url = ""
+        for wait_i in range(60):
+            await asyncio.sleep(0.5)
+            img_url = await page.evaluate("""
+                () => { const img = document.querySelector('.ProseMirror img'); return img ? img.src : ''; }
+            """)
+            if img_url and not img_url.startswith('blob:') and not img_url.startswith('data:'):
+                break
+
+        if img_url and not img_url.startswith('blob:') and not img_url.startswith('data:'):
+            print(f"OK")
+            image_urls.append(img_url)
+        else:
+            print(f"FAIL")
+            image_urls.append("")
+
+        await asyncio.sleep(0.3)
+
+    return image_urls
 
 
 async def fill_title(page, title):
-    """填写标题（React受控组件）"""
     title_json = json.dumps(title)
     result = await page.evaluate(f"""
         () => {{
@@ -320,13 +294,14 @@ async def fill_title(page, title):
 
 
 async def upload_cover(page, cover_paths):
-    """上传封面图片（3图模式）"""
     valid = [cf for cf in cover_paths[:3] if os.path.exists(cf)]
     if not valid:
         print("    无有效封面图，跳过")
         return False
 
     print(f"    上传{len(valid)}张封面...")
+
+    # 滚动到顶部
     await page.evaluate("window.scrollTo(0, 0);")
     await asyncio.sleep(1)
 
@@ -337,7 +312,6 @@ async def upload_cover(page, cover_paths):
             for (const r of radios) {
                 if (r.value === '3') {
                     r.click();
-                    r.checked = true;
                     r.dispatchEvent(new Event('change', {bubbles: true}));
                     return;
                 }
@@ -348,42 +322,47 @@ async def upload_cover(page, cover_paths):
 
     for ci, cf in enumerate(valid):
         print(f"      封面{ci+1}: {os.path.basename(cf)}...", end=" ", flush=True)
-        # 点击添加按钮
-        await page.evaluate("""
-            () => {
-                const add = document.querySelector('.article-cover-add');
-                if (add) {
-                    add.scrollIntoView({block: 'center'});
-                    ['mousedown', 'mouseup', 'click'].forEach(function(type) {
-                        add.dispatchEvent(new MouseEvent(type, {bubbles: true, cancelable: true, view: window}));
-                    });
-                }
-            }
-        """)
-        await asyncio.sleep(1.5)
 
-        # 找到file input并上传
-        uploaded = False
-        file_input = page.locator('input[type="file"][accept*="image"]').first
+        # 点击添加按钮
         try:
+            add_btn = page.locator('.article-cover-add').first
+            await add_btn.scroll_into_view_if_needed()
+            await add_btn.click()
+            await asyncio.sleep(1.5)
+        except:
+            await page.evaluate("""
+                () => {
+                    const add = document.querySelector('.article-cover-add');
+                    if (add) {
+                        add.scrollIntoView({block: 'center'});
+                        add.click();
+                    }
+                }
+            """)
+            await asyncio.sleep(1.5)
+
+        # 上传文件
+        uploaded = False
+        try:
+            # 方法1: 找可见的file input
+            file_input = page.locator('input[type="file"]').first
             await file_input.set_input_files(cf, timeout=5000)
             await asyncio.sleep(2)
             uploaded = True
         except:
-            pass
-
-        if not uploaded:
-            # 兜底：找任何可见的file input
             try:
-                all_inputs = page.locator('input[type="file"]')
-                count = await all_inputs.count()
-                for i in range(count):
-                    inp = all_inputs.nth(i)
-                    if await inp.is_visible():
-                        await inp.set_input_files(cf, timeout=3000)
-                        await asyncio.sleep(2)
-                        uploaded = True
-                        break
+                # 方法2: 通过file chooser
+                async with page.expect_file_chooser(timeout=5000) as fc_info:
+                    await page.evaluate("""
+                        () => {
+                            const add = document.querySelector('.article-cover-add');
+                            if (add) add.click();
+                        }
+                    """)
+                file_chooser = await fc_info.value
+                await file_chooser.set_files(cf)
+                await asyncio.sleep(2)
+                uploaded = True
             except:
                 pass
 
@@ -392,8 +371,7 @@ async def upload_cover(page, cover_paths):
     return True
 
 
-async def wait_for_save_indicator(page, timeout=20):
-    """等待保存成功提示"""
+async def wait_for_save(page, timeout=30):
     for i in range(timeout):
         await asyncio.sleep(1)
         saved = await page.evaluate("""
@@ -408,15 +386,14 @@ async def wait_for_save_indicator(page, timeout=20):
                 return false;
             }
         """)
-        if saved:
-            return True
+        if saved: return True
     return False
 
 
-async def trigger_auto_save(page):
-    """触发自动保存（通过修改标题再改回来）"""
-    title_el = page.locator('textarea[placeholder*="文章标题"]').first
+async def trigger_save(page):
+    """触发保存：点击标题框再blur"""
     try:
+        title_el = page.locator('textarea[placeholder*="文章标题"]').first
         await title_el.click(timeout=3000)
         await asyncio.sleep(0.3)
         await title_el.press('Space')
@@ -430,7 +407,6 @@ async def trigger_auto_save(page):
 
 
 async def process_article(context, art, index, total):
-    """处理单篇文章上传"""
     title = art["title"]
     html_path = art["html_file"]
     cover_files = art.get("cover_files", [])
@@ -450,36 +426,28 @@ async def process_article(context, art, index, total):
         print("  [ERROR] 无文字内容")
         return False
 
-    # 压缩图片
-    img_bytes_list = []
-    for img in images:
-        compressed = compress_image_to_bytes(img)
-        if compressed:
-            img_bytes_list.append(compressed)
-    print(f"  图片压缩: {len(img_bytes_list)}/{len(images)}张有效")
+    img_bytes_list = [c for img in images if (c := compress_image_to_bytes(img))]
+    print(f"  压缩: {len(img_bytes_list)}/{len(images)}张有效")
 
-    # 计算图片布局
     image_layout = calc_image_layout(len(paragraphs), len(img_bytes_list))
-    print(f"  图片布局: {image_layout}")
+    print(f"  布局: {image_layout}")
 
     page = await context.new_page()
 
     try:
-        # 导航到发布页面
-        print(f"  [1/5] 打开发布页面...")
+        # [1] 打开发布页面（带时间戳避免缓存）
         ts = int(time.time() * 1000)
+        print(f"  [1] 打开发布页面...")
         await page.goto(f"{PUBLISH_URL}?_t={ts}", wait_until="domcontentloaded", timeout=30000)
         await asyncio.sleep(5)
         await dismiss_notifications(page)
 
-        # 等待编辑器就绪
         for i in range(20):
             await asyncio.sleep(1)
             ready = await page.evaluate("""
                 () => { const ed = document.querySelector('.ProseMirror'); return ed && ed.getBoundingClientRect().width > 0; }
             """)
-            if ready:
-                break
+            if ready: break
         else:
             print("  [ERROR] 编辑器未就绪")
             return False
@@ -488,90 +456,83 @@ async def process_article(context, art, index, total):
         # [2] 上传图片到服务器
         image_urls = []
         if img_bytes_list:
-            print(f"  [2/5] 上传{len(img_bytes_list)}张图片到服务器...")
+            print(f"  [2] 上传{len(img_bytes_list)}张图片...")
             image_urls = await upload_images_to_server(page, img_bytes_list)
             valid_count = len([u for u in image_urls if u])
-            print(f"  上传完成: {valid_count}/{len(img_bytes_list)}张成功")
-        else:
-            print(f"  [2/5] 无图片，跳过")
-
+            print(f"  结果: {valid_count}/{len(img_bytes_list)}张成功")
         valid_urls = [u for u in image_urls if u]
 
-        # 清除编辑器中的残留图片（上次上传留下的innerHTML图片）
-        await page.evaluate("""
-            () => {
-                const ed = document.querySelector('.ProseMirror');
-                if (ed) {
-                    // 清除所有内容（包括非PM管理的DOM节点）
-                    while (ed.firstChild) ed.removeChild(ed.firstChild);
-                    ed.focus();
-                }
-            }
-        """)
-        await asyncio.sleep(0.3)
+        # [3] 用PM API清空编辑器（关键修复：确保PM状态干净）
+        print(f"  [3] 清空编辑器(PM API)...")
+        clear_result = await clear_editor_via_pm(page)
+        print(f"  清空: {clear_result}")
+        await asyncio.sleep(0.5)
 
-        # [3] 通过ProseMirror API设置完整内容
-        print(f"  [3/5] 设置内容 ({len(paragraphs)}段, {len(valid_urls)}张图)...")
+        # [4] 通过PM API设置完整内容
+        print(f"  [4] 设置内容 ({len(paragraphs)}段, {len(valid_urls)}张图)...")
         pm_result = await set_content_via_pm_api(page, paragraphs, valid_urls, image_layout)
-        print(f"  PM API: {pm_result}")
+        print(f"  PM: {pm_result[:200]}")
 
         try:
             pm_data = json.loads(pm_result)
             if pm_data.get('status') == 'ok':
-                imgs = pm_data.get('imgs', 0)
-                chars = pm_data.get('chars', 0)
-                print(f"  [OK] 内容设置成功: {chars}字, {imgs}张图片")
+                pm_imgs = pm_data.get('imgs', 0)
+                pm_chars = pm_data.get('chars', 0)
+                print(f"  [OK] PM: {pm_chars}字, {pm_imgs}张图片")
             else:
-                print(f"  [WARN] PM API失败: {pm_result}")
+                print(f"  [WARN] PM失败: {pm_result[:100]}")
         except:
-            print(f"  [WARN] 无法解析PM结果: {pm_result}")
+            print(f"  [WARN] 无法解析PM结果")
 
-        # 等待图片URL在DOM中更新
         await asyncio.sleep(2)
-        dom_imgs = await page.evaluate("() => document.querySelectorAll('.ProseMirror img').length")
-        print(f"  DOM图片数: {dom_imgs}")
 
-        # [4] 填写标题
-        print(f"  [4/5] 填写标题...")
+        # 验证DOM图片数
+        dom_imgs = await page.evaluate("() => document.querySelectorAll('.ProseMirror img').length")
+        dom_chars = await page.evaluate("() => { const ed = document.querySelector('.ProseMirror'); return ed ? ed.innerText.length : 0; }")
+        print(f"  DOM: {dom_chars}字, {dom_imgs}张图片")
+
+        if dom_imgs != len(valid_urls):
+            print(f"  [WARN] DOM图片数({dom_imgs}) != 预期({len(valid_urls)})，可能重复")
+
+        # [5] 填写标题
+        print(f"  [5] 填写标题...")
         title_result = await fill_title(page, title)
         print(f"  标题: {title_result}")
         await asyncio.sleep(3)
 
-        # 触发并等待保存
-        print(f"  等待保存...")
-        await trigger_auto_save(page)
-        saved = await wait_for_save_indicator(page, timeout=30)
+        # 触发保存
+        print(f"  触发保存...")
+        await trigger_save(page)
+        saved = await wait_for_save(page, timeout=30)
         if saved:
             print(f"  [OK] 自动保存成功")
         else:
-            print(f"  [WARN] 未检测到保存成功提示，尝试预览触发...")
-            # 尝试点击预览按钮
+            print(f"  [WARN] 未检测到保存提示，尝试预览触发...")
             try:
                 preview_btn = page.locator("text=预览").first
-                await preview_btn.click(timeout=5000)
-                await asyncio.sleep(5)
-                # 关闭预览窗口
-                all_pages = context.pages
-                for p in all_pages:
-                    if p != page:
-                        await p.close()
-                        await asyncio.sleep(1)
-                print(f"  已通过预览触发保存，等待服务器处理...")
-                await asyncio.sleep(3)
+                if await preview_btn.is_visible(timeout=3000):
+                    await preview_btn.click()
+                    await asyncio.sleep(5)
+                    # 关闭预览窗口
+                    for p in context.pages:
+                        if p != page:
+                            await p.close()
+                            await asyncio.sleep(1)
+                    print(f"  已通过预览触发保存")
+                    await asyncio.sleep(3)
             except:
-                print(f"  预览按钮不可用")
-                # 最后兜底：直接等待更长时间
-                await asyncio.sleep(10)
+                print(f"  预览按钮不可用，等待更长时间...")
+                await asyncio.sleep(15)
 
-        # [5] 上传封面
-        print(f"  [5/5] 上传封面...")
+        # [6] 上传封面
+        print(f"  [6] 上传封面...")
         await upload_cover(page, cover_files)
 
-        # 最后再触发一次保存
-        await trigger_auto_save(page)
-        await wait_for_save_indicator(page, timeout=15)
+        # 最终保存
+        await trigger_save(page)
+        await wait_for_save(page, timeout=15)
 
-        await page.screenshot(path=f"/workspace/upload_final_art{index}.png")
+        await page.screenshot(path=f"/workspace/v16_art{index}.png")
         return True
 
     except Exception as e:
@@ -579,9 +540,8 @@ async def process_article(context, art, index, total):
         print(f"  [ERROR] {e}")
         traceback.print_exc()
         try:
-            await page.screenshot(path=f"/workspace/upload_final_art{index}_err.png")
-        except:
-            pass
+            await page.screenshot(path=f"/workspace/v16_art{index}_err.png")
+        except: pass
         return False
     finally:
         await page.close()
@@ -593,7 +553,7 @@ async def main():
     with open(COOKIE_FILE, "r", encoding="utf-8") as f:
         cookies = json.load(f)
 
-    print(f"共 {len(articles)} 篇文章待上传\n")
+    print(f"共 {len(articles)} 篇文章\n")
     for i, art in enumerate(articles, 1):
         html_path = art["html_file"]
         if os.path.exists(html_path):
@@ -617,40 +577,27 @@ async def main():
             for k, v in cookies.items()
         ])
 
-        # 验证登录
-        print("验证登录状态...")
+        print("验证登录...")
         test_page = await context.new_page()
         await test_page.goto(DRAFT_URL, wait_until="domcontentloaded", timeout=20000)
         await asyncio.sleep(3)
-        title = await test_page.title()
-        if "登录" in title:
-            print("[ERROR] Cookie已过期，请更新 toutiao_cookies.json")
+        if "登录" in (await test_page.title()):
+            print("[ERROR] Cookie已过期")
             await browser.close()
             return
         print("[OK] 登录有效\n")
         await test_page.close()
 
-        # 处理每篇文章 - 每篇使用独立context避免加载旧草稿
         success = 0
         for i, art in enumerate(articles, 1):
             try:
-                # 创建新的浏览器上下文（关键：避免加载旧草稿的pgc_id）
-                art_context = await browser.new_context(
-                    viewport={"width": 1920, "height": 1080},
-                    user_agent=UA
-                )
-                await art_context.add_cookies([
-                    {"name": k, "value": v, "domain": ".toutiao.com", "path": "/"}
-                    for k, v in cookies.items()
-                ])
-                if await process_article(art_context, art, i, len(articles)):
+                if await process_article(context, art, i, len(articles)):
                     success += 1
-                await art_context.close()
             except Exception as e:
                 import traceback
                 print(f"  [FATAL] {e}")
                 traceback.print_exc()
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
 
         # 验证草稿箱
         print(f"\n{'='*60}")
@@ -658,21 +605,24 @@ async def main():
         verify_page = await context.new_page()
         await verify_page.goto(DRAFT_URL, wait_until="domcontentloaded", timeout=20000)
         await asyncio.sleep(5)
-        draft_text = await verify_page.evaluate("() => document.body.innerText.substring(0, 5000)")
+        draft_text = await verify_page.evaluate("() => document.body.innerText.substring(0, 8000)")
 
         for art in articles:
             keyword = art["title"][:8]
             found = keyword in draft_text
-            status = "[OK]" if found else "[MISS]"
-            print(f"  {status} {art['title'][:45]}")
+            print(f"  {'[OK]' if found else '[MISS]'} {art['title'][:45]}")
 
-        await verify_page.screenshot(path="/workspace/draft_final.png")
+        print(f"\n草稿箱内容片段:")
+        for line in draft_text.split('\n')[:30]:
+            line = line.strip()
+            if line and len(line) > 5:
+                print(f"    {line[:120]}")
+
+        await verify_page.screenshot(path="/workspace/v16_draft_final.png")
         await verify_page.close()
         await browser.close()
 
-    print(f"\n{'='*60}")
-    print(f"上传完成: {success}/{len(articles)} 篇成功")
-    print(f"请打开 https://mp.toutiao.com/profile_v4/manage/draft 检查草稿箱")
+    print(f"\n上传完成: {success}/{len(articles)} 篇成功")
 
 
 if __name__ == "__main__":

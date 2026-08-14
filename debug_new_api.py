@@ -1,36 +1,40 @@
 #!/usr/bin/env python3
-"""检查 new API 返回的完整数据结构"""
-import json, requests
+"""调试：获取article/new的完整响应和pgc_id"""
+import json, asyncio
+from playwright.async_api import async_playwright
 
-BASE_DIR = "/workspace"
-COOKIE_FILE = f"{BASE_DIR}/toutiao_cookies.json"
-UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+CHROME_PATH = "/root/.cache/puppeteer/chrome/linux-151.0.7922.71/chrome-linux64/chrome"
+UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
-with open(COOKIE_FILE, "r", encoding="utf-8") as f:
-    cookies = json.load(f)
+async def main():
+    with open("toutiao_cookies.json") as f:
+        cookies = json.load(f)
+    
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True, executable_path=CHROME_PATH,
+            args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"])
+        context = await browser.new_context(viewport={"width": 1920, "height": 1080}, user_agent=UA)
+        await context.add_cookies([{"name": k, "value": v, "domain": ".toutiao.com", "path": "/"} for k, v in cookies.items()])
+        
+        page = await context.new_page()
+        
+        # 拦截article/new响应
+        new_resp = []
+        async def handle_response(response):
+            if 'article/new' in response.url:
+                try:
+                    body = await response.text()
+                    new_resp.append(body)
+                except: pass
+        page.on('response', handle_response)
+        
+        await page.goto("https://mp.toutiao.com/profile_v4/graphic/publish", wait_until="domcontentloaded", timeout=30000)
+        await asyncio.sleep(5)
+        
+        for resp in new_resp:
+            print(f"article/new 完整响应:")
+            print(resp[:2000])
+        
+        await browser.close()
 
-session = requests.Session()
-session.headers.update({
-    "User-Agent": UA,
-    "Accept": "application/json, text/plain, */*",
-    "Referer": "https://mp.toutiao.com/",
-    "Origin": "https://mp.toutiao.com",
-})
-for name, value in cookies.items():
-    session.cookies.set(name, value, domain=".toutiao.com", path="/")
-
-# 测试 new API
-resp = session.get("https://mp.toutiao.com/mp/agw/article/new", params={
-    "article_type": 0, "format": "json", "compat": 1, "column_no": "",
-})
-data = resp.json()
-print("=== new API 完整响应 ===")
-print(json.dumps(data, indent=2, ensure_ascii=False)[:3000])
-
-# 也测试 edit API
-print("\n=== edit API (已知pgc_id) ===")
-resp2 = session.get("https://mp.toutiao.com/mp/agw/article/edit", params={
-    "pgc_id": "7673588172474942006", "wxstyle": 0, "format": "json"
-})
-data2 = resp2.json()
-print(json.dumps(data2, indent=2, ensure_ascii=False)[:3000])
+asyncio.run(main())
