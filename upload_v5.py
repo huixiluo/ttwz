@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""头条草稿箱上传 v4 - 提取 msToken/a_bogus，浏览器内 fetch 调用保存API
+"""头条草稿箱上传 v5 - 捕获页面 msToken/a_bogus 后调用 API
 
-关键发现：API URL 需要 msToken 和 a_bogus 参数，否则返回 7050
+策略：
+1. 打开页面，填写标题触发自动保存
+2. 拦截自动保存请求，捕获 msToken 和 a_bogus
+3. 用捕获的 token 调用 API 保存完整内容
 """
 import os, re, json, time, base64, asyncio, io
+from urllib.parse import urlparse, parse_qs
 from playwright.async_api import async_playwright
 from PIL import Image
 
@@ -75,40 +79,27 @@ def calc_image_layout(total_paragraphs, num_images):
     return {best[0]: 1, best[1]: 2, best[2]: 2}
 
 
-async def extract_tokens(page):
-    """从页面提取 msToken 和 a_bogus"""
-    result = await page.evaluate("""
-        () => {
-            // 尝试从 window 对象中查找
-            const tokens = { msToken: '', a_bogus: '' };
-            
-            // 方法1: 从 window.__INITIAL_STATE__ 或其他全局状态
-            if (window.__INITIAL_STATE__) {
-                // 检查各种可能的位置
-            }
-            
-            // 方法2: 拦截 XHR/fetch 来获取
-            // 方法3: 从页面源码中搜索
-            const scripts = document.querySelectorAll('script');
-            for (const s of scripts) {
-                const text = s.textContent || s.innerText || '';
-                const msMatch = text.match(/msToken["'\\s]*[:=]["'\\s]*([^"'\\s&]+)/);
-                const abMatch = text.match(/a_bogus["'\\s]*[:=]["'\\s]*([^"'\\s&]+)/);
-                if (msMatch) tokens.msToken = msMatch[1];
-                if (abMatch) tokens.a_bogus = abMatch[1];
-            }
-            
-            return JSON.stringify(tokens);
-        }
-    """)
-    try:
-        return json.loads(result)
-    except:
-        return {"msToken": "", "a_bogus": ""}
+class TokenCapture:
+    def __init__(self):
+        self.ms_token = ""
+        self.a_bogus = ""
+        self.captured = False
+
+    async def handle_route(self, route):
+        url = route.request.url
+        if "article/publish" in url and not self.captured:
+            parsed = urlparse(url)
+            qs = parse_qs(parsed.query)
+            self.ms_token = qs.get('msToken', [''])[0]
+            self.a_bogus = qs.get('a_bogus', [''])[0]
+            if self.ms_token:
+                self.captured = True
+                print(f"  [TOKEN] 捕获 msToken: {self.ms_token[:50]}...")
+                print(f"  [TOKEN] 捕获 a_bogus: {self.a_bogus[:50]}...")
+        await route.continue_()
 
 
 async def upload_images_get_urls(page, img_bytes_list):
-    """逐张上传图片，返回服务器URL列表"""
     image_urls = []
     for img_idx, img_bytes in enumerate(img_bytes_list):
         print(f"    图片{img_idx+1}/{len(img_bytes_list)}: ", end="", flush=True)
@@ -148,10 +139,7 @@ async def upload_images_get_urls(page, img_bytes_list):
         for _ in range(60):
             await asyncio.sleep(1)
             img_url = await page.evaluate("""
-                () => {
-                    const img = document.querySelector('.ProseMirror img');
-                    return img ? img.src : '';
-                }
+                () => { const img = document.querySelector('.ProseMirror img'); return img ? img.src : ''; }
             """)
             if img_url and not img_url.startswith('blob:') and not img_url.startswith('data:'):
                 break
@@ -166,32 +154,47 @@ async def upload_images_get_urls(page, img_bytes_list):
     return image_urls
 
 
-async def save_via_fetch_with_tokens(page, title, content_html, word_count, image_urls, title_id):
-    """通过浏览器内 fetch 调用保存API"""
-    # 使用 coverType=3 让系统自动从正文图片生成封面，避免封面格式问题
+async def capture_tokens_by_title(page, token_capture, title):
+    """通过填写标题触发自动保存，从而捕获 token"""
+    print(f"  填写标题触发自动保存...")
+    title_el = page.locator('textarea[placeholder*="文章标题"]').first
+    await title_el.click()
+    await asyncio.sleep(0.5)
+    await title_el.fill(title)
+    await asyncio.sleep(3)
+    
+    # 等待捕获
+    for _ in range(10):
+        await asyncio.sleep(1)
+        if token_capture.captured:
+            return True
+    return False
+
+
+async def save_article(page, token_capture, title, content_html, word_count, image_urls, title_id):
+    """用捕获的 token 调用 API"""
     covers_json = "[]"
-    draft_form = json.dumps({"coverType": 3})  # 3 = 自动从正文提取封面
+    draft_form = json.dumps({"coverType": 2})
     
     extra = json.dumps({
         "content_source": 100000000402,
         "content_word_cnt": word_count,
         "is_multi_title": 0,
         "sub_titles": [],
-        "gd_ext": {
-            "entrance": "",
-            "from_page": "publisher_mp",
-            "enter_from": "PC",
-            "device_platform": "mp",
-            "is_message": 0
-        },
+        "gd_ext": {"entrance": "", "from_page": "publisher_mp", "enter_from": "PC", "device_platform": "mp", "is_message": 0},
         "tuwen_wtt_transfer_switch": "1"
     })
     
     search_info = json.dumps({"searchTopOne": 0, "abstract": "", "clue_id": ""})
     mp_editor_stat = json.dumps({"image": 1 if image_urls else 0})
     
+    # 构建带 token 的 URL
+    ms_token = token_capture.ms_token
+    a_bogus = token_capture.a_bogus
+    api_url = f"https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0&msToken={ms_token}&a_bogus={a_bogus}"
+    
     result = await page.evaluate("""
-        async ([title, content, extra, searchInfo, titleId, mpEditorStat, draftForm, coversJson]) => {
+        async ([apiUrl, title, content, extra, searchInfo, titleId, mpEditorStat, draftForm, coversJson]) => {
             const params = new URLSearchParams();
             params.append('source', '29');
             params.append('extra', extra);
@@ -222,32 +225,26 @@ async def save_via_fetch_with_tokens(page, title, content_html, word_count, imag
             params.append('claim_exclusive', '1');
             
             try {
-                const resp = await fetch(
-                    'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                            'Accept': 'application/json, text/plain, */*',
-                        },
-                        body: params.toString(),
-                        credentials: 'include',
-                    }
-                );
+                const resp = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8', 'Accept': 'application/json, text/plain, */*'},
+                    body: params.toString(),
+                    credentials: 'include',
+                });
                 const data = await resp.json();
                 return JSON.stringify(data);
             } catch(e) {
                 return JSON.stringify({error: e.message});
             }
         }
-    """, [title, content_html, extra, search_info, title_id, mp_editor_stat, draft_form, covers_json])
+    """, [api_url, title, content_html, extra, search_info, title_id, mp_editor_stat, draft_form, covers_json])
     try:
         return json.loads(result)
     except:
         return {"raw": result}
 
 
-async def process_article(page, art, index, total):
+async def process_article(page, token_capture, art, index, total):
     title = art["title"]
     html_path = art["html_file"]
 
@@ -277,7 +274,7 @@ async def process_article(page, art, index, total):
     await page.goto(PUBLISH_URL, wait_until="domcontentloaded", timeout=30000)
     await asyncio.sleep(5)
 
-    # 移除遮罩层
+    # 移除遮罩
     await page.evaluate("""
         () => {
             document.querySelectorAll('.byte-drawer-mask, .byte-modal-mask, .byte-overlay').forEach(m => m.remove());
@@ -301,8 +298,16 @@ async def process_article(page, art, index, total):
         print("  [ERROR] 编辑器未就绪")
         return False
 
-    # 生成 title_id
+    # 重置 token 捕获
+    token_capture.captured = False
+    token_capture.ms_token = ""
+    token_capture.a_bogus = ""
+
+    # 填写标题触发自动保存，捕获 token
     title_id = f"{int(time.time()*1000)}_1842848430550016"
+    if not await capture_tokens_by_title(page, token_capture, title):
+        print("  [WARN] 未能捕获 token，尝试无 token 调用")
+    
     print(f"  title_id: {title_id}")
 
     # 上传图片
@@ -339,8 +344,8 @@ async def process_article(page, art, index, total):
     print(f"  内容: {word_count}字, {len(content_html)}字符")
 
     # 保存
-    print(f"  调用保存API...")
-    result = await save_via_fetch_with_tokens(page, title, content_html, word_count, valid_urls, title_id)
+    print(f"  调用保存API (msToken={'有' if token_capture.ms_token else '无'})...")
+    result = await save_article(page, token_capture, title, content_html, word_count, valid_urls, title_id)
     if isinstance(result, dict):
         code = result.get('code', -1)
         msg = result.get('message', '')
@@ -349,7 +354,6 @@ async def process_article(page, art, index, total):
             return True
         else:
             print(f"  [FAIL] code={code}, msg={msg}")
-            print(f"  完整响应: {json.dumps(result, ensure_ascii=False)[:500]}")
     else:
         print(f"  [FAIL] 异常: {result}")
     return False
@@ -377,6 +381,10 @@ async def main():
         await context.add_cookies(cookie_list)
         page = await context.new_page()
 
+        # 设置 token 捕获
+        token_capture = TokenCapture()
+        await page.route("**/*", token_capture.handle_route)
+
         print("验证登录...")
         await page.goto(DRAFT_URL, wait_until="domcontentloaded", timeout=20000)
         await asyncio.sleep(2)
@@ -389,7 +397,7 @@ async def main():
         success = 0
         for i, art in enumerate(articles, 1):
             try:
-                ok = await process_article(page, art, i, len(articles))
+                ok = await process_article(page, token_capture, art, i, len(articles))
                 if ok:
                     success += 1
             except Exception as e:
@@ -408,7 +416,7 @@ async def main():
             found = t in draft_text
             print(f"  {'[OK]' if found else '[MISS]'} {art['title'][:30]}")
 
-        await page.screenshot(path="/workspace/draft_v4_final.png")
+        await page.screenshot(path="/workspace/draft_v5_final.png")
         await browser.close()
 
     print(f"\n{'='*60}")

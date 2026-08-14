@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""头条草稿箱上传 v4 - 提取 msToken/a_bogus，浏览器内 fetch 调用保存API
+"""头条草稿箱上传 v6 - 通过 HTML 粘贴到 ProseMirror 编辑器
 
-关键发现：API URL 需要 msToken 和 a_bogus 参数，否则返回 7050
+策略：使用剪贴板API粘贴完整HTML内容到ProseMirror编辑器，让页面自动保存
 """
 import os, re, json, time, base64, asyncio, io
 from playwright.async_api import async_playwright
@@ -75,38 +75,6 @@ def calc_image_layout(total_paragraphs, num_images):
     return {best[0]: 1, best[1]: 2, best[2]: 2}
 
 
-async def extract_tokens(page):
-    """从页面提取 msToken 和 a_bogus"""
-    result = await page.evaluate("""
-        () => {
-            // 尝试从 window 对象中查找
-            const tokens = { msToken: '', a_bogus: '' };
-            
-            // 方法1: 从 window.__INITIAL_STATE__ 或其他全局状态
-            if (window.__INITIAL_STATE__) {
-                // 检查各种可能的位置
-            }
-            
-            // 方法2: 拦截 XHR/fetch 来获取
-            // 方法3: 从页面源码中搜索
-            const scripts = document.querySelectorAll('script');
-            for (const s of scripts) {
-                const text = s.textContent || s.innerText || '';
-                const msMatch = text.match(/msToken["'\\s]*[:=]["'\\s]*([^"'\\s&]+)/);
-                const abMatch = text.match(/a_bogus["'\\s]*[:=]["'\\s]*([^"'\\s&]+)/);
-                if (msMatch) tokens.msToken = msMatch[1];
-                if (abMatch) tokens.a_bogus = abMatch[1];
-            }
-            
-            return JSON.stringify(tokens);
-        }
-    """)
-    try:
-        return json.loads(result)
-    except:
-        return {"msToken": "", "a_bogus": ""}
-
-
 async def upload_images_get_urls(page, img_bytes_list):
     """逐张上传图片，返回服务器URL列表"""
     image_urls = []
@@ -115,12 +83,12 @@ async def upload_images_get_urls(page, img_bytes_list):
         await page.evaluate("""
             () => {
                 const ed = document.querySelector('.ProseMirror');
-                if (ed) { ed.innerHTML = '<p></p>'; ed.dispatchEvent(new Event('input', {bubbles: true})); }
+                if (ed) { ed.innerHTML = ''; ed.dispatchEvent(new Event('input', {bubbles: true})); }
             }
         """)
-        await asyncio.sleep(0.5)
-        await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) e.focus(); }")
         await asyncio.sleep(0.3)
+        await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) e.focus(); }")
+        await asyncio.sleep(0.2)
 
         b64 = base64.b64encode(img_bytes).decode('ascii')
         await page.evaluate(f"""
@@ -145,13 +113,10 @@ async def upload_images_get_urls(page, img_bytes_list):
         """)
 
         img_url = ""
-        for _ in range(60):
+        for _ in range(30):
             await asyncio.sleep(1)
             img_url = await page.evaluate("""
-                () => {
-                    const img = document.querySelector('.ProseMirror img');
-                    return img ? img.src : '';
-                }
+                () => { const img = document.querySelector('.ProseMirror img'); return img ? img.src : ''; }
             """)
             if img_url and not img_url.startswith('blob:') and not img_url.startswith('data:'):
                 break
@@ -162,89 +127,59 @@ async def upload_images_get_urls(page, img_bytes_list):
         else:
             print(f"FAIL")
             image_urls.append("")
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(0.3)
     return image_urls
 
 
-async def save_via_fetch_with_tokens(page, title, content_html, word_count, image_urls, title_id):
-    """通过浏览器内 fetch 调用保存API"""
-    # 使用 coverType=3 让系统自动从正文图片生成封面，避免封面格式问题
-    covers_json = "[]"
-    draft_form = json.dumps({"coverType": 3})  # 3 = 自动从正文提取封面
-    
-    extra = json.dumps({
-        "content_source": 100000000402,
-        "content_word_cnt": word_count,
-        "is_multi_title": 0,
-        "sub_titles": [],
-        "gd_ext": {
-            "entrance": "",
-            "from_page": "publisher_mp",
-            "enter_from": "PC",
-            "device_platform": "mp",
-            "is_message": 0
-        },
-        "tuwen_wtt_transfer_switch": "1"
-    })
-    
-    search_info = json.dumps({"searchTopOne": 0, "abstract": "", "clue_id": ""})
-    mp_editor_stat = json.dumps({"image": 1 if image_urls else 0})
-    
-    result = await page.evaluate("""
-        async ([title, content, extra, searchInfo, titleId, mpEditorStat, draftForm, coversJson]) => {
-            const params = new URLSearchParams();
-            params.append('source', '29');
-            params.append('extra', extra);
-            params.append('content', content);
-            params.append('title', title);
-            params.append('search_creation_info', searchInfo);
-            params.append('title_id', titleId);
-            params.append('mp_editor_stat', mpEditorStat);
-            params.append('is_refute_rumor', '0');
-            params.append('save', '0');
-            params.append('entrance', '');
-            params.append('timer_status', '0');
-            params.append('timer_time', '');
-            params.append('educluecard', '');
-            params.append('draft_form_data', draftForm);
-            params.append('pgc_feed_covers', coversJson);
-            params.append('article_ad_type', '3');
-            params.append('is_fans_article', '0');
-            params.append('govern_forward', '0');
-            params.append('praise', '0');
-            params.append('disable_praise', '0');
-            params.append('tree_plan_article', '0');
-            params.append('star_order_id', '');
-            params.append('star_order_name', '');
-            params.append('customer_nick_name', '');
-            params.append('activity_tag', '0');
-            params.append('trends_writing_tag', '0');
-            params.append('claim_exclusive', '1');
-            
-            try {
-                const resp = await fetch(
-                    'https://mp.toutiao.com/mp/agw/article/publish?source=mp&type=article&aid=1231&mp_publish_ab_val=0',
-                    {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                            'Accept': 'application/json, text/plain, */*',
-                        },
-                        body: params.toString(),
-                        credentials: 'include',
-                    }
-                );
-                const data = await resp.json();
-                return JSON.stringify(data);
-            } catch(e) {
-                return JSON.stringify({error: e.message});
+async def paste_html_to_editor(page, html_content):
+    """通过剪贴板粘贴HTML内容到ProseMirror编辑器"""
+    # 先清空编辑器
+    await page.evaluate("""
+        () => {
+            const ed = document.querySelector('.ProseMirror');
+            if (ed) {
+                ed.innerHTML = '';
+                ed.dispatchEvent(new Event('input', {bubbles: true}));
             }
         }
-    """, [title, content_html, extra, search_info, title_id, mp_editor_stat, draft_form, covers_json])
-    try:
-        return json.loads(result)
-    except:
-        return {"raw": result}
+    """)
+    await asyncio.sleep(0.5)
+    await page.evaluate("() => { const e = document.querySelector('.ProseMirror'); if(e) e.focus(); }")
+    await asyncio.sleep(0.3)
+
+    # 通过剪贴板粘贴HTML
+    html_escaped = json.dumps(html_content)
+    await page.evaluate(f"""
+        () => {{
+            const ed = document.querySelector('.ProseMirror');
+            if (!ed) return;
+            ed.focus();
+            const html = {html_escaped};
+            const ev = new ClipboardEvent('paste', {{bubbles: true, cancelable: true}});
+            const cd = {{
+                types: ['text/html', 'text/plain'],
+                getData: function(type) {{
+                    if (type === 'text/html') return html;
+                    return '';
+                }},
+                setData: function() {{}},
+                clearData: function() {{}},
+                files: [], items: []
+            }};
+            Object.defineProperty(ev, 'clipboardData', {{value: cd}});
+            ed.dispatchEvent(ev);
+        }}
+    """)
+    await asyncio.sleep(2)
+
+    # 检查内容是否已粘贴
+    content = await page.evaluate("""
+        () => {
+            const ed = document.querySelector('.ProseMirror');
+            return ed ? ed.innerHTML.substring(0, 200) : 'no editor';
+        }
+    """)
+    print(f"    编辑器内容预览: {content[:100]}")
 
 
 async def process_article(page, art, index, total):
@@ -277,7 +212,7 @@ async def process_article(page, art, index, total):
     await page.goto(PUBLISH_URL, wait_until="domcontentloaded", timeout=30000)
     await asyncio.sleep(5)
 
-    # 移除遮罩层
+    # 移除遮罩
     await page.evaluate("""
         () => {
             document.querySelectorAll('.byte-drawer-mask, .byte-modal-mask, .byte-overlay').forEach(m => m.remove());
@@ -301,11 +236,7 @@ async def process_article(page, art, index, total):
         print("  [ERROR] 编辑器未就绪")
         return False
 
-    # 生成 title_id
-    title_id = f"{int(time.time()*1000)}_1842848430550016"
-    print(f"  title_id: {title_id}")
-
-    # 上传图片
+    # 步骤1: 上传图片获取URL
     image_urls = []
     if img_bytes_list:
         print(f"  上传图片...")
@@ -313,7 +244,7 @@ async def process_article(page, art, index, total):
         valid = len([u for u in image_urls if u])
         print(f"  上传完成: {valid}/{len(img_bytes_list)}张成功")
 
-    # 构建内容HTML
+    # 步骤2: 构建HTML内容（用服务器URL替换base64）
     valid_urls = [u for u in image_urls if u]
     image_layout = calc_image_layout(len(paragraphs), len(valid_urls))
     print(f"  图片布局: {image_layout}")
@@ -328,31 +259,81 @@ async def process_article(page, art, index, total):
         if target_para in image_layout:
             for _ in range(image_layout[target_para]):
                 if img_idx < len(valid_urls):
-                    content_parts.append(f'<p class="pgc-p" data-track="{track+1}"><br></p>')
                     track += 1
-                    content_parts.append(f'<p data-track="{track+1}"><img src="{valid_urls[img_idx]}" alt=""></p>')
-                    track += 1
+                    content_parts.append(f'<p data-track="{track}"><img src="{valid_urls[img_idx]}" alt=""></p>')
                     img_idx += 1
 
     content_html = "".join(content_parts)
     word_count = sum(len(p) for p in paragraphs)
     print(f"  内容: {word_count}字, {len(content_html)}字符")
 
-    # 保存
-    print(f"  调用保存API...")
-    result = await save_via_fetch_with_tokens(page, title, content_html, word_count, valid_urls, title_id)
-    if isinstance(result, dict):
-        code = result.get('code', -1)
-        msg = result.get('message', '')
-        if code == 0 or msg == 'success':
-            print(f"  [SUCCESS] 保存成功!")
-            return True
-        else:
-            print(f"  [FAIL] code={code}, msg={msg}")
-            print(f"  完整响应: {json.dumps(result, ensure_ascii=False)[:500]}")
-    else:
-        print(f"  [FAIL] 异常: {result}")
-    return False
+    # 步骤3: 填写标题
+    print(f"  填写标题...")
+    title_el = page.locator('textarea[placeholder*="文章标题"]').first
+    await title_el.click()
+    await asyncio.sleep(0.5)
+    await title_el.fill(title)
+    await asyncio.sleep(2)
+
+    # 步骤4: 粘贴HTML内容到编辑器
+    print(f"  粘贴内容到编辑器...")
+    await paste_html_to_editor(page, content_html)
+
+    # 步骤5: 等待自动保存
+    print(f"  等待自动保存 (30秒)...")
+    saved = False
+    for i in range(30):
+        await asyncio.sleep(1)
+        result = await page.evaluate("""
+            () => {
+                const body = document.body.innerText;
+                if (body.indexOf('草稿已保存') !== -1 || body.indexOf('保存成功') !== -1) return 'SAVED';
+                const btns = document.querySelectorAll('button, span');
+                for (let j = 0; j < btns.length; j++) {
+                    if ((btns[j].textContent || '').indexOf('草稿已保存') !== -1) return 'SAVED_BTN';
+                }
+                return 'idle';
+            }
+        """)
+        if result and 'SAVED' in str(result):
+            print(f"  [{i+1}s] 检测到保存提示!")
+            saved = True
+            break
+        if i % 5 == 0:
+            # 检查编辑器内容
+            content_len = await page.evaluate("""
+                () => {
+                    const ed = document.querySelector('.ProseMirror');
+                    return ed ? ed.innerHTML.length : 0;
+                }
+            """)
+            print(f"  [{i+1}s] 编辑器内容长度: {content_len}")
+
+    if not saved:
+        # 尝试手动触发保存
+        print(f"  未检测到自动保存，尝试手动触发...")
+        editor_el = page.locator('.ProseMirror').first
+        await editor_el.click()
+        await asyncio.sleep(0.5)
+        await page.keyboard.press('Enter')
+        await asyncio.sleep(3)
+        for i in range(10):
+            await asyncio.sleep(1)
+            result = await page.evaluate("""
+                () => {
+                    const body = document.body.innerText;
+                    return body.indexOf('草稿已保存') !== -1 || body.indexOf('保存成功') !== -1;
+                }
+            """)
+            if result:
+                print(f"  手动触发后检测到保存!")
+                saved = True
+                break
+
+    await page.screenshot(path=f"/workspace/editor_v6_art{index}.png")
+    print(f"  截图: /workspace/editor_v6_art{index}.png")
+
+    return saved
 
 
 async def main():
@@ -408,7 +389,7 @@ async def main():
             found = t in draft_text
             print(f"  {'[OK]' if found else '[MISS]'} {art['title'][:30]}")
 
-        await page.screenshot(path="/workspace/draft_v4_final.png")
+        await page.screenshot(path="/workspace/draft_v6_final.png")
         await browser.close()
 
     print(f"\n{'='*60}")
