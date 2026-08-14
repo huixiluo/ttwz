@@ -77,3 +77,14 @@ _preview_tt_result.json
 _test_*.py
 gen_*.py
 .workbuddy/
+
+# 本次任务临时脚本（配图去重/改写/上传辅助）
+_regenerate_images.py
+_rewrite_guodegang.py
+_prepare_upload.py
+_check_dup.py
+_check_phash.py
+_verify_images.py
+temp_clone/
+temp_extract/
+ttwz_main.zip

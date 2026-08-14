@@ -675,43 +675,120 @@ def fetch_images_from_toutiao(session, keyword, topic_image_url="", topic_url=""
     return images
 
 
+# ===== 配图去重（dHash 感知哈希，纯 PIL 实现，不依赖 numpy）=====
+def _dhash(img, hash_size=16):
+    """差异哈希：比较相邻像素亮度，返回 hash_size*(hash_size-1) 位字符串。"""
+    img = img.convert("L").resize((hash_size + 1, hash_size), Image.LANCZOS)
+    pixels = list(img.getdata())
+    bits = []
+    for row in range(hash_size):
+        base = row * (hash_size + 1)
+        for col in range(hash_size):
+            left = pixels[base + col]
+            right = pixels[base + col + 1]
+            bits.append('1' if left < right else '0')
+    return ''.join(bits)
+
+
+def _hamming(a, b):
+    return sum(1 for x, y in zip(a, b) if x != y)
+
+
+def _dedupe_images(images, threshold=15):
+    """对 base64 图片列表做视觉去重，保留每张图首次出现的版本。
+    threshold 越小判定越严格；默认 15，海明距离 <15 视为同一张图。
+    无法解码的图片原样保留（不阻塞管线）。
+    """
+    kept = []
+    kept_hashes = []
+    for b64 in images:
+        try:
+            img = Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB")
+            h = _dhash(img)
+        except Exception:
+            kept.append(b64)
+            continue
+        if any(_hamming(h, kh) < threshold for kh in kept_hashes):
+            continue
+        kept.append(b64)
+        kept_hashes.append(h)
+    return kept
+
+
+def _is_dup_with(images, b64, threshold=15):
+    """判断 b64 是否与 images 列表中任一图视觉重复。"""
+    try:
+        h = _dhash(Image.open(io.BytesIO(base64.b64decode(b64))).convert("RGB"))
+    except Exception:
+        return False
+    for other in images:
+        try:
+            oh = _dhash(Image.open(io.BytesIO(base64.b64decode(other))).convert("RGB"))
+        except Exception:
+            continue
+        if _hamming(h, oh) < threshold:
+            return True
+    return False
+
+
 def fetch_images_unified(tt_session, keyword, topic_image_url="", topic_url="", count=5):
-    """统一配图管线（4层优先级）：
+    """统一配图管线（4层优先级 + 全链路去重）：
     1. 头条热榜缩略图
     2. 头条话题详情页正文图片
     3. 微博话题原帖配图（#关键词# 搜索）
     4. 百度图片搜索（最终回退）
-    返回 (images_list, source_desc)。
+    每层图片先做 dHash 视觉去重，且跨层不再收录与已选图片重复的图，
+    最终凑够 count 张互不重复的配图。返回 (images_list, source_desc)。
     """
     images = []
     source_parts = []
 
-    # 1+2: 头条
-    images = fetch_images_from_toutiao(tt_session, keyword, topic_image_url, topic_url, count)
-    if images:
-        source_parts.append(f"头条({len(images)}张)")
+    def _append_unique(new_imgs, tag):
+        """把 new_imgs 中与 images 不重复的图追加进来，返回实际追加数。"""
+        added = 0
+        for b64 in new_imgs:
+            if len(images) >= count:
+                break
+            if _is_dup_with(images, b64):
+                continue
+            images.append(b64)
+            added += 1
+        if added:
+            source_parts.append(f"{tag}({added}张)")
 
-    # 3: 微博（不足时）
+    # 1+2: 头条（先层内去重，再收录）
+    try:
+        tt_imgs = fetch_images_from_toutiao(tt_session, keyword, topic_image_url, topic_url, count)
+        tt_imgs = _dedupe_images(tt_imgs)
+        if tt_imgs:
+            _append_unique(tt_imgs, "头条")
+    except Exception as e:
+        print(f"  [头条配图跳过] {e}")
+
+    # 3: 微博（不足时，抓取 count*2 以便去重后有富余）
     if len(images) < count:
-        remaining = count - len(images)
         try:
             print("  获取微博访客session...")
             wb_session = get_weibo_session()
-            wb_imgs = fetch_images_from_weibo(wb_session, keyword, count=remaining)
+            wb_imgs = fetch_images_from_weibo(wb_session, keyword, count=count * 2)
+            wb_imgs = _dedupe_images(wb_imgs)
             if wb_imgs:
-                images.extend(wb_imgs)
-                source_parts.append(f"微博({len(wb_imgs)}张)")
+                _append_unique(wb_imgs, "微博")
         except Exception as e:
             print(f"  [微博配图跳过] {e}")
 
-    # 4: 百度（仍不足时）
+    # 4: 百度（仍不足时，同样抓 count*2 以便去重后有富余）
     if len(images) < count:
-        remaining = count - len(images)
-        bd_imgs = fetch_images_baidu(keyword, count=remaining)
-        if bd_imgs:
-            images.extend(bd_imgs)
-            source_parts.append(f"百度({len(bd_imgs)}张)")
+        try:
+            bd_imgs = fetch_images_baidu(keyword, count=count * 2)
+            bd_imgs = _dedupe_images(bd_imgs)
+            if bd_imgs:
+                _append_unique(bd_imgs, "百度")
+        except Exception as e:
+            print(f"  [百度配图跳过] {e}")
 
+    # 最终兜底去重、截断到 count
+    images = _dedupe_images(images)[:count]
     source = " + ".join(source_parts) if source_parts else "无"
     return images, source
 
