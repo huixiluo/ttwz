@@ -1,154 +1,122 @@
 # -*- coding: utf-8 -*-
-"""监控网络请求，调试保存"""
+"""调试保存：fetch hook捕获autosave请求及响应"""
 import os, json, time
 from DrissionPage import ChromiumPage, ChromiumOptions
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_FILE = os.path.join(BASE_DIR, "toutiao_cookies.json")
-
-with open(COOKIE_FILE, "r", encoding="utf-8") as f:
-    cookies = json.load(f)
+PUBLISH_URL = "https://mp.toutiao.com/profile_v4/graphic/publish"
 
 co = ChromiumOptions()
-co.headless(True)
+chrome_path = "/root/.cache/puppeteer/chrome/linux-151.0.7922.71/chrome-linux64/chrome"
+if os.path.exists(chrome_path):
+    co.set_browser_path(chrome_path)
+co.auto_port()
 co.set_argument("--no-sandbox")
 co.set_argument("--disable-gpu")
-
+co.set_argument("--disable-dev-shm-usage")
+co.headless()
 page = ChromiumPage(co)
 page.get("https://mp.toutiao.com")
 time.sleep(2)
-
+with open(COOKIE_FILE, "r", encoding="utf-8") as f:
+    cookies = json.load(f)
 for name, value in cookies.items():
     try:
         page.set.cookies({"name": name, "value": value, "domain": ".toutiao.com", "path": "/"})
     except Exception:
         pass
+page.get(PUBLISH_URL)
+time.sleep(8)
 
-page.get("https://mp.toutiao.com/profile_v4/index")
-time.sleep(3)
-page.get("https://mp.toutiao.com/profile_v4/graphic/publish")
-time.sleep(5)
-
-# 关闭弹窗
-try:
-    close_btn = page.ele('text:关闭', timeout=2)
-    if close_btn:
-        close_btn.click()
-        time.sleep(1)
-except:
-    pass
-
-# 注入fetch拦截器，在页面加载时就注入
+# 处理弹窗
+for text in ["不恢复", "关闭"]:
+    try:
+        btn = page.ele(f"text:{text}", timeout=2)
+        if btn:
+            btn.click(); time.sleep(1)
+    except Exception:
+        pass
 page.run_js("""
-window.__fetchLogs = [];
-var originalFetch = window.fetch;
-window.fetch = function(url, options) {
-    var urlStr = typeof url === 'string' ? url : (url.url || '');
-    window.__fetchLogs.push({url: urlStr, time: new Date().toISOString(), method: (options && options.method) || 'GET'});
-    console.log('[FETCH] ' + urlStr);
-    return originalFetch.apply(this, arguments).then(function(response) {
-        var clone = response.clone();
-        clone.text().then(function(text) {
-            if (text && text.length > 0) {
-                window.__fetchLogs.push({url: urlStr, response: text.substring(0, 300), status: response.status});
-                console.log('[FETCH RESP] ' + urlStr + ' status=' + response.status + ' body=' + text.substring(0, 200));
-            }
-        }).catch(function(){});
-        return response;
-    });
-};
-console.log('[DEBUG] fetch interceptor installed');
+var mask = document.querySelector('.byte-drawer-mask');
+if (mask) { mask.click(); mask.remove(); }
+var drawer = document.querySelector('.ai-assistant-drawer');
+if (drawer) drawer.remove();
 """)
 
-# 填写标题
-print("=== 填写标题 ===")
-title = "退货先给码，钱货两空，你的取件码还安全吗？"
-title_el = page.ele('tag:textarea@placeholder=请输入文章标题（2～30个字）', timeout=10)
-if title_el:
-    title_el.clear()
-    title_el.input(title)
-    print(f"标题: {title}")
-time.sleep(1)
-
-# 填写正文
-print("=== 填写正文 ===")
+# fetch + XHR 双hook
 page.run_js("""
-var editor = document.querySelector('.ProseMirror');
-if (!editor) return 'not_found';
-editor.innerHTML = '';
-editor.focus();
-var dt = new DataTransfer();
-dt.setData('text/html', '<p>测试段落1：退货时千万别急着给取件码。</p><p>测试段落2：很多人接到快递员电话就急着报码。</p>');
-var pasteEvent = new ClipboardEvent('paste', {
-  bubbles: true,
-  cancelable: true,
-  clipboardData: dt
-});
-editor.dispatchEvent(pasteEvent);
+window._apiResults = [];
+var origFetch = window.fetch;
+window.fetch = function(url, opts) {
+    var u = typeof url === 'string' ? url : (url && url.url) || '';
+    if (u.indexOf('/mp/') >= 0 || u.indexOf('save') >= 0 || u.indexOf('publish') >= 0 || u.indexOf('draft') >= 0) {
+        var entry = {url: u.substring(0, 150), method: (opts && opts.method) || 'GET', body: ((opts && opts.body) || '').substring(0, 400)};
+        window._apiResults.push(entry);
+        return origFetch.apply(this, arguments).then(function(resp) {
+            return resp.clone().text().then(function(t) {
+                entry.status = resp.status;
+                entry.resp = t.substring(0, 400);
+                return resp;
+            });
+        });
+    }
+    return origFetch.apply(this, arguments);
+};
+var OrigXHR = window.XMLHttpRequest;
+function HookedXHR() {
+    var xhr = new OrigXHR();
+    var origOpen = xhr.open;
+    var origSend = xhr.send;
+    var _url = '';
+    xhr.open = function(m, u) {
+        _url = u;
+        return origOpen.apply(xhr, arguments);
+    };
+    xhr.send = function(body) {
+        if (_url.indexOf('/mp/') >= 0 || _url.indexOf('save') >= 0 || _url.indexOf('publish') >= 0) {
+            var entry = {url: String(_url).substring(0, 150), method: 'XHR', body: String(body || '').substring(0, 400)};
+            window._apiResults.push(entry);
+            xhr.addEventListener('load', function() {
+                entry.status = xhr.status;
+                entry.resp = String(xhr.responseText || '').substring(0, 400);
+            });
+        }
+        return origSend.apply(xhr, arguments);
+    };
+    return xhr;
+}
+window.XMLHttpRequest = HookedXHR;
+return 'hooked';
+""")
+
+# 设置标题（native setter + input事件）
+title_json = json.dumps("测试保存流程-可删除")
+page.run_js(f"""
+var el = document.querySelector('textarea[placeholder*="文章标题"]');
+if (!el) return 'no_el';
+el.focus();
+var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;
+nativeSetter.call(el, {title_json});
+el.dispatchEvent(new Event('input', {{bubbles: true}}));
+el.dispatchEvent(new Event('change', {{bubbles: true}}));
+el.blur();
 return 'ok';
 """)
-time.sleep(3)
+print("标题已设置，等待25秒观察autosave...")
+time.sleep(25)
 
-# 检查网络请求
-print("\n=== 网络请求日志 ===")
-logs = page.run_js("""
-var results = [];
-var logs = window.__fetchLogs || [];
-for (var i = 0; i < logs.length; i++) {
-    var log = logs[i];
-    if (log.response) {
-        results.push(log.url + ' -> ' + log.response);
-    } else if (log.url && (log.url.indexOf('draft') !== -1 || log.url.indexOf('save') !== -1 || log.url.indexOf('article') !== -1 || log.url.indexOf('content') !== -1)) {
-        results.push(log.url + ' (no response yet)');
-    }
-}
-return results.join('\\n') || 'no relevant logs';
-""")
-print(logs)
+print("\n=== 捕获的API请求 ===")
+api_results = page.run_js("return JSON.stringify(window._apiResults, null, 1);")
+print(api_results[:4000] if api_results else "无请求")
 
-# 等待并检查草稿状态
-print("\n=== 等待保存 ===")
-for i in range(10):
-    time.sleep(2)
-    status = page.run_js("""
-var results = [];
-var spans = document.querySelectorAll('span');
-for (var i = 0; i < spans.length; i++) {
-    var text = spans[i].textContent.trim();
-    if (text.indexOf('草稿') !== -1) results.push(text);
-}
-var body = document.body.innerText;
-if (body.indexOf('保存失败') !== -1) results.push('保存失败');
-if (body.indexOf('已保存') !== -1) results.push('已保存');
-return results.join(' | ');
+# 页面上有无"保存"提示
+ui_text = page.run_js("""
+var t = document.body.innerText;
+var m = t.match(/.{0,30}(保存|草稿).{0,30}/g);
+return m ? m.slice(0, 10).join('\\n') : '无保存相关文本';
 """)
-    print(f"  {i+1}: {status}")
-    
-    if '已保存' in str(status):
-        break
-
-# 最终检查网络请求
-print("\n=== 最终网络请求 ===")
-logs2 = page.run_js("""
-var results = [];
-var logs = window.__fetchLogs || [];
-var relevant = [];
-for (var i = 0; i < logs.length; i++) {
-    var log = logs[i];
-    if (log.url && (log.url.indexOf('draft') !== -1 || log.url.indexOf('save') !== -1 || log.url.indexOf('article') !== -1 || log.url.indexOf('content') !== -1 || log.url.indexOf('publish') !== -1)) {
-        relevant.push(log);
-    }
-}
-results.push('相关请求数: ' + relevant.length);
-for (var i = 0; i < relevant.length; i++) {
-    var r = relevant[i];
-    results.push(r.time + ' ' + r.method + ' ' + r.url.substring(0, 100));
-    if (r.response) {
-        results.push('  -> ' + r.response.substring(0, 200));
-    }
-}
-return results.join('\\n');
-""")
-print(logs2)
+print("\n=== UI保存提示 ===")
+print(ui_text)
 
 page.quit()
