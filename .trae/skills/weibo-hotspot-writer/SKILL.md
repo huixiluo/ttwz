@@ -128,7 +128,8 @@ Field defaults (used when key absent): `model`=`deepseek-chat`, `api_url`=`https
 - "朋友圈里/群里/评论区" patterns;
 - Self-referencing rank ("热搜第X位");
 - "近日/近日来/近日，一则..." news-template patterns;
-- "话说回来/闲来无事" filler.
+- "话说回来/闲来无事" filler;
+- **Single-sentence-paragraph openings**: the first paragraph must NOT be just one lone hook/suspense/exclamation sentence standing alone (a recent固化 pattern). The first paragraph must be a natural paragraph of 2+ sentences: hook sentence first, immediately followed by 1-3 expansion sentences (background, who/when, event push) so the hook is woven into the narrative flow. Do not frequently use single-sentence paragraphs elsewhere either.
 
 **7 opening techniques** (choose the most fitting one per article, avoid repeating):
 - Scene cut-in: a concrete life scene or image;
@@ -331,7 +332,7 @@ Supports a command-line start index for resuming after interruptions:
 python batch_upload.py 4   # Resume from 4th article (self-check still runs for 4th+)
 ```
 
-Each article upload runs as a subprocess with a 180s timeout. Logs are written to `batch_upload.log` with timestamps, including self-check pass/fail per article and (if applicable) which dimension failed and what regeneration step was run.
+Each article upload runs as a subprocess with a 600s timeout (raised from 180s→300s→600s: the Toutiao editor issues multiple publish polling rounds after body save, and cover handling adds ~50s, so 300s was still exceeded). Logs are written to `batch_upload.log` with timestamps, including self-check pass/fail per article and (if applicable) which dimension failed and what regeneration step was run. Note: a "timeout" verdict does not mean upload failed — the body is usually already saved (publish request succeeded, pgc_id generated); verify in the draft box before retrying to avoid duplicates.
 
 ## Dependencies
 

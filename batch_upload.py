@@ -93,7 +93,7 @@ def main():
                     env=env,
                     stdout=logf,
                     stderr=subprocess.STDOUT,
-                    timeout=180,
+                    timeout=600,
                 )
             # 读取子进程输出到日志
             with open(upload_log, "r", encoding="utf-8") as logf:
@@ -110,7 +110,7 @@ def main():
                 blog(f"[{i}/{total}] 上传异常 (returncode={result.returncode})")
         except subprocess.TimeoutExpired:
             print(f"\n  >> [{i}/{total}] 超时", flush=True)
-            blog(f"[{i}/{total}] 超时（180s）")
+            blog(f"[{i}/{total}] 超时（600s）")
         except Exception as e:
             print(f"\n  >> [{i}/{total}] 异常: {e}", flush=True)
             blog(f"[{i}/{total}] 异常: {e}")
