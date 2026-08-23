@@ -70,8 +70,8 @@ def author_article(keyword, posts_text):
         title = f"{kw}，背后真相来了，你怎么想？"
     else:
         title = f"{kw[:12]}，真相来了，你怎么看？"
-    if len(title) > 25:
-        title = title[:25]
+    if len(title) > 30:
+        title = title[:30]
 
     # 开头：细节切入或场景切入（禁"刷到/看到/点开+热搜"）
     if snippets:

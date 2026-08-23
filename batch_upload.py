@@ -122,7 +122,7 @@ def main():
     blog(f"批量上传完成：{success}/{total} 篇成功")
     print(f"\n{'='*60}", flush=True)
     print(f"批量上传完成：{success}/{total} 篇成功", flush=True)
-    print("注意：封面图未上传，需手动补充", flush=True)
+    print("封面随文章一起保存（SKIP_COVER=0），如需跳过封面请设置 SKIP_COVER=1", flush=True)
     print("=" * 60, flush=True)
 
 

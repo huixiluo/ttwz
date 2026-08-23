@@ -154,7 +154,7 @@ for art in ARTICLES:
     # 检查标题
     commas = art['title'].count('，')
     title_len = len(art['title'])
-    print(f"      标题: {title_len}字, 逗号={commas} → {'✓' if commas == 2 and title_len <= 25 else '✗ 不合格!'}")
+    print(f"      标题: {title_len}字, 逗号={commas} → {'✓' if commas == 2 and title_len <= 30 else '✗ 不合格!'}")
     print(f"      字数>600: {'✓' if art['word_cnt'] > 600 else '✗ 不合格!'}")
 
 # 保存文章数据
