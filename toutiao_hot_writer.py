@@ -1124,22 +1124,42 @@ def main(category="娱乐"):
     if not api_key or api_key == "YOUR_API_KEY_HERE":
         raise RuntimeError("请在 config.json 中填写API Key")
 
-    print(f"[1/5] 获取今日头条热榜（类别：{category}）...")
+    print(f"[1/6] 获取资讯选题（类别：{category}，优先创作罐头低粉爆款）...")
     session = get_tt_session()
-    hot_list = get_toutiao_hot_board(session)
-    print(f"  共获取 {len(hot_list)} 条热榜")
-    if not hot_list:
-        raise RuntimeError("未获取到热榜数据")
-    hot = pick_tt_hot_by_category(hot_list, category)
-    keyword = hot["word"]
-    print(f"  选中：{hot['title']}（排名 {hot['rank']}，分类 {classify_tt_topic(hot)}）")
+    hot = None
+    keyword = None
+    try:
+        import czgts_source
+        czgts_lists = czgts_source.fetch_czgts_low_fans([category], per_category_limit=10)
+        items = czgts_lists.get(category) or []
+        if not items:
+            raise RuntimeError("创作罐头无可用选题")
+        hot = items[0]
+        # 用原文标题作为话题上下文，信息量最完整
+        keyword = hot["title"] if hot.get("title") else hot["word"]
+        print(f"  选中：{hot['title']}（阅读{hot.get('num')} 粉丝{hot.get('fans')}，"
+              f"领域{hot.get('czgts_category')}第{hot['rank']}）")
+    except Exception as e:
+        print(f"  创作罐头失败({str(e)[:80]})，回退头条热榜")
+        hot_list = get_toutiao_hot_board(session)
+        print(f"  共获取 {len(hot_list)} 条热榜")
+        if not hot_list:
+            raise RuntimeError("未获取到热榜数据")
+        hot = pick_tt_hot_by_category(hot_list, category)
+        keyword = hot["word"]
+        print(f"  选中：{hot['title']}（排名 {hot['rank']}，分类 {classify_tt_topic(hot)}）")
 
-    print(f"[2/5] DeepSeek改写文章...")
+    print(f"[2/6] DeepSeek改写文章...")
     title, article = rewrite_article(keyword, hot["rank"], api_key, model, api_url)
     print(f"  标题：{title}（{len(title)}字）")
     print(f"  正文：共 {len(article)} 字")
 
-    print("[3/5] 获取配图（头条 → 微博 → 百度）...")
+    print("[3/6] 真人文字校准编辑（润色）...")
+    article = polish_article(article, api_key, model, api_url)
+    article = clean_erhua(article)
+    print(f"  润色后正文：共 {len(article)} 字")
+
+    print("[4/6] 获取配图（头条 → 微博 → 百度）...")
     images, source = fetch_images_unified(
         session, keyword,
         topic_image_url=hot.get("image", ""),
@@ -1148,10 +1168,10 @@ def main(category="娱乐"):
     )
     print(f"  成功处理 {len(images)} 张配图（来源：{source}）")
 
-    print("[4/5] 生成HTML...")
+    print("[5/6] 生成HTML...")
     html = build_html(title, article, images)
 
-    print("[5/5] 保存文件...")
+    print("[6/6] 保存文件...")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"tt_hot_{category}_{timestamp}.html"
     filepath = os.path.join(output_dir, filename)

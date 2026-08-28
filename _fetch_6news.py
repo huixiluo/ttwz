@@ -44,7 +44,7 @@ LAST_USED = {
 }
 
 print("=" * 60)
-print("获取微博分类热搜（2娱乐+2体育+2社会），跳过上次已用...")
+print("获取资讯选题（优先创作罐头低粉爆款，回退微博分类热搜），跳过上次已用...")
 print("=" * 60)
 
 session = hnw.get_visitor_session()
@@ -54,14 +54,33 @@ per_category = 2
 used_titles = set(LAST_USED)
 preview = {}
 
-for cat in categories:
-    hot_list = hnw.get_hotsearch_by_category(session, cat)
-    print(f"  [{cat}] 分类热搜共 {len(hot_list)} 条")
-    candidates = [h for h in hot_list if h["word"] not in used_titles]
-    selected = candidates[:per_category]
-    preview[cat] = selected
-    for h in selected:
-        used_titles.add(h["word"])
+# 来源1（优先）: 创作罐头低粉爆款（今日头条/文章/粉丝<1万/阅读量降序）
+source_name = "创作罐头·低粉爆款"
+try:
+    import czgts_source
+    czgts_lists = czgts_source.fetch_czgts_low_fans(categories)
+    for cat in categories:
+        candidates = [a for a in czgts_lists.get(cat, [])
+                      if a["word"] not in used_titles and a["title"] not in used_titles]
+        selected = candidates[:per_category]
+        if not selected:
+            raise RuntimeError(f"[{cat}] 无可用低粉爆款选题")
+        preview[cat] = selected
+        for h in selected:
+            used_titles.add(h["word"])
+    print(f"  选题来源: {source_name}")
+except Exception as e:
+    print(f"  创作罐头失败({str(e)[:100]})，回退微博热搜")
+    source_name = "微博分类热搜"
+    preview = {}
+    for cat in categories:
+        hot_list = hnw.get_hotsearch_by_category(session, cat)
+        print(f"  [{cat}] 分类热搜共 {len(hot_list)} 条")
+        candidates = [h for h in hot_list if h["word"] not in used_titles]
+        selected = candidates[:per_category]
+        preview[cat] = selected
+        for h in selected:
+            used_titles.add(h["word"])
 print()
 
 # 展示
@@ -75,7 +94,10 @@ for cat in categories:
     print("-" * 40)
     for h in preview[cat]:
         idx += 1
-        print(f"  {idx}. [{cat}] {h['title']}（热搜排名{h['rank']}）")
+        if h.get("source") == "czgts":
+            print(f"  {idx}. [{cat}] {h['title'][:40]}（阅读{h['num']} 粉丝{h['fans']} 来源:低粉爆款第{h['rank']}）")
+        else:
+            print(f"  {idx}. [{cat}] {h['title']}（热搜排名{h['rank']}）")
         items.append((cat, h))
 
 # 保存预览结果

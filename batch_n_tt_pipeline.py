@@ -381,16 +381,37 @@ def main():
     print(f"获取{N_ARTICLES}条头条热榜 → 生成文章 → 上传草稿箱")
     print("=" * 60)
 
-    print("\n[1] 获取头条热榜...")
+    print("\n[1] 获取资讯选题（优先创作罐头低粉爆款，回退头条热榜）...")
     session = ttw.get_tt_session()
-    hot_list = ttw.get_toutiao_hot_board(session)
-    print(f"  共获取 {len(hot_list)} 条热榜")
+    topics = []
+    try:
+        import czgts_source
+        czgts_lists = czgts_source.fetch_czgts_low_fans()
+        # 三领域轮转取条，保证领域均衡
+        pools = {cat: list(items) for cat, items in czgts_lists.items()}
+        while len(topics) < N_ARTICLES and any(pools.values()):
+            for cat in ("娱乐", "体育", "社会"):
+                if pools.get(cat) and len(topics) < N_ARTICLES:
+                    topics.append(pools[cat].pop(0))
+        if not topics:
+            raise RuntimeError("创作罐头无可用选题")
+        # 话题相似度去重
+        topics = pick_distinct(topics, N_ARTICLES) if len(topics) > N_ARTICLES else topics
+        print(f"  选题来源: 创作罐头·低粉爆款（今日头条/文章/粉丝<1万/阅读量降序）")
+    except Exception as e:
+        print(f"  创作罐头失败({str(e)[:100]})，回退头条热榜")
+        hot_list = ttw.get_toutiao_hot_board(session)
+        print(f"  共获取 {len(hot_list)} 条热榜")
+        topics = pick_distinct(hot_list, N_ARTICLES)
 
-    topics = pick_distinct(hot_list, N_ARTICLES)
-    print(f"  去重后选中 {len(topics)} 条:")
+    print(f"  选中 {len(topics)} 条:")
     for t in topics:
-        cat = ttw.classify_tt_topic(t)
-        print(f"    [{t['rank']}] {t['word']}（{cat}, 热度{t.get('num', '?')}）")
+        if t.get("source") == "czgts":
+            print(f"    [{t['czgts_category']}] {t['word']}（阅读{t.get('num', '?')} 粉丝{t.get('fans', '?')}）")
+            print(f"      原文: {t['title'][:44]}")
+        else:
+            cat = ttw.classify_tt_topic(t)
+            print(f"    [{t['rank']}] {t['word']}（{cat}, 热度{t.get('num', '?')}）")
 
     print("\n[2] 启动浏览器并登录...")
     with open(COOKIE_FILE, "r", encoding="utf-8") as f:
