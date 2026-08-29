@@ -308,7 +308,15 @@ for each article in manifest order:
 
 ## Toutiao Draft Upload
 
-The skill includes `upload_visible.py` for uploading generated articles to the Toutiao creator platform draft box. It uses DrissionPage to drive a real Chrome browser (non-headless).
+The skill includes `upload_visible.py` for uploading generated articles to the Toutiao creator platform draft box. It uses DrissionPage to drive a real browser (non-headless).
+
+### Browser Choice: Edge over Chrome (important)
+
+**Always use Edge** (`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`) via `co.set_browser_path(...)`. Chrome repeatedly hangs during page loads in this environment (observed multiple times: page.get() never returns, no timeout fires), while Edge with the exact same code runs reliably. Before starting any upload/fix script, kill residual browser processes first (`Get-Process chrome, msedge | Stop-Process -Force`) — leftover processes from a previous hung run cause `BrowserConnectError` (user-folder conflict).
+
+### Login Handling
+
+`ensure_toutiao_login.py` validates cookies before upload. If cookies are missing/expired, it **automatically opens a visible browser login page for the user to log in manually** (QR / phone / WeChat), then auto-saves the fresh cookies to `toutiao_cookies.json` (40 entries) for subsequent runs. Cookie injection format: `page.set.cookies({"name": k, "value": v, "domain": ".toutiao.com", "path": "/"})` — inject after visiting any `mp.toutiao.com` page, then reload. Injecting raw cookie-list dicts without `domain` silently fails (0 cookies injected).
 
 ### Upload Flow
 
@@ -379,6 +387,9 @@ Each article upload runs as a subprocess with a 600s timeout (raised from 180s�
 - If title fails three-part validation: automatically retries once.
 - **Pre-upload self-check failure loop**: If an article fails opening / polish / image compliance check after 3 regenerate attempts, it is skipped (logged) and the batch proceeds — one bad article never blocks the rest.
 - If batch upload stalls: use `python batch_upload.py <start_index>` to resume (self-check still runs for resumed articles).
+- **Batch-upload "timeout" does NOT mean failure**: `batch_upload.py` reports 超时 per article when the subprocess exceeds the wait limit, but the article is often already saved (cover upload is slow, ~3min per cover). Always verify the actual draft box state via the API (`/mp/agw/article/list` and `/mp/agw/creator_center/draft_list` with cookie header) before re-uploading — otherwise you create duplicate drafts.
+- **Title may silently fail to save (no-title draft)**: in rare cases the React native-setter title fill does not get committed to the saved draft, producing a draft with empty title. Fix flow: query `draft_list` API to get the draft's `gid`, open the edit page, re-fill the title via the same native setter, click 存草稿. **Caution**: `https://mp.toutiao.com/profile_v4/graphic/publish?draft_id=<gid>&article_edit=1` does NOT reliably load the existing draft content (loads a fresh empty editor) — editing via this URL can create empty shell drafts. When patching a title, verify the editor actually loaded the draft body first; delete accidental empty-shell drafts via `POST /mp/agw/article/delete` (form: `pgc_id`, `group_id`).
+- **Draft box verification API** (works without browser): `GET https://mp.toutiao.com/mp/agw/article/list?need_recall=0&status=0&from=all&offset=0&count=15&type=&source=0&_signature=` and `GET https://mp.toutiao.com/mp/agw/creator_center/draft_list?type=0&count=20&app_id=1231` with `Cookie` header built from `toutiao_cookies.json` (dict form: `"; ".join(f"{k}={v}")`). Returns titles, `is_draft`, `create_time`, `article_url` — use this as the source of truth after uploads.
 - If cover upload fails: article content is still saved; covers can be manually added later. Set `SKIP_COVER=1` to skip cover upload entirely.
 - **Stale temp images**: `upload_visible.py` saves body images to `output/tmp/body_img_N.jpg` before uploading. If these files persist from a previous article, they will be reused by mistake, causing the wrong images to appear in the new article. Fixed: all `body_img_*` files are cleared before each upload, forcing fresh extraction from the current article's base64 data.
 - **Baidu image encrypted objURL**: Some Baidu image results return encrypted `objURL` that cannot be directly downloaded. Fixed: prioritize `middleURL`/`thumbURL` (always accessible) over `objURL`.
