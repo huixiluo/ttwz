@@ -149,7 +149,7 @@ After the final article content is fixed (post-polish), generate **10 candidate 
 
 - **>600 words (hard requirement)**, ideal range 650-750 words, 6-8 paragraphs, at least 6 (each <=150 chars);
 - Article content must be based on fetched Toutiao topic article/comment text, not fabricated;
-- Positive tone, reader-resonant, ends with a comment-prompting hook;
+- Positive tone, reader-resonant; the ending leaves an aftertaste through content itself, NOT through templated interaction-bait (see "Ending - Diverse" section below);
 - Neutral and objective, no favoring or attacking specific persons;
 - Supplement background info or extended content to add depth.
 
@@ -173,6 +173,27 @@ After the final article content is fixed (post-polish), generate **10 candidate 
 - Emotion cut-in: directly state a feeling for empathy.
 
 Must grab the reader within the first three sentences. No roundabout padding.
+
+### Ending - Diverse & restrained (strictly enforced)
+
+**Banned ending patterns** (a recent固化 pattern — all articles ended with "question + 评论区聊聊", which is strictly forbidden now):
+- "提问+评论区" template: "你怎么看？评论区聊聊" / "评论区说说你的看法" / "评论区聊" — ANY question followed by a 评论区 call-to-action is banned;
+- Template interaction-bait tails: "欢迎留言讨论" / "大家怎么看呢" / "说说你的观点" and similar universal tails;
+- Empty summary-elevation endings: "这不仅xxx，更是xxx的体现" / "时间会给出答案".
+
+**7 ending techniques** (choose the most fitting one per article; adjacent articles in a batch must NOT use the same technique):
+- 画面留白式 (scene-blank ending): close on a concrete scene/detail/action and stop — the aftertaste lives in the image;
+- 观点直陈式 (verdict ending): one clean sentence stating the stance, no explanation, no padding;
+- 数字回扣式 (number-callback ending): end with a key number from the article and let it speak;
+- 时间展望式 (forward-look ending): one step into the future — a little suspense or expectation, no verdict;
+- 金句式 (punchline ending): one condensed, forceful sentence, with a touch of emotion or attitude;
+- 细节呼应式 (echo ending): call back to a detail/person/image from the opening, closing the loop;
+- 开放提问式 (open-question ending): one specific, restrained question tied to concrete facts in the article — allowed at most ONCE per batch, and never with any 评论区 tail.
+
+Rules:
+- The ending must contain zero summary/transition words (same as the style rules);
+- The open-question technique is the LAST choice — prefer the other six;
+- Editor-mode articles (`_manual_articles_tt.json`) must follow the same rule when authored by the assistant.
 
 ### Style (no AI flavor - strictly enforced)
 
@@ -198,6 +219,7 @@ After the initial draft, `polish_article()` runs a second DeepSeek pass (or edit
 - **Delete**: empty pleasantries, mechanical connectors (首先/其次/最后/总之/综上所述/总而言之/不难看出/值得一提的是/同时), transition words (然而/但是 and any other word used to lead or summarize), flowery parallelism, repetitive conclusions, textbook-style endings;
 - **Adjust**: sentence length rhythm, diverse sentence structures; inter-paragraph logic connects naturally through content (not transition words); language fits the target readers; no jargon stacking or mechanical repetition — the article should read like a sincere conversation with the reader;
 - **Direct entry & direct ending**: every paragraph enters the discussion topic directly (strip introductory/transitional lead-ins); the final part states the opinion/conclusion directly with zero summary/transition words;
+- **De-template the ending**: if the draft ends with a "question + 评论区聊聊" template or other universal interaction-bait tail, rewrite it with one of the 7 ending techniques (scene-blank / verdict / number-callback / forward-look / punchline / echo / open-question); adjacent articles in a batch must use different techniques; keep open-question endings at most once per batch, never with a 评论区 tail;
 - **Allow**: slight imperfections to restore natural human writing feel;
 - **Ban**: meme-stacking, forced slang, fabricated stories/details, template-style writing;
 - **Word count**: polished article must remain >600 words; if deletion would drop below 600, supplement content to maintain length;
@@ -277,7 +299,7 @@ Verify the **full article body** (after the polish step) against these rules:
 | B1 | **Mechanical connectors & transition words removed** | Zero occurrences of: 首先 / 其次 / 最后 / 总之 / 综上所述 / 总而言之 / 不难看出 / 值得一提的是 / 同时 / 然而 / 但是 (and any other leading/summarizing transition word) | Re-run `polish_article()` with explicit focus on deleting connectors & transitions |
 | B2 | **No flowery parallelism** | No 是…也是…更是… / 不仅…而且…还… clause stacking anywhere | Re-polish: break stacks into separate short sentences |
 | B3 | **No empty adjective stacking** | No 令人深思、发人深省、意义深远 type clusters | Re-polish: delete or replace with concrete observation |
-| B4 | **No repetitive / textbook endings** | Last paragraph is NOT a summary ("总的来说… / 综上所述…") but a comment-prompting hook (e.g., a question, a personal take, or an open reflection) | Rewrite last 1-2 paragraphs |
+| B4 | **No repetitive / templated endings** | Last paragraph is NOT a summary ("总的来说… / 综上所述…") AND NOT a "question + 评论区" template or other universal interaction-bait tail; it uses one of the 7 ending techniques (scene-blank / verdict / number-callback / forward-look / punchline / echo / open-question) with zero summary/transition words; adjacent articles in the batch use different techniques; open-question appears at most once per batch | Rewrite last 1-2 paragraphs with a different ending technique |
 | B5 | **Word count preserved** | Polished article >600 words (same hard requirement as initial draft); if polish reduced below 600, supplement content | Expand a middle paragraph with extra background or context, then re-polish |
 | B6 | **Facts & viewpoints unchanged** | All original factual claims and core viewpoints from step 4 are still present in the polished text; nothing was fabricated during polish | Diff the two versions, restore any accidentally deleted factual content |
 | B7 | **No meme-stacking / forced slang** | No piled-up internet slang; language is colloquial but natural, like chatting with a friend | Re-polish to natural tone |
