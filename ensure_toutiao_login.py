@@ -94,13 +94,13 @@ def ensure_login():
     status = _check_login(page)
     if status is True:
         # 已登录 → 刷新保存当前 cookies
-        cur = _cookies_to_dict(page.cookies(as_dict=False) if hasattr(page.cookies, '__call__') else page.cookies())
-        # 兼容 DrissionPage 两种 API
         try:
             raw = page.cookies(all_domains=True)
         except Exception:
-            raw = page.cookies
+            raw = page.cookies()
         if isinstance(raw, list):
+            cur = _cookies_to_dict(raw)
+        else:
             cur = _cookies_to_dict(raw)
         with open(COOKIE_FILE, "w", encoding="utf-8") as f:
             json.dump(cur, f, ensure_ascii=False, indent=2)
@@ -137,7 +137,7 @@ def ensure_login():
             try:
                 raw = page.cookies(all_domains=True)
             except Exception:
-                raw = page.cookies
+                raw = page.cookies()
             cur = _cookies_to_dict(raw) if isinstance(raw, list) else raw
             with open(COOKIE_FILE, "w", encoding="utf-8") as f:
                 json.dump(cur, f, ensure_ascii=False, indent=2)
