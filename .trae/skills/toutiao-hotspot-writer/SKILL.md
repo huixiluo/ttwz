@@ -78,6 +78,27 @@ python generate_single_tt.py    # Single editor-authored article
 
 Each article goes through: post text fetch (optional) -> authoring (DeepSeek or editor) -> human-editor polish -> image fetch -> HTML + cover save. Results saved to `./output/batch_manifest_tt.json`.
 
+### Staged pipeline with hard gates (batch_n_tt_pipeline.py — preferred for full rounds)
+
+The end-to-end pipeline `batch_n_tt_pipeline.py` is **stage-based with TWO mandatory human-confirmation gates** (mirrors the 9-step flow; the old auto-run-through mode was removed because it skipped both gates and used a template author):
+
+```bash
+python batch_n_tt_pipeline.py topics [K]      # [1] fetch czgts topics (1-day window), list K=3 candidates PER CATEGORY (9 total), STOP
+python batch_n_tt_pipeline.py confirm 1,4,7   # gate 1: record user's topic picks by index, one per category typically (or "all")
+python batch_n_tt_pipeline.py material        # [2] open each original article page in Edge, extract real body text -> _pipeline_material.md
+python batch_n_tt_pipeline.py generate        # [4] validate _pipeline_articles.json (assistant-authored from the material) via code-level self-check; then 5-layer images (original-first), HTML, covers, manifest
+python title_candidates.py                    # gate 2: 10 candidates per article, STOP for user picks (editor mode via _manual_title_candidates.json)
+python title_candidates.py apply 1:3 2:1 3:0  # apply picks
+python batch_n_tt_pipeline.py upload          # [6] upload with server-response verification (XHR capture of article/publish, code==0) + draft_list API recheck
+```
+
+Key rules enforced in code:
+- `topics` lists **3 candidates per category** (9 total). Society candidates are pre-filtered: czgts "时政社会" domain items matching political keywords (纪委/国民党/民进党/台湾/选举/罢免/征兵...) are excluded, so only civic/livelihood topics (tourism disputes, scams, accidents, community news) enter the society candidate list.
+- `material`/`generate`/`upload` refuse to run before `confirm` (state file `_pipeline_state.json` tracks the stage); `upload` refuses if `output/title_candidates.json` is missing (title gate).
+- `generate` self-check: three-part title (two commas, <=30 chars, each segment <=10), >600 chars, 6-9 paragraphs, banned openings (刷到/看到/点开+热搜, 近日, single-sentence first paragraph), banned connectors (首先/其次/最后/总之/然而/但是/同时...), banned parallel stacking, banned ending templates (评论区聊聊 etc.), erhua-clean, adjacent articles must not share opening/ending. Any failure → detailed report + exit 1, NO manifest, NO upload.
+- Articles are authored by the assistant (editor mode) from the REAL extracted material (`_pipeline_material.md`), not from templates. Format: `_pipeline_articles.json` = `[{"category", "keyword", "title", "article"}]`, keyword must match the confirmed topic's word.
+- Save verification is honest: the in-page toast lies under headless/risk-control (7050 保存失败 still shows "草稿保存中"), so `upload_to_draft` captures the `article/publish` XHR response and requires `code==0`, then re-verifies every article via the draft_list API after the browser closes. Windows local runs use visible Edge (headless Chrome is rejected by Toutiao risk control on write APIs).
+
 ### Generate 10 candidate titles & manual selection (MANDATORY before upload)
 
 ```bash

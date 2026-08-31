@@ -9,8 +9,12 @@ _weibo_posts_raw.json
 _toutiao_posts_raw.json
 _manual_articles.json
 _manual_articles_tt.json
+_manual_title_candidates.json
 _preview_result.json
 _preview_tt_result.json
+_pipeline_state.json
+_pipeline_material.md
+_pipeline_articles.json
 fix_article9_images.py
 _test_fetch_posts.py
 _test_weibo_imgs/

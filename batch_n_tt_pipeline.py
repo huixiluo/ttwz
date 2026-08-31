@@ -1,30 +1,72 @@
-#!/usr/bin/env python3
-"""批量：获取N条头条热榜 → 撰写文章 → 5层图片（原文优先） → 上传草稿箱
-用法: python batch_n_tt_pipeline.py [数量，默认3]
-不依赖 DeepSeek API，直接编辑器撰写。
-遵守skill约束：
-- 开头禁用"刷到/看到/点开+热搜"模板，用细节/场景切入
-- >600字，6-8段
-- 配图布局用 _calc_image_layout 动态计算（纯文字尾段<=3）
-- 无AI味，无儿化音
+#!/usr/bin/env python3 -*-
+"""创作罐头选题 → 确认 → 素材 → 撰写 → 自检 → 配图 → 标题候选 → 上传草稿箱
+
+分阶段执行，含两道强制人工确认关卡（参照 skill 规则）：
+
+关卡1（选题确认）: topics 列出候选后必须停下，用户 confirm 后才能进入后续阶段
+关卡2（标题挑选）: generate 产出文章后必须走 title_candidates.py 生成候选并由用户
+                   挑选 apply，upload 阶段检测到候选流程未走完会拒绝上传
+
+用法:
+  python batch_n_tt_pipeline.py topics [每类条数]  # [1] 抓创作罐头选题，每类列出3条候选（默认）
+  python batch_n_tt_pipeline.py confirm 1,4,7     # [关卡1] 用户按序号确认选题（all=全部）
+  python batch_n_tt_pipeline.py material        # [2] 打开原文页提取真实素材（浏览器）
+  python batch_n_tt_pipeline.py generate        # [4] 校验 _pipeline_articles.json →
+                                                 #     自检 → 配图 → HTML/封面/manifest
+  python batch_n_tt_pipeline.py upload          # [6] 上传草稿箱（校验标题已挑选，真实保存验证）
+
+撰写规则（编辑直写模式，无 DeepSeek）：
+- 文章由助手基于 material 阶段提取的真实原文撰写，写入 _pipeline_articles.json
+  （list 格式，自带 category/keyword/title/article，keyword 与选题搜索词一致）
+- generate 阶段做代码级自检：三段式标题(≤30字/每段≤10字)、正文>600字、6-9段、
+  开头禁模板(刷到热搜/近日/单句成段)、结尾禁"评论区聊聊"等互动尾巴、
+  禁连接词(然而/但是/首先/总之...)、禁排比堆叠、儿化音清洗、开头/结尾批内不重复
+- 任一项不过关 → 打印失败明细并退出，不产出 manifest，不进入上传
+- 上传保存以服务端响应为准（XHR 捕获 article/publish 返回 code==0），
+  并在浏览器关闭后用 draft_list API 复核，不再无条件报成功
 """
 import os, re, json, time, base64, sys, difflib
 from DrissionPage import ChromiumPage, ChromiumOptions
+import requests
+
 import toutiao_hot_writer as ttw
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 COOKIE_FILE = os.path.join(BASE_DIR, "toutiao_cookies.json")
 PUBLISH_URL = "https://mp.toutiao.com/profile_v4/graphic/publish"
-DRAFT_URL = "https://mp.toutiao.com/profile_v4/manage/draft"
+STATE_FILE = os.path.join(BASE_DIR, "_pipeline_state.json")
+MATERIAL_MD = os.path.join(BASE_DIR, "_pipeline_material.md")
+ARTICLES_FILE = os.path.join(BASE_DIR, "_pipeline_articles.json")
+OUTPUT_DIR = os.path.join(BASE_DIR, "output")
+MANIFEST_FILE = os.path.join(OUTPUT_DIR, "batch_manifest_tt.json")
+CANDIDATES_FILE = os.path.join(OUTPUT_DIR, "title_candidates.json")
 IMAGE_COUNT = 5
-N_ARTICLES = int(sys.argv[1]) if len(sys.argv) > 1 else 3
+
 
 def dlog(msg):
     print(f"  [{time.strftime('%H:%M:%S')}] {msg}")
 
+
+def print_usage():
+    print(__doc__)
+
+
+def load_state():
+    if not os.path.exists(STATE_FILE):
+        raise FileNotFoundError("未找到 _pipeline_state.json，请先运行: python batch_n_tt_pipeline.py topics")
+    with open(STATE_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def save_state(state):
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=2)
+
+
 # ===== 话题去重 =====
 def bigrams(s):
     return set(s[i:i+2] for i in range(len(s)-1))
+
 
 def is_similar_topic(a, b, ratio_threshold=0.3, bigram_threshold=0.5):
     if not a or not b:
@@ -41,74 +83,430 @@ def is_similar_topic(a, b, ratio_threshold=0.3, bigram_threshold=0.5):
             return True
     return False
 
+
 def pick_distinct(hot_list, count):
     selected = []
-    for h in hot_list:
-        w = h.get("word", "")
-        if not w:
-            continue
-        if any(is_similar_topic(w, s.get("word", "")) for s in selected):
-            continue
-        selected.append(h)
+    for item in hot_list:
         if len(selected) >= count:
             break
+        if any(is_similar_topic(item.get("word", ""), s.get("word", "")) for s in selected):
+            continue
+        selected.append(item)
     return selected
 
-# ===== 文章撰写 =====
-def author_article(keyword, posts_text):
-    """直接编辑器撰写文章（基于抓取的头条话题文本）"""
-    snippets = []
-    for p in (posts_text or []):
-        t = p.get("text", "").strip()
-        if t and len(t) > 15:
-            snippets.append(t)
 
-    kw = keyword.strip()
-    if len(kw) <= 8:
-        title = f"{kw}，细节曝光，你怎么看？"
-    elif len(kw) <= 14:
-        title = f"{kw}，背后真相来了，你怎么想？"
+# ===== 浏览器 =====
+def open_page():
+    co = ChromiumOptions()
+    chrome_path = "/root/.cache/puppeteer/chrome/linux-151.0.7922.71/chrome-linux64/chrome"
+    if os.path.exists(chrome_path):
+        co.set_browser_path(chrome_path)
+        co.headless()
     else:
-        title = f"{kw[:12]}，真相来了，你怎么看？"
+        # Windows本地用可见Edge：头条风控会拒绝headless浏览器的保存请求(7050保存失败)
+        edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+        if os.path.exists(edge_path):
+            co.set_browser_path(edge_path)
+    co.auto_port()
+    co.set_argument("--no-sandbox")
+    co.set_argument("--disable-gpu")
+    co.set_argument("--disable-dev-shm-usage")
+    page = ChromiumPage(co)
+    page.get("https://mp.toutiao.com")
+    time.sleep(2)
+    cookies = json.load(open(COOKIE_FILE, "r", encoding="utf-8"))
+    for name, value in cookies.items():
+        try:
+            page.set.cookies({"name": name, "value": str(value), "domain": ".toutiao.com", "path": "/"})
+        except Exception:
+            pass
+    page.get("https://mp.toutiao.com")
+    time.sleep(3)
+    print(f"  登录: {page.url}")
+    return page
+
+
+# ===== [1] 选题 =====
+# 时政/两岸/纪检类关键词（"时政社会"领域里的时政内容，按用户要求不进社会类候选）
+POLITICAL_KEYWORDS = [
+    "纪委", "纪检", "中央纪委", "反腐", "双开", "落马", "移送司法", "通报批评",
+    "国民党", "民进党", "台独", "台湾", "赖清德", "郑丽文", "蒋万安", "柯志恩",
+    "朱立伦", "两岸", "统一", "岛内", "台海", "高雄", "国安", "间谍", "国家安全部",
+    "政协", "人大", "党代会", "组织部", "州委书记", "正厅级", "正厅", "罢免",
+    "选举", "参选", "败选", "当选", "请辞", "党政", "公选", "托关系", "征兵",
+]
+
+
+def is_political(title, keywords):
+    text = (title or "") + " " + " ".join(keywords or [])
+    return any(k in text for k in POLITICAL_KEYWORDS)
+
+
+def fetch_topics(per_category=3):
+    session = ttw.get_tt_session()
+    topics = []
+    try:
+        import czgts_source
+        czgts_lists = czgts_source.fetch_czgts_low_fans()
+        for cat in ("娱乐", "体育", "社会"):
+            items = [t for t in (czgts_lists.get(cat) or [])
+                     if not (cat == "社会" and is_political(t.get("title", ""), t.get("keywords")))]
+            picked = pick_distinct(items, per_category)
+            topics.extend(picked)
+        if not topics:
+            raise RuntimeError("创作罐头无可用选题")
+        print("  选题来源: 创作罐头·低粉爆款（今日头条/文章/粉丝<1万/发布时间1天内/阅读量降序）")
+        print("  社会类已过滤时政内容（纪委/两岸/选举/纪检等）")
+    except Exception as e:
+        print(f"  创作罐头失败({str(e)[:100]})，回退头条热榜")
+        hot_list = ttw.get_toutiao_hot_board(session)
+        print(f"  共获取 {len(hot_list)} 条热榜")
+        for cat in ("娱乐", "体育", "社会"):
+            cat_items = [t for t in hot_list if ttw.classify_tt_topic(t) == cat
+                         and not (cat == "社会" and is_political(t.get("word", ""), []))]
+            topics.extend(pick_distinct(cat_items, per_category))
+    return topics
+
+
+def cmd_topics(per_category=3):
+    print("=" * 60)
+    print(f"[1] 获取资讯选题（创作罐头低粉爆款，每类 {per_category} 条候选）")
+    print("=" * 60)
+    topics = fetch_topics(per_category)
+    current_cat = None
+    print(f"\n候选选题共 {len(topics)} 条（每类{per_category}条，等待确认，确认前不会写文章）:")
+    for i, t in enumerate(topics, 1):
+        cat = t.get("czgts_category") or ttw.classify_tt_topic(t)
+        if cat != current_cat:
+            current_cat = cat
+            print(f"\n  —— {cat} ——")
+        if t.get("source") == "czgts":
+            print(f"  [{i}] {t['word']}（阅读{t.get('num', '?')} 粉丝{t.get('fans', '?')}）")
+            print(f"       原文: {t['title'][:44]}")
+            print(f"       发布: {t.get('publishTime', '?')}")
+        else:
+            print(f"  [{i}] {t['word']}（热度{t.get('num', '?')}）")
+    save_state({"stage": "topics", "topics": topics, "confirmed": [], "material": {}})
+    print("\n>>> 关卡1：每类挑选（可换条/去掉，一般每类选1条）")
+    print("    确认方式: python batch_n_tt_pipeline.py confirm 1,4,7（按序号）")
+    print("    确认后:   python batch_n_tt_pipeline.py material")
+
+
+def cmd_confirm(sel):
+    state = load_state()
+    if state.get("stage") != "topics":
+        raise RuntimeError("当前状态不是待确认选题，请先运行 topics")
+    topics = state["topics"]
+    if sel.strip().lower() == "all":
+        idx = list(range(1, len(topics) + 1))
+    else:
+        idx = [int(x) for x in re.split(r"[，,\s]+", sel.strip()) if x]
+    for i in idx:
+        if not (1 <= i <= len(topics)):
+            raise ValueError(f"选题序号越界: {i}（共 {len(topics)} 条）")
+    confirmed = [topics[i - 1] for i in idx]
+    state["confirmed"] = confirmed
+    state["stage"] = "confirmed"
+    save_state(state)
+    print(f"已确认 {len(confirmed)} 条选题:")
+    for t in confirmed:
+        print(f"  [{t.get('czgts_category') or ttw.classify_tt_topic(t)}] {t['word']}")
+    print("\n下一步: python batch_n_tt_pipeline.py material")
+
+
+# ===== [2] 素材（真实原文，替代旧模板撰写路径） =====
+def fetch_material_from_article(page, url):
+    """打开原文页提取正文段落文字（选择器逻辑与配图原文层一致）"""
+    if not url or not str(url).startswith("http"):
+        return None
+    try:
+        page.get(url)
+    except Exception:
+        return None
+    time.sleep(4)
+    try:
+        page.run_js("window.scrollTo(0, document.body.scrollHeight * 0.6);")
+        time.sleep(1)
+    except Exception:
+        pass
+    js = """
+    return (function(){
+        var sels = ['article', '.article-content', '.syl-article-base', '.tt-article'];
+        var scope = null, best = 0;
+        for (var i = 0; i < sels.length; i++) {
+            var el = document.querySelector(sels[i]);
+            if (el) { var t = (el.innerText || '').length; if (t > best) { best = t; scope = el; } }
+        }
+        if (!scope) scope = document.body;
+        var h1 = document.querySelector('h1');
+        var paras = [];
+        scope.querySelectorAll('p').forEach(function(p){
+            var s = (p.innerText || '').trim().replace(/\\s+/g, ' ');
+            if (s.length > 12 && s.length < 500 && paras.indexOf(s) === -1) paras.push(s);
+        });
+        return JSON.stringify({title: h1 ? h1.innerText.trim() : '', paras: paras.slice(0, 40)});
+    })();
+    """
+    try:
+        raw = page.run_js(js)
+        data = json.loads(raw) if raw else {}
+    except Exception:
+        return None
+    paras = [p for p in data.get("paras", []) if p]
+    text = "\n".join(paras)[:3500]
+    if len(text) < 100:
+        return None
+    return {"title": data.get("title", ""), "text": text, "para_count": len(paras)}
+
+
+def cmd_material():
+    state = load_state()
+    if not state.get("confirmed"):
+        raise RuntimeError("选题未确认，请先运行 confirm")
+    print("=" * 60)
+    print("[2] 提取原文素材（浏览器打开原文页）")
+    print("=" * 60)
+    page = open_page()
+    material = state.get("material", {})
+    md_lines = ["# 原文素材（供撰写参考）\n"]
+    try:
+        for i, t in enumerate(state["confirmed"], 1):
+            kw = t["word"]
+            print(f"\n[{i}/{len(state['confirmed'])}] {kw}")
+            print(f"  原文链接: {t.get('url', '')[:70]}")
+            m = fetch_material_from_article(page, t.get("url", ""))
+            if m:
+                material[kw] = m
+                print(f"  素材: {m['para_count']} 段, {len(m['text'])} 字")
+                print(f"  原文标题: {m['title'][:40]}")
+                md_lines.append(f"\n## [{i}] {kw}\n\n原文标题: {m['title']}\n原文链接: {t.get('url', '')}\n\n{m['text']}\n")
+            else:
+                print("  素材: 提取失败（正文太短或页面未渲染）")
+                md_lines.append(f"\n## [{i}] {kw}\n\n（素材提取失败）\n")
+    finally:
+        page.quit()
+    state["material"] = material
+    state["stage"] = "material"
+    save_state(state)
+    with open(MATERIAL_MD, "w", encoding="utf-8") as f:
+        f.write("\n".join(md_lines))
+    ok = sum(1 for t in state["confirmed"] if material.get(t["word"]))
+    print(f"\n素材就绪: {ok}/{len(state['confirmed'])} 条选题有真实原文素材")
+    print(f"素材全文: {MATERIAL_MD}")
+    print("\n下一步: 助手基于素材撰写 _pipeline_articles.json，然后运行 generate")
+
+
+# ===== [4] 自检 + 配图 + HTML/manifest =====
+BANNED_CONNECTORS = ["首先", "其次", "最后", "总之", "综上所述", "总而言之",
+                     "不难看出", "值得一提的是", "同时", "然而", "但是",
+                     "话说回来", "闲来无事", "近日"]
+ENDING_BANNED = ["评论区", "留言", "欢迎讨论", "怎么看呢", "说说你的",
+                 "总的来说", "时间会给出答案", "大家怎么看"]
+OPENING_PATTERNS = [
+    r"(刷到|看到|点开)[^。]{0,8}(热搜|榜单|话题)",
+    r"^(朋友圈里|群里)",
+    r"热搜第",
+    r"^近日",
+]
+PARALLEL_PATTERNS = [r"不仅.{2,20}更是", r"是.{2,15}也是.{2,15}更是", r"不仅.{2,20}而且.{2,20}还"]
+
+
+def check_title(title):
+    fails = []
+    if not ttw._is_three_part_title(title):
+        fails.append("A-标题: 非三段式（须恰好两个逗号）")
     if len(title) > 30:
-        title = title[:30]
+        fails.append(f"A-标题: 超30字（{len(title)}字）")
+    segs = [s for s in title.split("，") if s.strip()]
+    if any(len(s) > 10 for s in segs):
+        fails.append(f"A-标题: 某段超10字 {[len(s) for s in segs]}")
+    return fails
 
-    # 开头：细节切入或场景切入（禁"刷到/看到/点开+热搜"）
-    if snippets:
-        first_snippet = snippets[0][:80].rstrip("。！？，,. ")
-        p1 = f'{first_snippet}。这几个字看着不起眼，但仔细一琢磨，背后的东西比想象中复杂得多。'
-    else:
-        p1 = f'下午三点，手机屏幕亮了一下，推送栏弹出一行字：{kw}。放下手机，我盯着窗外发了一会儿呆。'
 
-    if snippets and len(snippets) > 1:
-        p2 = f'有网友梳理了事情的来龙去脉。{snippets[1][:100]} 另有人补充了不同角度的信息，评论区很快分成几派，各说各的理。'
-    elif snippets:
-        p2 = f'把事情的来龙去脉拼凑起来，大概是这样的。{snippets[0][:100]} 信息不算多，但足够让人产生一堆问号。'
-    else:
-        p2 = f'把事情的前因后果捋了一遍，发现里面牵扯的环节不少。{kw}，光看字面意思可能觉得简单，实际往深了挖，每层都有说道。'
+def check_article(idx, title, article):
+    """代码级自检（开头A/润色B维度），返回失败明细列表"""
+    fails = check_title(title)
+    text = article.strip()
+    chars = len(re.sub(r"\s", "", text))
+    if chars <= 600:
+        fails.append(f"B-字数: 正文{chars}字，未过600硬线")
+    paras = [p.strip() for p in text.split("\n") if p.strip()]
+    if not (6 <= len(paras) <= 9):
+        fails.append(f"B-段落: {len(paras)}段，须6-9段")
+    # 开头检查
+    first = paras[0] if paras else ""
+    for pat in OPENING_PATTERNS:
+        if re.search(pat, first):
+            fails.append(f"A-开头: 命中禁用模式 {pat}")
+    for w in BANNED_CONNECTORS:
+        if w in first:
+            fails.append(f"A-开头: 含连接词「{w}」")
+    sent_ends = len(re.findall(r"[。！？]", first))
+    if sent_ends < 2:
+        fails.append("A-开头: 首段不足2句（单句成段式开头）")
+    # 全文检查
+    for w in BANNED_CONNECTORS:
+        if w in text:
+            fails.append(f"B-文风: 含禁用连接词「{w}」")
+    for pat in PARALLEL_PATTERNS:
+        if re.search(pat, text):
+            fails.append(f"B-文风: 排比堆叠 {pat}")
+    for w in ["令人深思", "发人深省", "意义深远"]:
+        if w in text:
+            fails.append(f"B-文风: 空洞形容词「{w}」")
+    # 结尾检查
+    last = paras[-1] if paras else ""
+    for w in ENDING_BANNED:
+        if w in last:
+            fails.append(f"B-结尾: 命中禁用模板「{w}」")
+    if "评论区" in text[-80:]:
+        fails.append("B-结尾: 结尾出现「评论区」互动尾巴")
+    if re.search(r"[。！？]$", last) is None:
+        fails.append("B-结尾: 末段未以句号收束")
+    # 段落长度
+    long_paras = [i + 1 for i, p in enumerate(paras) if len(p) > 200]
+    if long_paras:
+        fails.append(f"B-段落: 第{long_paras}段超200字（建议每段≤150字）")
+    # 儿化音
+    cleaned = ttw.clean_erhua(text)
+    if cleaned != text:
+        fails.append("B-儿化音: clean_erhua 后有变化（应提交前自行清洗）")
+    return fails
 
-    p3 = f'类似的情况，前几年也出现过。那次的结局不算圆满，但至少让很多人意识到：事情不到最后一刻，谁也别急着下结论。这次会不会走老路，现在说还为时过早，但关注的人明显比上次多得多。'
 
-    p4 = f'评论区的分歧挺大。一部分人觉得"事情没那么严重，别过度解读"，另一部分人认为"恰恰是这种态度，才让问题一再被忽视"。两种声音都有道理，但也都有盲区。真相往往不在任何一端，而在中间某个容易被忽略的地方。'
+def check_batch(articles):
+    """批级检查：开头/结尾批内不重复、开放提问式结尾全批最多1次"""
+    fails = []
+    opens = [a["article"].strip().split("\n")[0][:12] for a in articles]
+    ends = [a["article"].strip().split("\n")[-1][-12:] for a in articles]
+    for i in range(len(articles) - 1):
+        if opens[i] == opens[i + 1]:
+            fails.append(f"批-开头: 第{i+1}与第{i+2}篇开头雷同「{opens[i]}」")
+        if ends[i] == ends[i + 1]:
+            fails.append(f"批-结尾: 第{i+1}与第{i+2}篇结尾雷同「{ends[i]}」")
+    qs = sum(1 for a in articles if a["article"].strip().split("\n")[-1].rstrip().endswith("？"))
+    if qs > 1:
+        fails.append(f"批-结尾: 开放提问式结尾出现{qs}次（全批最多1次）")
+    return fails
 
-    p5 = f'老实讲，我对这件事的态度也在变。刚看到标题的时候，觉得无非又是一次舆论喧嚣。但把各方说法对照着看了一遍之后，发现有些细节确实经不起推敲。这不是立场问题，是事实问题。'
 
-    p6 = f'每个时代都有属于它的热点，但真正值得记住的，不是热度本身，而是热度退去之后留下来的思考。{kw}这件事，最终会怎么收场，目前还不好说。但至少此刻，它给了我们一个重新审视某些习以为常的东西的机会。你怎么看？评论区聊聊。'
+def save_cover_images(images_b64, prefix):
+    cover_dir = os.path.join(OUTPUT_DIR, "covers")
+    os.makedirs(cover_dir, exist_ok=True)
+    covers = []
+    for i, b64 in enumerate(images_b64[:3]):
+        raw = b64.split(",", 1)[1] if b64.startswith("data:") else b64
+        fpath = os.path.join(cover_dir, f"{prefix}_cover_{i+1}.jpg")
+        with open(fpath, "wb") as f:
+            f.write(base64.b64decode(raw))
+        covers.append(fpath)
+    return covers
 
-    paragraphs = [p1, p2, p3, p4, p5, p6]
-    article = "\n\n".join(paragraphs)
 
-    total = sum(len(p) for p in paragraphs)
-    if total < 600:
-        p7 = f'说到底，公众关注这件事，不完全是凑热闹。大家想弄明白的是一个更普遍的问题：类似的情况如果发生在自己身上，该怎么应对？这个问题没有标准答案，但值得每个人提前想一想。'
-        paragraphs.append(p7)
-        article = "\n\n".join(paragraphs)
+def cmd_generate():
+    state = load_state()
+    if not state.get("confirmed"):
+        raise RuntimeError("选题未确认，请先运行 confirm")
+    if not os.path.exists(ARTICLES_FILE):
+        raise FileNotFoundError(
+            f"未找到 {ARTICLES_FILE}。编辑直写模式：请助手基于 {MATERIAL_MD} 撰写，"
+            "格式 [{category, keyword, title, article}]，keyword 与选题搜索词一致")
+    with open(ARTICLES_FILE, "r", encoding="utf-8") as f:
+        articles = json.load(f)
+    kw_map = {t["word"]: t for t in state["confirmed"]}
+    for a in articles:
+        if a.get("keyword") not in kw_map:
+            raise KeyError(f"文章 keyword「{a.get('keyword')}」不在已确认选题中")
 
-    article = ttw.clean_erhua(article)
-    title = ttw.clean_erhua(title)
-    return title, article
+    print("=" * 60)
+    print("[4] 自检（标题/开头/文风/结尾/字数/段落/儿化音）")
+    print("=" * 60)
+    all_fail = False
+    for i, a in enumerate(articles, 1):
+        a["title"] = ttw.clean_erhua(a["title"])
+        a["article"] = ttw.clean_erhua(a["article"])
+        fails = check_article(i, a["title"], a["article"])
+        if fails:
+            all_fail = True
+            print(f"\n[{i}] {a['title'][:30]} —— 未过关:")
+            for f_ in fails:
+                print(f"    × {f_}")
+        else:
+            print(f"[{i}] {a['title'][:30]} —— 通过 ({len(re.sub(r'(?m)^$', '', a['article'].strip()))}字)")
+    batch_fails = check_batch(articles)
+    for f_ in batch_fails:
+        all_fail = True
+        print(f"    × {f_}")
+    if all_fail:
+        print("\n>>> 自检未通过，未生成任何产物。请修订 _pipeline_articles.json 后重跑 generate")
+        sys.exit(1)
+    print("全部通过。")
 
-# ===== 上传辅助 =====
+    print("\n[5] 获取配图（原文优先，5层管线）并生成 HTML/封面/manifest")
+    session = ttw.get_tt_session()
+    page = open_page()
+    manifest = []
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    try:
+        for i, a in enumerate(articles, 1):
+            kw = a["keyword"]
+            topic = kw_map[kw]
+            print(f"\n[{i}/{len(articles)}] [{a['category']}] {kw}")
+            try:
+                images, source = ttw.fetch_images_unified(
+                    session, kw,
+                    topic_image_url=topic.get("image", ""),
+                    topic_url=topic.get("url", ""),
+                    count=IMAGE_COUNT,
+                    page=page,
+                )
+            except Exception as e:
+                print(f"  配图获取失败: {e}")
+                images, source = [], "无"
+            print(f"  配图: {len(images)}张（{source}）")
+            if len(images) < 3:
+                print("  [警告] 配图不足3张，跳过此篇（自检C未过）")
+                continue
+            html = ttw.build_html(a["title"], a["article"], images)
+            prefix = f"tt_{a['category']}_{i}_{timestamp}"
+            filepath = os.path.join(OUTPUT_DIR, f"tt_hot_{prefix}.html")
+            with open(filepath, "w", encoding="utf-8") as f:
+                f.write(html)
+            covers = save_cover_images(images, prefix)
+            print(f"  HTML: {filepath}")
+            print(f"  封面: {len(covers)}张 → covers/")
+            manifest.append({
+                "category": a["category"],
+                "keyword": kw,
+                "title": a["title"],
+                "article": a["article"],
+                "html_file": filepath,
+                "cover_files": covers,
+                "word_count": len(a["article"]),
+                "image_count": len(images),
+                "image_source": source,
+            })
+    finally:
+        page.quit()
+
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    with open(MANIFEST_FILE, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+    state["stage"] = "generated"
+    save_state(state)
+    print("\n" + "=" * 60)
+    print(f"生成完成: {len(manifest)}/{len(articles)} 篇，manifest → {MANIFEST_FILE}")
+    print("=" * 60)
+    for m in manifest:
+        print(f"  {m['category']} | {m['title']}（{m['word_count']}字, {m['image_count']}图, {m['image_source']}）")
+    print("\n>>> 关卡2：标题候选挑选（上传前必经）")
+    print("    1) 助手撰写 _manual_title_candidates.json（每篇10个候选，keyword对应）")
+    print("    2) python title_candidates.py          # 列出候选，暂停等待挑选")
+    print("    3) python title_candidates.py apply 1:3 2:1 3:0   # 应用用户挑选")
+    print("    4) python batch_n_tt_pipeline.py upload")
+
+
+# ===== [6] 上传 =====
 def save_b64_to_file(b64_data, prefix, idx):
     if not b64_data:
         return None
@@ -122,6 +520,7 @@ def save_b64_to_file(b64_data, prefix, idx):
         return fpath
     except Exception:
         return None
+
 
 def upload_image_via_paste(page, fpath, tag):
     with open(fpath, "rb") as f:
@@ -179,12 +578,9 @@ def upload_image_via_paste(page, fpath, tag):
             break
         time.sleep(1)
     if img_url.startswith('blob:'):
-        for _ in range(15):
-            time.sleep(2)
-            img_url = page.run_js("return document.querySelector('.ProseMirror img') ? document.querySelector('.ProseMirror img').src : '';") or ""
-            if img_url and not img_url.startswith('blob:'):
-                break
+        img_url = ""
     return img_url
+
 
 def wait_for_save(page, timeout=30):
     for i in range(timeout):
@@ -197,6 +593,7 @@ def wait_for_save(page, timeout=30):
         if s and 'SAVED' in str(s):
             return True
     return False
+
 
 def trigger_save(page):
     title_el = page.ele('tag:textarea@placeholder:文章标题', timeout=5)
@@ -217,6 +614,42 @@ def trigger_save(page):
     """)
     time.sleep(0.5)
     return True
+
+
+SAVE_HOOK_JS = """
+window._saveLog = [];
+(function(){
+  var oo = XMLHttpRequest.prototype.open;
+  XMLHttpRequest.prototype.open = function(m, u){ this._u = u; return oo.apply(this, arguments); };
+  var os = XMLHttpRequest.prototype.send;
+  XMLHttpRequest.prototype.send = function(b){
+    var xhr = this, url = String(this._u || '');
+    if (url.indexOf('article/publish') !== -1) {
+      var rec = {u: url, resp: ''};
+      window._saveLog.push(rec);
+      xhr.addEventListener('load', function(){
+        try { rec.resp = xhr.status + ' ' + String(xhr.responseText).substring(0, 200); }
+        catch (e) { rec.resp = 'status' + xhr.status; }
+      });
+    }
+    return os.apply(this, arguments);
+  };
+})();
+"""
+
+
+def save_confirmed_by_server(page):
+    """以服务端 article/publish 响应为准判断保存是否成功（页面提示会说谎）"""
+    try:
+        log = page.run_js("return JSON.stringify(window._saveLog || []);", timeout=10)
+    except Exception:
+        return False, "读取保存响应失败"
+    for rec in json.loads(log or "[]"):
+        resp = str(rec.get("resp", ""))
+        if '"code":0' in resp and "保存成功" in resp:
+            return True, resp[:80]
+    return False, (json.dumps(json.loads(log or "[]"), ensure_ascii=False)[:160] if log else "无保存请求")
+
 
 PM_JS = """return (function(){
 function findView(){
@@ -272,6 +705,7 @@ try{
 }catch(e){return JSON.stringify({status:'error',error:e.message});}
 })()"""
 
+
 def upload_to_draft(page, title, text_parts, image_urls, image_layout, art_tag="a"):
     dlog(f"文章: {title}")
     dlog(f"正文: {len(text_parts)}段, {sum(len(t) for t in text_parts)}字")
@@ -286,7 +720,12 @@ def upload_to_draft(page, title, text_parts, image_urls, image_layout, art_tag="
         time.sleep(1)
     else:
         dlog("编辑器加载超时")
-        return False
+        return False, "编辑器加载超时"
+
+    try:
+        page.run_js(SAVE_HOOK_JS)
+    except Exception:
+        pass
 
     for text in ["不恢复", "关闭"]:
         try:
@@ -317,7 +756,6 @@ def upload_to_draft(page, title, text_parts, image_urls, image_layout, art_tag="
         el.blur();
     """)
     time.sleep(3)
-    wait_for_save(page, timeout=10)
 
     valid_urls = []
     if image_urls:
@@ -368,134 +806,106 @@ def upload_to_draft(page, title, text_parts, image_urls, image_layout, art_tag="
 
     time.sleep(2)
     trigger_save(page)
-    if wait_for_save(page, timeout=20):
-        dlog("正文已自动保存")
-    else:
+    ok, detail = save_confirmed_by_server(page)
+    if not ok:
         dlog("保存未确认，再触发一次...")
         trigger_save(page)
         wait_for_save(page, timeout=15)
-    return True
+        ok, detail = save_confirmed_by_server(page)
+    if ok:
+        dlog(f"服务端确认保存成功: {detail}")
+    else:
+        dlog(f"保存失败（服务端未确认）: {detail}")
+    return ok, detail
+
+
+def extract_images_from_html(path):
+    """从 HTML 提取 base64 图片（顺序即文中顺序）"""
+    with open(path, "r", encoding="utf-8") as f:
+        html = f.read()
+    return re.findall(r'data:image/jpeg;base64,([A-Za-z0-9+/=]+)', html)
+
+
+def verify_drafts_api(titles):
+    """浏览器关闭后用 draft_list API 复核（权威验证）"""
+    cookies = json.load(open(COOKIE_FILE, "r", encoding="utf-8"))
+    headers = {
+        "Cookie": "; ".join(f"{k}={v}" for k, v in cookies.items()),
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+        "Referer": "https://mp.toutiao.com/profile_v4/manage/draft",
+    }
+    r = requests.get("https://mp.toutiao.com/mp/agw/creator_center/draft_list?type=0&count=20&app_id=1231",
+                     headers=headers, timeout=20)
+    drafts = (r.json() or {}).get("draft_list") or []
+    results = []
+    for t in titles:
+        hit = any(t[:8] in (d.get("title") or "") for d in drafts)
+        results.append((t, hit))
+        print(f"  {'[OK]  ' if hit else '[MISS]'} {t[:32]}")
+    return results
+
+
+def cmd_upload():
+    if not os.path.exists(MANIFEST_FILE):
+        raise FileNotFoundError(f"未找到 {MANIFEST_FILE}，请先运行 generate")
+    if not os.path.exists(CANDIDATES_FILE):
+        raise RuntimeError(
+            "未完成标题候选流程（关卡2）。请先: python title_candidates.py 列出候选并让用户挑选，"
+            "再 python title_candidates.py apply ... 应用，然后才能上传")
+    with open(MANIFEST_FILE, "r", encoding="utf-8") as f:
+        manifest = json.load(f)
+    print("=" * 60)
+    print(f"[6] 上传草稿箱（{len(manifest)} 篇）")
+    print("=" * 60)
+    page = open_page()
+    results = []
+    try:
+        for i, m in enumerate(manifest, 1):
+            print(f"\n[{i}/{len(manifest)}] {m['title'][:40]}")
+            text_parts = [p.strip() for p in m["article"].split("\n") if p.strip()]
+            images = extract_images_from_html(m["html_file"])
+            if len(images) != IMAGE_COUNT:
+                print(f"  [警告] HTML中提取到{len(images)}张图（应为{IMAGE_COUNT}）")
+            image_layout = ttw._calc_image_layout(len(text_parts), len(images))
+            ok, detail = upload_to_draft(page, m["title"], text_parts, images, image_layout, f"a{i}")
+            results.append({"title": m["title"], "ok": ok, "detail": detail})
+            print(f"  >>> {'成功' if ok else '失败'}")
+            time.sleep(3)
+    finally:
+        page.quit()
+
+    print("\n[7] 草稿箱复核（draft_list API）")
+    api_results = verify_drafts_api([r["title"] for r in results])
+    n_ok = sum(1 for _, hit in api_results if hit)
+    print("\n" + "=" * 60)
+    print(f"完成: {n_ok}/{len(results)} 篇确认在草稿箱（以API复核为准）")
+    print("=" * 60)
+
 
 def main():
-    print("=" * 60)
-    print(f"获取{N_ARTICLES}条头条热榜 → 生成文章 → 上传草稿箱")
-    print("=" * 60)
+    args = sys.argv[1:]
+    if not args:
+        print_usage()
+        return
+    cmd = args[0]
+    if cmd == "topics":
+        cmd_topics(int(args[1]) if len(args) > 1 else 3)
+    elif cmd == "confirm":
+        if len(args) < 2:
+            raise ValueError("用法: python batch_n_tt_pipeline.py confirm 1,2,3（或 all）")
+        cmd_confirm(args[1])
+    elif cmd == "material":
+        cmd_material()
+    elif cmd == "generate":
+        cmd_generate()
+    elif cmd == "upload":
+        cmd_upload()
+    elif cmd.isdigit():
+        cmd_topics(int(cmd))
+    else:
+        print(f"未知子命令: {cmd}")
+        print_usage()
 
-    print("\n[1] 获取资讯选题（优先创作罐头低粉爆款，回退头条热榜）...")
-    session = ttw.get_tt_session()
-    topics = []
-    try:
-        import czgts_source
-        czgts_lists = czgts_source.fetch_czgts_low_fans()
-        # 三领域轮转取条，保证领域均衡
-        pools = {cat: list(items) for cat, items in czgts_lists.items()}
-        while len(topics) < N_ARTICLES and any(pools.values()):
-            for cat in ("娱乐", "体育", "社会"):
-                if pools.get(cat) and len(topics) < N_ARTICLES:
-                    topics.append(pools[cat].pop(0))
-        if not topics:
-            raise RuntimeError("创作罐头无可用选题")
-        # 话题相似度去重
-        topics = pick_distinct(topics, N_ARTICLES) if len(topics) > N_ARTICLES else topics
-        print(f"  选题来源: 创作罐头·低粉爆款（今日头条/文章/粉丝<1万/发布时间1天内/阅读量降序）")
-    except Exception as e:
-        print(f"  创作罐头失败({str(e)[:100]})，回退头条热榜")
-        hot_list = ttw.get_toutiao_hot_board(session)
-        print(f"  共获取 {len(hot_list)} 条热榜")
-        topics = pick_distinct(hot_list, N_ARTICLES)
-
-    print(f"  选中 {len(topics)} 条:")
-    for t in topics:
-        if t.get("source") == "czgts":
-            print(f"    [{t['czgts_category']}] {t['word']}（阅读{t.get('num', '?')} 粉丝{t.get('fans', '?')}）")
-            print(f"      原文: {t['title'][:44]}")
-        else:
-            cat = ttw.classify_tt_topic(t)
-            print(f"    [{t['rank']}] {t['word']}（{cat}, 热度{t.get('num', '?')}）")
-
-    print("\n[2] 启动浏览器并登录...")
-    with open(COOKIE_FILE, "r", encoding="utf-8") as f:
-        cookies = json.load(f)
-    co = ChromiumOptions()
-    chrome_path = "/root/.cache/puppeteer/chrome/linux-151.0.7922.71/chrome-linux64/chrome"
-    if os.path.exists(chrome_path):
-        co.set_browser_path(chrome_path)
-    co.auto_port()
-    co.set_argument("--no-sandbox")
-    co.set_argument("--disable-gpu")
-    co.set_argument("--disable-dev-shm-usage")
-    co.headless()
-    page = ChromiumPage(co)
-    page.get("https://mp.toutiao.com")
-    time.sleep(2)
-    for name, value in cookies.items():
-        try:
-            page.set.cookies({"name": name, "value": value, "domain": ".toutiao.com", "path": "/"})
-        except Exception:
-            pass
-    page.get("https://mp.toutiao.com")
-    time.sleep(3)
-    print(f"  登录: {page.url}")
-
-    results = []
-    for i, hot in enumerate(topics):
-        art_tag = f"a{i+1}"
-        print(f"\n{'='*50}")
-        print(f"[文章 {i+1}/{len(topics)}] {hot['word']}")
-        print(f"{'='*50}")
-
-        print("[3] 抓取话题文本...")
-        try:
-            posts = ttw.fetch_toutiao_posts_text(session, hot["word"], topic_url=hot.get("url", ""), count=8)
-        except Exception as e:
-            print(f"  抓取失败: {e}，跳过素材")
-            posts = []
-        print(f"  获取到 {len(posts)} 条素材")
-
-        print("[4] 撰写文章...")
-        title, article = author_article(hot["word"], posts)
-        text_parts = [p.strip() for p in article.split("\n") if p.strip()]
-        print(f"  标题: {title}（{len(title)}字）")
-        print(f"  正文: {len(article)}字, {len(text_parts)}段")
-
-        print("[5] 获取配图（原文优先，5层管线）...")
-        try:
-            images, source = ttw.fetch_images_unified(
-                session, hot["word"],
-                topic_image_url=hot.get("image", ""),
-                topic_url=hot.get("url", ""),
-                count=IMAGE_COUNT,
-                page=page,
-            )
-        except Exception as e:
-            print(f"  配图获取失败: {e}")
-            images, source = [], "无"
-        print(f"  成功获取 {len(images)} 张配图（来源: {source}）")
-
-        image_layout = ttw._calc_image_layout(len(text_parts), len(images))
-        print(f"  图片布局: {image_layout}")
-
-        print("[6] 上传草稿箱...")
-        ok = upload_to_draft(page, title, text_parts, images, image_layout, art_tag)
-        results.append({"title": title, "ok": ok, "chars": len(article), "imgs": len(images), "layout": str(image_layout)})
-        print(f"  >>> {'成功' if ok else '失败'}")
-        time.sleep(3)
-
-    print("\n[7] 验证草稿箱...")
-    page.get(DRAFT_URL)
-    time.sleep(5)
-    draft_text = page.run_js("return document.body.innerText;") or ""
-    for r in results:
-        prefix = r["title"][:6]
-        found = prefix in draft_text
-        r["in_draft"] = found
-        print(f"  {'[OK]  ' if found else '[MISS]'} {r['title'][:30]}")
-
-    page.quit()
-
-    print("\n" + "=" * 60)
-    print(f"完成: {sum(1 for r in results if r.get('in_draft'))}/{len(results)} 篇在草稿箱")
-    print("=" * 60)
 
 if __name__ == "__main__":
     main()
