@@ -48,7 +48,7 @@ per_category = 1
 used_titles = set(LAST_USED)
 preview = {}
 
-# 来源1（优先）: 创作罐头低粉爆款（今日头条/文章/粉丝<1万/阅读量降序）
+# 来源1（优先）: 创作罐头低粉爆款（今日头条/文章/粉丝<1万/发布时间1天内/阅读量降序）
 source_name = "创作罐头·低粉爆款"
 try:
     import czgts_source

@@ -549,6 +549,9 @@ def clean_erhua(text):
     """清除儿话音：按替换表替换，再用正则兜底处理剩余的"X儿"词尾"""
     if not text:
         return text
+    # 0. 保护"女儿"这类含"儿"的合法词（正则会误删其中的"儿"）
+    _PLACEHOLDER = "\ue000"
+    text = text.replace("女儿", _PLACEHOLDER)
     # 1. 按替换表精确替换（长串优先，避免短串先匹配破坏长串）
     for k in sorted(_ERHUA_MAP.keys(), key=len, reverse=True):
         text = text.replace(k, _ERHUA_MAP[k])
@@ -556,6 +559,7 @@ def clean_erhua(text):
     #    排除"儿"作为词首的合法词（儿女/儿童/儿子/儿科/儿歌/儿时/儿媳/儿郎等）
     import re as _re
     text = _re.sub(r'([\u4e00-\u9fa5])儿(?!女|童|子|科|歌|时|媳|郎|孙)', r'\1', text)
+    text = text.replace(_PLACEHOLDER, "女儿")
     return text
 
 
@@ -762,6 +766,86 @@ def fetch_images_from_toutiao(session, keyword, topic_image_url="", topic_url=""
     return images
 
 
+# ===== 原文详情页图片提取（DrissionPage）=====
+def fetch_images_from_article_page(page, topic_url, tt_session=None, count=5):
+    """用 DrissionPage 打开原文详情页，提取正文图片 URL 后走统一加工。
+
+    requests 直抓头条文章页会命中 JS 挑战（空壳页 0 张图），故借已打开的
+    浏览器 page 提取 DOM 图片；下载仍走 requests（带 Referer）。每张图
+    与其他层一样过 process_image（最小尺寸过滤/增强/JPEG92），不直接使用原图。
+    返回 base64 列表。
+    """
+    if not topic_url or not str(topic_url).startswith("http"):
+        return []
+    try:
+        page.get(topic_url)
+    except Exception:
+        return []
+    time.sleep(4)  # 等待 JS 挑战自愈 + 正文渲染
+    try:
+        page.run_js("window.scrollTo(0, document.body.scrollHeight * 0.6);")
+        time.sleep(1)  # 触发懒加载
+    except Exception:
+        pass
+    js = """
+    return (function(){
+        var sels = ['article', '.article-content', '.syl-article-base', '.tt-article'];
+        var scope = null;
+        for (var i = 0; i < sels.length; i++) {
+            var el = document.querySelector(sels[i]);
+            if (el && el.querySelectorAll('img').length) { scope = el; break; }
+        }
+        if (!scope) scope = document.body;
+        var out = [];
+        scope.querySelectorAll('img').forEach(function(im){
+            var src = im.src || '';
+            var lazy = im.getAttribute('data-src') || im.getAttribute('data-original') || '';
+            var u = (src.indexOf('http') === 0) ? src : ((lazy.indexOf('http') === 0) ? lazy : '');
+            if (!u) return;
+            var w = im.naturalWidth || 0, h = im.naturalHeight || 0;
+            if (u === lazy) out.push(u);                  // 懒加载未渲染，尺寸交给服务端校验
+            else if (w >= 500 && h >= 300) out.push(u);   // 已加载且够大
+        });
+        return out;
+    })();
+    """
+    try:
+        urls = page.run_js(js) or []
+    except Exception:
+        return []
+    if not isinstance(urls, list):
+        return []
+    skip_kw = ("logo", "avatar", "icon", "qrcode", "sprite")
+    urls = [u for u in dict.fromkeys(urls)
+            if isinstance(u, str) and not any(k in u.lower() for k in skip_kw)]
+    images = []
+    for u in urls:
+        if len(images) >= count:
+            break
+        try:
+            if tt_session is not None:
+                img_resp = tt_session.get(u, headers={
+                    "User-Agent": UA_PC,
+                    "Referer": "https://www.toutiao.com/",
+                }, timeout=20)
+                content = img_resp.content if img_resp.status_code == 200 else b""
+            else:
+                b64 = page.run_js(
+                    "return fetch('%s').then(r=>r.blob()).then(b=>new Promise(res=>"
+                    "{var fr=new FileReader();fr.onload=()=>res(fr.result);fr.readAsDataURL(b)}))"
+                    % u)
+                content = base64.b64decode(b64.split(',', 1)[1]) \
+                    if isinstance(b64, str) and b64.startswith('data:image/') else b""
+            if len(content) > 8000:
+                b64 = process_image(content)
+                if b64:
+                    images.append(b64)
+        except Exception:
+            continue
+        time.sleep(0.3)
+    return images
+
+
 # ===== 配图去重（dHash 感知哈希，纯 PIL 实现，不依赖 numpy）=====
 def _dhash(img, hash_size=16):
     """差异哈希：比较相邻像素亮度，返回 hash_size*(hash_size-1) 位字符串。"""
@@ -818,8 +902,9 @@ def _is_dup_with(images, b64, threshold=15):
     return False
 
 
-def fetch_images_unified(tt_session, keyword, topic_image_url="", topic_url="", count=5):
-    """统一配图管线（4层优先级 + 全链路去重）：
+def fetch_images_unified(tt_session, keyword, topic_image_url="", topic_url="", count=5, page=None):
+    """统一配图管线（原文优先，5层优先级 + 全链路去重）：
+    0. 原文详情页正文图片（DrissionPage 浏览器上下文，传入 page 时启用）
     1. 头条热榜缩略图
     2. 头条话题详情页正文图片
     3. 微博话题原帖配图（#关键词# 搜索）
@@ -842,6 +927,17 @@ def fetch_images_unified(tt_session, keyword, topic_image_url="", topic_url="", 
             added += 1
         if added:
             source_parts.append(f"{tag}({added}张)")
+
+    # 0: 原文详情页（DrissionPage 绕过 JS 挑战；czgts 选题的 url 即原文链接）
+    if page is not None and topic_url:
+        try:
+            art_imgs = fetch_images_from_article_page(page, topic_url,
+                                                      tt_session=tt_session, count=count)
+            art_imgs = _dedupe_images(art_imgs)
+            if art_imgs:
+                _append_unique(art_imgs, "原文")
+        except Exception as e:
+            print(f"  [原文配图跳过] {e}")
 
     # 1+2: 头条（先层内去重，再收录）
     try:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""批量：获取N条头条热榜 → 撰写文章 → 4层图片 → 上传草稿箱
+"""批量：获取N条头条热榜 → 撰写文章 → 5层图片（原文优先） → 上传草稿箱
 用法: python batch_n_tt_pipeline.py [数量，默认3]
 不依赖 DeepSeek API，直接编辑器撰写。
 遵守skill约束：
@@ -397,7 +397,7 @@ def main():
             raise RuntimeError("创作罐头无可用选题")
         # 话题相似度去重
         topics = pick_distinct(topics, N_ARTICLES) if len(topics) > N_ARTICLES else topics
-        print(f"  选题来源: 创作罐头·低粉爆款（今日头条/文章/粉丝<1万/阅读量降序）")
+        print(f"  选题来源: 创作罐头·低粉爆款（今日头条/文章/粉丝<1万/发布时间1天内/阅读量降序）")
     except Exception as e:
         print(f"  创作罐头失败({str(e)[:100]})，回退头条热榜")
         hot_list = ttw.get_toutiao_hot_board(session)
@@ -458,13 +458,14 @@ def main():
         print(f"  标题: {title}（{len(title)}字）")
         print(f"  正文: {len(article)}字, {len(text_parts)}段")
 
-        print("[5] 获取配图（4层管线）...")
+        print("[5] 获取配图（原文优先，5层管线）...")
         try:
             images, source = ttw.fetch_images_unified(
                 session, hot["word"],
                 topic_image_url=hot.get("image", ""),
                 topic_url=hot.get("url", ""),
-                count=IMAGE_COUNT
+                count=IMAGE_COUNT,
+                page=page,
             )
         except Exception as e:
             print(f"  配图获取失败: {e}")
