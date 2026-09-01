@@ -268,21 +268,24 @@ def cmd_material():
     print("=" * 60)
     page = open_page()
     material = state.get("material", {})
+    confirmed = state["confirmed"]
     md_lines = ["# 原文素材（供撰写参考）\n"]
     try:
-        for i, t in enumerate(state["confirmed"], 1):
+        for i, t in enumerate(confirmed):
             kw = t["word"]
-            print(f"\n[{i}/{len(state['confirmed'])}] {kw}")
+            print(f"\n[{i+1}/{len(confirmed)}] {kw}")
             print(f"  原文链接: {t.get('url', '')[:70]}")
             m = fetch_material_from_article(page, t.get("url", ""))
             if m:
                 material[kw] = m
                 print(f"  素材: {m['para_count']} 段, {len(m['text'])} 字")
                 print(f"  原文标题: {m['title'][:40]}")
-                md_lines.append(f"\n## [{i}] {kw}\n\n原文标题: {m['title']}\n原文链接: {t.get('url', '')}\n\n{m['text']}\n")
+                if len(m["text"]) < 500:
+                    print(f"  [提示] 素材偏薄（{len(m['text'])}字 < 500），撰写时注意事实边界")
+                md_lines.append(f"\n## [{i+1}] {kw}\n\n原文标题: {m['title']}\n原文链接: {t.get('url', '')}\n\n{m['text']}\n")
             else:
                 print("  素材: 提取失败（正文太短或页面未渲染）")
-                md_lines.append(f"\n## [{i}] {kw}\n\n（素材提取失败）\n")
+                md_lines.append(f"\n## [{i+1}] {kw}\n\n（素材提取失败）\n")
     finally:
         page.quit()
     state["material"] = material
@@ -290,8 +293,8 @@ def cmd_material():
     save_state(state)
     with open(MATERIAL_MD, "w", encoding="utf-8") as f:
         f.write("\n".join(md_lines))
-    ok = sum(1 for t in state["confirmed"] if material.get(t["word"]))
-    print(f"\n素材就绪: {ok}/{len(state['confirmed'])} 条选题有真实原文素材")
+    ok = sum(1 for t in confirmed if material.get(t["word"]))
+    print(f"\n素材就绪: {ok}/{len(confirmed)} 条选题有真实原文素材")
     print(f"素材全文: {MATERIAL_MD}")
     print("\n下一步: 助手基于素材撰写 _pipeline_articles.json，然后运行 generate")
 

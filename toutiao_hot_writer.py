@@ -667,11 +667,45 @@ def get_weibo_session():
     return session
 
 
+_ABSTRACT_WORDS = {"行业反思", "民生深度", "深度", "反思", "热议", "争议", "最新", "快讯", "爆料", "真相"}
+
+
+def _weibo_query_candidates(keyword):
+    """为微博话题搜索生成备选词列表（命中率优先级降序）。
+
+    czgts 关键词多为「主词 抽象词」结构（如「职场霸凌 行业反思」），
+    #完整词# 话题在微博基本不存在。策略：
+    1. 空格拆分后过滤抽象词，取剩余主词（长短两版）
+    2. 原词整体（保底，兼容本就存在的完整话题）
+    """
+    parts = [p.strip() for p in re.split(r"[\s　]+", keyword or "") if p.strip()]
+    concrete = [p for p in parts if p not in _ABSTRACT_WORDS]
+    cands = []
+    if concrete:
+        cands.append(concrete[0])
+        if len(concrete) > 1:
+            cands.append(concrete[1])
+    if keyword.strip() and keyword.strip() not in cands:
+        cands.append(keyword.strip())
+    return cands
+
+
 def fetch_images_from_weibo(weibo_session, keyword, count=3):
     """从微博话题原帖提取配图。用话题标签(#关键词#)搜索，确保只取话题原帖图片。
-    返回base64列表。数量不足时由调用方百度补足。"""
+    搜索词按 _weibo_query_candidates 逐个尝试，任一命中即返回。返回base64列表。
+    数量不足时由调用方百度补足。"""
     images = []
-    topic_query = f"#{keyword}#"
+    for query in _weibo_query_candidates(keyword):
+        if len(images) >= count:
+            break
+        images = _fetch_images_from_weibo_query(weibo_session, query, count, images)
+    return images
+
+
+def _fetch_images_from_weibo_query(weibo_session, query, count, images=None):
+    if images is None:
+        images = []
+    topic_query = f"#{query}#"
     search_url = (
         f"https://weibo.com/ajax/statuses/search"
         f"?q={quote(topic_query)}"
@@ -903,12 +937,11 @@ def _is_dup_with(images, b64, threshold=15):
 
 
 def fetch_images_unified(tt_session, keyword, topic_image_url="", topic_url="", count=5, page=None):
-    """统一配图管线（原文优先，5层优先级 + 全链路去重）：
-    0. 原文详情页正文图片（DrissionPage 浏览器上下文，传入 page 时启用）
-    1. 头条热榜缩略图
-    2. 头条话题详情页正文图片
-    3. 微博话题原帖配图（#关键词# 搜索）
-    4. 百度图片搜索（最终回退）
+    """统一配图管线（按固定配额分层 + 全链路去重）：
+    0. 原文详情页正文图片：最多 min(3, count) 张（DrissionPage 浏览器上下文，传入 page 时启用）
+    3. 微博话题原帖配图（#关键词# 搜索）：补足 count 张
+    4. 百度图片搜索（最终回退）：微博仍不足时兜底
+    头条热榜缩略图/话题页图层已按新规则移除（czgts 流程原文即头条文章，第 0 层已覆盖）。
     每层图片先做 dHash 视觉去重，且跨层不再收录与已选图片重复的图，
     最终凑够 count 张互不重复的配图。返回 (images_list, source_desc)。
     """
@@ -928,27 +961,19 @@ def fetch_images_unified(tt_session, keyword, topic_image_url="", topic_url="", 
         if added:
             source_parts.append(f"{tag}({added}张)")
 
-    # 0: 原文详情页（DrissionPage 绕过 JS 挑战；czgts 选题的 url 即原文链接）
-    if page is not None and topic_url:
+    # 0: 原文详情页（配额 min(3, count)；DrissionPage 绕过 JS 挑战；czgts 选题的 url 即原文链接）
+    quota_art = min(3, count)
+    if page is not None and topic_url and quota_art > 0:
         try:
             art_imgs = fetch_images_from_article_page(page, topic_url,
-                                                      tt_session=tt_session, count=count)
-            art_imgs = _dedupe_images(art_imgs)
+                                                      tt_session=tt_session, count=quota_art)
+            art_imgs = _dedupe_images(art_imgs)[:quota_art]
             if art_imgs:
                 _append_unique(art_imgs, "原文")
         except Exception as e:
             print(f"  [原文配图跳过] {e}")
 
-    # 1+2: 头条（先层内去重，再收录）
-    try:
-        tt_imgs = fetch_images_from_toutiao(tt_session, keyword, topic_image_url, topic_url, count)
-        tt_imgs = _dedupe_images(tt_imgs)
-        if tt_imgs:
-            _append_unique(tt_imgs, "头条")
-    except Exception as e:
-        print(f"  [头条配图跳过] {e}")
-
-    # 3: 微博（不足时，抓取 count*2 以便去重后有富余）
+    # 3: 微博（不足 count 时，抓取 count*2 以便去重后有富余）
     if len(images) < count:
         try:
             print("  获取微博访客session...")
@@ -960,7 +985,7 @@ def fetch_images_unified(tt_session, keyword, topic_image_url="", topic_url="", 
         except Exception as e:
             print(f"  [微博配图跳过] {e}")
 
-    # 4: 百度（仍不足时，同样抓 count*2 以便去重后有富余）
+    # 4: 百度（仍不足时，同样抓 count*2 以便去余）
     if len(images) < count:
         try:
             bd_imgs = fetch_images_baidu(keyword, count=count * 2)

@@ -85,8 +85,8 @@ The end-to-end pipeline `batch_n_tt_pipeline.py` is **stage-based with TWO manda
 ```bash
 python batch_n_tt_pipeline.py topics [K]      # [1] fetch czgts topics (1-day window), list K=3 candidates PER CATEGORY (9 total), STOP
 python batch_n_tt_pipeline.py confirm 1,4,7   # gate 1: record user's topic picks by index, one per category typically (or "all")
-python batch_n_tt_pipeline.py material        # [2] open each original article page in Edge, extract real body text -> _pipeline_material.md
-python batch_n_tt_pipeline.py generate        # [4] validate _pipeline_articles.json (assistant-authored from the material) via code-level self-check; then 5-layer images (original-first), HTML, covers, manifest
+python batch_n_tt_pipeline.py material        # [2] open each original article page in Edge, extract real body text -> _pipeline_material.md (thin material <500 chars only prints a warning; NO auto-swap — user's confirmed topic selection is final)
+python batch_n_tt_pipeline.py generate        # [4] validate _pipeline_articles.json (assistant-authored from the material) via code-level self-check; then images (original-page quota 3 + weibo fill + baidu fallback), HTML, covers, manifest
 python title_candidates.py                    # gate 2: 10 candidates per article, STOP for user picks (editor mode via _manual_title_candidates.json)
 python title_candidates.py apply 1:3 2:1 3:0  # apply picks
 python batch_n_tt_pipeline.py upload          # [6] upload with server-response verification (XHR capture of article/publish, code==0) + draft_list API recheck
