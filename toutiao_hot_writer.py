@@ -702,6 +702,14 @@ def fetch_images_from_weibo(weibo_session, keyword, count=3):
     return images
 
 
+# 微博话题里的蹭标签广告帖特征（电话卡/流量套餐/店铺推广等），命中则跳过该帖
+_WEIBO_AD_PATTERNS = re.compile(
+    r"(通用流量|定向流量|月包|流量卡|电话卡|免费申请|店铺A|店铺B|不限速"
+    r"|通话0\.\d|流量不用超|话费充值|宽带办理|回关必|互粉|加V私)"
+)
+_WEIBO_MAX_PER_ACCOUNT = 2  # 同一账号最多贡献2张图，防单一账号刷屏
+
+
 def _fetch_images_from_weibo_query(weibo_session, query, count, images=None):
     if images is None:
         images = []
@@ -718,7 +726,16 @@ def _fetch_images_from_weibo_query(weibo_session, query, count, images=None):
         resp.raise_for_status()
         data = resp.json()
         statuses = data.get("statuses", [])
+        account_count = {}
+        skipped_ads = 0
         for s in statuses:
+            text = s.get("text_raw") or s.get("text") or ""
+            if _WEIBO_AD_PATTERNS.search(text):
+                skipped_ads += 1
+                continue
+            account = (s.get("user") or {}).get("screen_name") or ""
+            if account_count.get(account, 0) >= _WEIBO_MAX_PER_ACCOUNT:
+                continue
             pic_infos = s.get("pic_infos", {})
             if not pic_infos:
                 continue
@@ -741,11 +758,16 @@ def _fetch_images_from_weibo_query(weibo_session, query, count, images=None):
                         b64 = process_image(img_resp.content)
                         if b64:
                             images.append(b64)
+                            account_count[account] = account_count.get(account, 0) + 1
                             if len(images) >= count:
+                                if skipped_ads:
+                                    print(f"  [微博] 跳过{skipped_ads}条蹭标签广告帖")
                                 return images
                 except Exception:
                     continue
                 time.sleep(0.3)
+        if skipped_ads:
+            print(f"  [微博] 跳过{skipped_ads}条蹭标签广告帖")
     except Exception:
         pass
     return images

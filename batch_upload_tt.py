@@ -45,7 +45,7 @@ def main():
     print("=" * 60, flush=True)
 
     env = os.environ.copy()
-    env["SKIP_COVER"] = "0"
+    env["SKIP_COVER"] = "1"
     env["PYTHONUNBUFFERED"] = "1"
 
     success = 0
@@ -88,7 +88,7 @@ def main():
                     env=env,
                     stdout=logf,
                     stderr=subprocess.STDOUT,
-                    timeout=180,
+                    timeout=300,
                 )
             with open(upload_log, "r", encoding="utf-8") as logf:
                 for line in logf:
