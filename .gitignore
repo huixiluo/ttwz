@@ -92,3 +92,20 @@ _verify_images.py
 temp_clone/
 temp_extract/
 ttwz_main.zip
+
+# 2026-09-02批次临时脚本与数据（素材抓取/解析/调试/单篇上传）
+_dbg_js.py
+_fetch_article.py
+_fetch_article_dp.py
+_find_chunk.py
+_gen_rewrite.py
+_parse_article.py
+_probe_czgts.py
+_update_manifest.py
+_upload_single.py
+_article_imgs.json
+_article_page.html
+_article_raw.txt
+_commit_msg.txt
+covers/
+.libs/
