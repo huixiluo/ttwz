@@ -1,11 +1,11 @@
 ---
 name: "toutiao-hotspot-writer"
-description: "Fetches Toutiao hot-board topics, classifies into entertainment/sports/society via keyword rules, fetches Toutiao article/comment text as source material, rewrites them into >600-word articles with three-part click-worthy titles (<=30 chars) via DeepSeek or direct editor authoring, polishes with a human-editor pass, generates 10 candidate titles per finalized article for manual selection, fetches images via a 5-layer pipeline (original article body images via DrissionPage -> Toutiao hot-board thumbnail -> Toutiao topic page body images -> Weibo topic post images -> Baidu Images fallback), and outputs HTML files. Supports batch generation and Toutiao draft upload."
+description: "Fetches Toutiao hot-board topics, classifies into entertainment/sports/society via keyword rules, fetches Toutiao article/comment text as source material, rewrites them into 650-750-char articles with three-part click-worthy titles (20-30 chars) via DeepSeek or direct editor authoring, polishes with a human-editor pass, generates 10 candidate titles per finalized article for manual selection, fetches images via a 5-layer pipeline (original article body images via DrissionPage -> Toutiao hot-board thumbnail -> Toutiao topic page body images -> Weibo topic post images -> Baidu Images fallback), and outputs HTML files. Supports batch generation and Toutiao draft upload."
 ---
 
 # Toutiao Hotspot Writer
 
-This skill fetches Toutiao hot-board topics, classifies them into 娱乐/体育/社会 three categories via keyword rules, fetches Toutiao topic article/comment text as source material, rewrites them into polished articles (>600 words) with three-part titles, applies a human-editor polish pass, fetches images via a 5-layer pipeline (original article body images via DrissionPage -> Toutiao hot-board thumbnail -> Toutiao topic page images -> Weibo topic post images -> Baidu Images fallback), and outputs standalone HTML files. Supports batch generation and Toutiao draft upload.
+This skill fetches Toutiao hot-board topics, classifies them into 娱乐/体育/社会 three categories via keyword rules, fetches Toutiao topic article/comment text as source material, rewrites them into polished articles (650-750 chars) with three-part titles, applies a human-editor polish pass, fetches images via a 5-layer priority pipeline (original article body images via DrissionPage -> Toutiao hot-board thumbnail -> Toutiao topic page images -> Weibo topic post images -> Baidu Images fallback), and outputs standalone HTML files. Supports batch generation and Toutiao draft upload.
 
 ## When to Invoke
 
@@ -24,13 +24,13 @@ The core pipeline has 9 steps:
 2. **List & confirm topics (MANDATORY pause)**: After fetching, the skill **must** list all candidate topics with their title, rank, heat value, and assigned category, then **stop and wait for user confirmation** before proceeding. The skill must NOT automatically start article generation. The user may approve the list as-is, remove specific topics, swap topics, or adjust category assignments. Only after the user explicitly confirms does the skill proceed to step 3. This is a hard gate — no downstream step (text fetch, authoring, images, HTML) may run before confirmation.
 3. **Fetch Toutiao topic article/comment text**: For each confirmed topic, scrapes the Toutiao trending topic page (or related article URLs) to fetch up to 8 article snippets / hot comments as source material for article rewriting. Saved to `_toutiao_posts_raw.json`. This ensures article content is based on real Toutiao discussions, not fabricated.
 4. **Article authoring (DeepSeek or direct editor)**: Two modes supported:
-   - **DeepSeek mode**: Calls DeepSeek API to generate a three-part title (<=30 chars, two commas splitting three segments) + >600-word article based on the fetched post text. Prompt enforces: diverse openings (7 techniques), no AI flavor, no mechanical/transition connectors (including 然而/但是), colloquial tone, neutral stance. Title is validated for three-part structure and retried if non-compliant.
-   - **Direct editor mode** (when DeepSeek API is unavailable or balance insufficient): The assistant directly authors the article based on the fetched Toutiao topic text, following the same standards (three-part title, >600 words, diverse opening, no AI flavor, no erhua).
+   - **DeepSeek mode**: Calls DeepSeek API to generate a three-part title (20-30 chars, two commas splitting three segments, packing 事件+人物+悬念) + 650-750-char article based on the fetched post text. Prompt enforces: diverse openings (7 techniques), no AI flavor, no mechanical/transition connectors (including 然而/但是), colloquial tone, neutral stance. Title is validated for three-part structure and retried if non-compliant.
+   - **Direct editor mode** (when DeepSeek API is unavailable or balance insufficient): The assistant directly authors the article based on the fetched Toutiao topic text, following the same standards (three-part title, 650-750 chars, diverse opening, no AI flavor, no erhua).
 5. **Human-editor polish**: A second LLM pass (or editor pass) acts as a real human copy editor. Preserves all facts and core viewpoints, deletes empty pleasantries / mechanical connectors / transition words (然而/同时/总而言之 etc.) / flowery parallelism / repetitive conclusions / textbook-style endings, adjusts sentence rhythm, restores natural human writing feel. Every paragraph enters the topic directly; the ending states the view directly with zero summary/transition words. No meme-stacking, no forced slang, no fabricated stories.
 6. **Image fetch & processing**: Uses a 5-layer priority pipeline via `fetch_images_unified()`: (0) original article body images — `fetch_images_from_article_page()` opens the czgts topic's original Toutiao article URL in the already-open DrissionPage browser (bypassing the JS challenge that returns an empty shell to plain requests), extracts content-scope `<img>` URLs (natural size >=500x300, or lazy `data-src`), filters logo/avatar/icon/qrcode/sprite URLs, then downloads via requests; enabled only when the caller passes `page` (the batch draft-upload pipeline does); (1) Toutiao hot-board thumbnail (from the API `Image` field, normalized by `_extract_image_url()` to handle dict/str formats); (2) Toutiao topic detail page body images (regex-extracted from `toutiaoimg.com` URLs); (3) Weibo topic post images (visitor-session + `#keyword#` search via `/ajax/statuses/search`, extracts `pic_infos` original/largest/large URLs); (4) Baidu Images fallback. Each layer fills only the remaining count needed; final source composition is reported (e.g. `原文(3张) + 微博(2张)`). All layers go through the SAME processing rules: Pillow processing (preserve original aspect ratio — no cropping, contrast/sharpness/color enhancement, unsharp mask, max width 1200px, JPEG quality 92) and dHash dedup — original-article images are never used raw. 5 images per article. Filters low-res images (width<500 or height<300).
 7. **Pre-upload self-check & regenerate loop (MANDATORY, per-article)**: **Before any article is saved or uploaded to the draft box, a full self-check MUST run.** The check has three priority dimensions: (A) Opening quality, (B) Human-editor polish quality, (C) Image compliance. If ANY dimension fails, the article is NOT uploaded — the specific failing step is re-run (regenerate opening / re-polish / refetch & re-layout images), the self-check runs again, and the loop repeats until all three dimensions pass. Max 3 regenerate attempts; if still failing after 3 attempts, the article is logged as rejected and the batch proceeds to the next one. See the full checklist in the "Pre-Upload Self-Check" section below.
 8. **HTML output**: Embeds images as base64 into a styled HTML file. Saves to `./output/tt_hot_<category>_<index>_<timestamp>.html`. Cover images saved separately to `./output/covers/`.
-9. **Title candidates & manual selection (MANDATORY pause, batch-level)**: After ALL articles in the batch are finalized (polished), generate **10 candidate titles per article based on the final article content** — eye-catching, click-attracting, "标题党"-style three-part titles (<=30 chars incl. punctuation), creative/novel/attractive while accurately reflecting the article's key highlights. Candidates come from `title_candidates.py` (LLM mode via `generate_title_candidates()`, or editor mode via `_manual_title_candidates.json`); the script auto-detects the newest manifest (`batch_manifest.json` or `batch_manifest_tt.json`). All candidates for every article are listed together (numbered, with the current title as option 0), and the skill **STOPS and waits for the user to pick one title per article**. Selections are applied via `python title_candidates.py apply 1:3 2:1 3:0` (0 = keep current title), which updates the manifest titles and patches HTML `<title>`/`<h1>`. **No upload runs before the user confirms title selections.**
+9. **Title candidates & manual selection (MANDATORY pause, batch-level)**: After ALL articles in the batch are finalized (polished), generate **10 candidate titles per article based on the final article content** — eye-catching, click-attracting, "标题党"-style three-part titles (20-30 chars incl. punctuation, each packing 事件+人物+悬念), creative/novel/attractive while accurately reflecting the article's key highlights. Candidates come from `title_candidates.py` (LLM mode via `generate_title_candidates()`, or editor mode via `_manual_title_candidates.json`); the script auto-detects the newest manifest (`batch_manifest.json` or `batch_manifest_tt.json`). All candidates for every article are listed together (numbered, with the current title as option 0), and the skill **STOPS and waits for the user to pick one title per article**. Selections are applied via `python title_candidates.py apply 1:3 2:1 3:0` (0 = keep current title), which updates the manifest titles and patches HTML `<title>`/`<h1>`. **No upload runs before the user confirms title selections.**
 
 ## Usage
 
@@ -95,7 +95,7 @@ python batch_n_tt_pipeline.py upload          # [6] upload with server-response 
 Key rules enforced in code:
 - `topics` lists **3 candidates per category** (9 total). Society candidates are pre-filtered: czgts "时政社会" domain items matching political keywords (纪委/国民党/民进党/台湾/选举/罢免/征兵...) are excluded, so only civic/livelihood topics (tourism disputes, scams, accidents, community news) enter the society candidate list.
 - `material`/`generate`/`upload` refuse to run before `confirm` (state file `_pipeline_state.json` tracks the stage); `upload` refuses if `output/title_candidates.json` is missing (title gate).
-- `generate` self-check: three-part title (two commas, <=30 chars, each segment <=10), >600 chars, 6-9 paragraphs, banned openings (刷到/看到/点开+热搜, 近日, single-sentence first paragraph), banned connectors (首先/其次/最后/总之/然而/但是/同时...), banned parallel stacking, banned ending templates (评论区聊聊 etc.), erhua-clean, adjacent articles must not share opening/ending. Any failure → detailed report + exit 1, NO manifest, NO upload.
+- `generate` self-check: three-part title (two commas, 20-30 chars, each segment <=10, packing 事件+人物+悬念), 650-750 chars (whitespace-stripped), 6-8 paragraphs, each paragraph <=150 chars, banned openings (刷到/看到/点开+热搜, 近日, single-sentence first paragraph), banned connectors (首先/其次/最后/总之/然而/但是/同时...), banned parallel stacking, banned ending templates (评论区聊聊 etc.), erhua-clean, adjacent articles must not share opening/ending. Any failure → detailed report + exit 1, NO manifest, NO upload.
 - Articles are authored by the assistant (editor mode) from the REAL extracted material (`_pipeline_material.md`), not from templates. Format: `_pipeline_articles.json` = `[{"category", "keyword", "title", "article"}]`, keyword must match the confirmed topic's word.
 - Save verification is honest: the in-page toast lies under headless/risk-control (7050 保存失败 still shows "草稿保存中"), so `upload_to_draft` captures the `article/publish` XHR response and requires `code==0`, then re-verifies every article via the draft_list API after the browser closes. Windows local runs use visible Edge (headless Chrome is rejected by Toutiao risk control on write APIs).
 
@@ -106,7 +106,7 @@ python title_candidates.py                  # Generate 10 candidates per article
 python title_candidates.py apply 1:3 2:1 3:0  # Apply user picks (0 = keep current title); updates manifest + HTML titles
 ```
 
-After all articles are finalized, `title_candidates.py` generates 10 candidate titles per article based on the final article content. It auto-detects the newest manifest (`output/batch_manifest.json` or `output/batch_manifest_tt.json`). Candidate sources (auto-detected): editor mode uses `_manual_title_candidates.json` (assistant-authored, format `[{"keyword": "...", "candidates": [...]}]`); otherwise LLM mode calls `generate_title_candidates()` from `toutiao_hot_writer.py`/`hot_news_writer.py` (needs `config.json`). Candidates are validated (three-part, <=30 chars, erhua-cleaned) and saved to `./output/title_candidates.json`.
+After all articles are finalized, `title_candidates.py` generates 10 candidate titles per article based on the final article content. It auto-detects the newest manifest (`output/batch_manifest.json` or `output/batch_manifest_tt.json`). Candidate sources (auto-detected): editor mode uses `_manual_title_candidates.json` (assistant-authored, format `[{"keyword": "...", "candidates": [...]}]`); otherwise LLM mode calls `generate_title_candidates()` from `toutiao_hot_writer.py`/`hot_news_writer.py` (needs `config.json`). Candidates are validated (three-part, 20-30 chars, packing 事件+人物+悬念, erhua-cleaned) and saved to `./output/title_candidates.json`.
 
 The skill lists all candidates (current title = option 0) and **pauses for the user to pick one per article**. Apply picks via the `apply` subcommand — it updates the manifest titles and patches `<title>`/`<h1>` in the HTML files. **Upload only runs after selection is applied.**
 
@@ -139,10 +139,10 @@ Field defaults (used when key absent): `model`=`deepseek-chat`, `api_url`=`https
 
 ## Output Requirements (enforced in prompt and code)
 
-### Title - Three-part structure (<=30 chars, strictly enforced)
+### Title - Three-part structure (20-30 chars, strictly enforced)
 
 1. **Must be three-part**: title consists of three short phrases separated by Chinese commas. Exactly two commas, three segments. Example: "明星哭穷上热搜，网友不买账，这届观众清醒了". Single-segment or two-segment titles are rejected.
-2. <=30 chars (including punctuation), semantically complete, no half-sentences;
+2. 20-30 chars (including punctuation), no less than 20 chars — semantically complete, no half-sentences. **Each title must pack all three elements: 事件 (what happened), 人物 (who is involved), 悬念 (why click)**. Thin titles that only carry one or two elements are rejected even if formally valid — fill the elements to make the title substantial;
 3. Choose from two structures based on the topic content:
    - **Structure A (event + detail + suspense)**: state the event, add a key detail, end with suspense. Preferred when the topic has dramatic details.
    - **Structure B (phenomenon + conflict + question)**: describe the phenomenon, point out the conflict, end with a question. Preferred when the topic involves controversy or contrast.
@@ -151,7 +151,7 @@ Field defaults (used when key absent): `model`=`deepseek-chat`, `api_url`=`https
 6. No low-quality clickbait words;
 7. Title must match content; no fabricating unverified facts;
 8. Neutral and objective. No favoring or naming specific persons;
-9. **Self-check**: after writing, verify the title has exactly two commas and three segments. If not, rewrite.
+9. **Self-check**: after writing, verify the title has exactly two commas, three segments, 20-30 chars, and carries all three elements (事件+人物+悬念). If not, rewrite.
 10. **Code-level validation**: `_is_three_part_title()` checks comma count == 2; non-compliant titles trigger one retry. Over-length titles (>30 chars) are smart-truncated in `_parse_llm_output()`.
 11. **Erhua post-processing**: `clean_erhua()` function removes any erhua suffixes from both title and article (24 replacement groups + regex fallback, excluding valid 儿 words like 儿女/儿童/儿子).
 
@@ -159,20 +159,31 @@ Field defaults (used when key absent): `model`=`deepseek-chat`, `api_url`=`https
 
 After the final article content is fixed (post-polish), generate **10 candidate titles based on the final article content** via `title_candidates.py`:
 
-1. Eye-catching, click-attracting, "标题党"-style three-part titles, <=30 chars each (including punctuation);
+1. Eye-catching, click-attracting, "标题党"-style three-part titles, 20-30 chars each (including punctuation) — no less than 20 chars; each title must pack all three elements: 事件 (what happened), 人物 (who is involved), 悬念 (why click). Thin titles that only carry one or two elements are rejected even if formally valid;
 2. Must attract reader interest AND accurately reflect the article's key highlights — no fabrication, no distortion;
 3. Emphasize creativity, novelty, and attractiveness; the 10 candidates must differ clearly in angle, sentence pattern, and cut-in point (no homogenization);
-4. Each candidate must pass the same hard validation: exactly two commas / three segments, <=30 chars, erhua-cleaned;
-5. All candidates are listed together (current title = option 0) and the skill **pauses for the user to manually pick one per article**;
+4. Each candidate must pass the same hard validation: exactly two commas / three segments, 20-30 chars, erhua-cleaned;
+5. All candidates are listed together and the skill **pauses for the user to manually pick one per article**. **Display format (fixed, user-mandated)**: per article show a table with the current title as option 0 ("保持原标题：..."), then every candidate as a numbered row with its character count appended (e.g. "标题文本（26字）"), so the user sees 原标题 + 候选标题 + 序号 + 字数 at a glance. The user may pick by index (e.g. `1:6 2:1 3:2`) or supply a custom title text for an article — custom titles are validated with the same rules (three-part, 20-30 chars, three elements) before being applied;
 6. The selected title is applied via `python title_candidates.py apply 1:3 2:1 3:0` (0 = keep current) — updates the manifest (`batch_manifest.json` / `batch_manifest_tt.json`) and HTML `<title>`/`<h1>`. Upload runs only after selection.
 
-### Article (>600 words, strictly enforced)
+### Article (650-750 chars, strictly enforced)
 
-- **>600 words (hard requirement)**, ideal range 650-750 words, 6-8 paragraphs, at least 6 (each <=150 chars);
+- **650-750 chars (whitespace-stripped, hard-enforced by the generate self-check — articles below 650 or above 750 are rejected)**, 6-8 paragraphs (hard-enforced), each <=150 chars (hard-enforced; >600 remains the absolute platform minimum);
 - Article content must be based on fetched Toutiao topic article/comment text, not fabricated;
 - Positive tone, reader-resonant; the ending leaves an aftertaste through content itself, NOT through templated interaction-bait (see "Ending - Diverse" section below);
 - Neutral and objective, no favoring or attacking specific persons;
 - Supplement background info or extended content to add depth.
+
+### Toutiao platform compliance (首发激励计划 rules, enforced in pipeline P-checks)
+
+Per Toutiao's "首发激励计划" (baike 242/566), articles flagged as 套路模板化/低成本创作 get the 首发 function frozen (14 days first, permanent after 2 strikes), and 洗稿/搬运 content is ruled 非原创 (no revenue share). The pipeline's generate stage enforces these as **P-checks**:
+
+1. **Titles — no exaggerated suspense clickbait (P-标题)**: banned words include 真相来了/你怎么看/你怎么想/怎么回事/看完惊呆/网友炸锅/全网沸腾/惊人一幕/细思极恐/大揭秘/内幕曝光 etc. The platform explicitly names "夸张悬念式标题" as 套路模板化发文. Within one batch, two titles must NOT share an identical segment (P-批标题, fixed-format posting);
+2. **Originality — rewrite, don't paraphrase-copy (P-原创)**: the article's 10-char continuous overlap ratio with the source material must stay <=25%. Writing means restructuring with your own analysis and phrasing; verbatim runs of the source longer than ~10 chars are treated as 大篇幅引用 (non-original). Quotes of official statements are fine in moderation;
+3. **No info-dump paragraphs (P-罗列)**: paragraphs that merely enumerate >=4 items with 顿号 and no complete sentences are flagged as low-cost 信息罗列;
+4. **Viewpoint required**: pure event re-narration without the author's own analysis/opinion is 内容空洞水化 — every article must contain original viewpoint or analysis paragraphs (this is a writing-discipline rule, checked by the editor, not code);
+5. **Facts only from material**: 捏造细节/编虚假故事 is a platform violation — all factual details (names, dates, numbers, quotes) come from the fetched material only;
+6. **Timeliness**: the czgts topic source is already filtered to articles published within 1 day (satisfies 首发时效); write and publish the same day.
 
 ### Opening - Diverse & natural (strictly enforced)
 
@@ -243,7 +254,7 @@ After the initial draft, `polish_article()` runs a second DeepSeek pass (or edit
 - **De-template the ending**: if the draft ends with a "question + 评论区聊聊" template or other universal interaction-bait tail, rewrite it with one of the 7 ending techniques (scene-blank / verdict / number-callback / forward-look / punchline / echo / open-question); adjacent articles in a batch must use different techniques; keep open-question endings at most once per batch, never with a 评论区 tail;
 - **Allow**: slight imperfections to restore natural human writing feel;
 - **Ban**: meme-stacking, forced slang, fabricated stories/details, template-style writing;
-- **Word count**: polished article must remain >600 words; if deletion would drop below 600, supplement content to maintain length;
+- **Word count**: polished article must remain in the 650-750 char range; if deletion would drop below 650, supplement content to maintain length;
 - Keep the original overall tone and paragraph structure. Only polish the prose level.
 
 ### Images
@@ -322,7 +333,7 @@ Verify the **full article body** (after the polish step) against these rules:
 | B2 | **No flowery parallelism** | No 是…也是…更是… / 不仅…而且…还… clause stacking anywhere | Re-polish: break stacks into separate short sentences |
 | B3 | **No empty adjective stacking** | No 令人深思、发人深省、意义深远 type clusters | Re-polish: delete or replace with concrete observation |
 | B4 | **No repetitive / templated endings** | Last paragraph is NOT a summary ("总的来说… / 综上所述…") AND NOT a "question + 评论区" template or other universal interaction-bait tail; it uses one of the 7 ending techniques (scene-blank / verdict / number-callback / forward-look / punchline / echo / open-question) with zero summary/transition words; adjacent articles in the batch use different techniques; open-question appears at most once per batch | Rewrite last 1-2 paragraphs with a different ending technique |
-| B5 | **Word count preserved** | Polished article >600 words (same hard requirement as initial draft); if polish reduced below 600, supplement content | Expand a middle paragraph with extra background or context, then re-polish |
+| B5 | **Word count preserved** | Polished article stays in the 650-750 char range (same hard requirement as initial draft); if polish reduced below 650, supplement content | Expand a middle paragraph with extra background or context, then re-polish |
 | B6 | **Facts & viewpoints unchanged** | All original factual claims and core viewpoints from step 4 are still present in the polished text; nothing was fabricated during polish | Diff the two versions, restore any accidentally deleted factual content |
 | B7 | **No meme-stacking / forced slang** | No piled-up internet slang; language is colloquial but natural, like chatting with a friend | Re-polish to natural tone |
 | B8 | **Natural sentence rhythm** | Mix of long and short sentences; no run-on paragraphs (>150 chars per paragraph on average) | Re-polish sentence breaks |
@@ -393,7 +404,7 @@ The skill includes `upload_visible.py` for uploading generated articles to the T
    - Stage 1: Upload all images one-by-one by pasting Blob via `ClipboardEvent('paste')`, capturing returned server URLs.
    - Stage 2: Set all content (text + images) at once via ProseMirror `view.dispatch()` API with properly structured image nodes.
 5. **Upload covers**: By default `SKIP_COVER=0` uploads 3 covers via file input. Set `SKIP_COVER=1` to skip.
-6. **Pre-save re-check (lightweight, in-page)**: Before clicking Save / calling the publish API, do a quick DOM check: (a) title has 2 commas / 3 segments and <=30 chars, and matches the user-selected title from the title-candidates pause; (b) 5 images present in DOM; (c) each image's `.pgc-img-caption` element contains "图片来源于网络" (NOT a separate `<p>` paragraph). If any mismatch, fix in-page before saving.
+6. **Pre-save re-check (lightweight, in-page)**: Before clicking Save / calling the publish API, do a quick DOM check: (a) title has 2 commas / 3 segments and 20-30 chars, and matches the user-selected title from the title-candidates pause; (b) 5 images present in DOM; (c) each image's `.pgc-img-caption` element contains "图片来源于网络" (NOT a separate `<p>` paragraph). If any mismatch, fix in-page before saving.
 7. **Fill all image captions (MANDATORY)**: After pasting HTML content into the ProseMirror editor, the Toutiao editor auto-creates `.pgc-img-caption` elements for each image but leaves them empty. **Iterate ALL `.pgc-img-caption` elements and set `textContent = '图片来源于网络'`**. Do NOT use `<figure>/<figcaption>`, `<p>图片来源于网络</p>`, or any separate text paragraph for captions — the editor splits these into standalone paragraphs. Captions must ONLY live in the `.pgc-img-caption` DOM element that the editor generates per image.
 8. **Save / auto-save to draft box**: Trigger save (or let auto-save commit). The save request must include: `save='1'`, `draft_form_data={"coverType":3}`, `pgc_feed_covers=[3 cover URLs]`.
 9. **Verify**: Check draft list for the article; confirm the saved article's title matches and images are present.

@@ -18,9 +18,16 @@
 撰写规则（编辑直写模式，无 DeepSeek）：
 - 文章由助手基于 material 阶段提取的真实原文撰写，写入 _pipeline_articles.json
   （list 格式，自带 category/keyword/title/article，keyword 与选题搜索词一致）
-- generate 阶段做代码级自检：三段式标题(≤30字/每段≤10字)、正文>600字、6-9段、
+- generate 阶段做代码级自检：三段式标题(20-30字/每段≤10字，填满事件+人物+悬念)、正文650-750字、6-8段、每段≤150字、
   开头禁模板(刷到热搜/近日/单句成段)、结尾禁"评论区聊聊"等互动尾巴、
   禁连接词(然而/但是/首先/总之...)、禁排比堆叠、儿化音清洗、开头/结尾批内不重复
+- 平台合规自检（依据头条「首发激励计划」规则，baike 242/566）：
+  P-标题: 禁夸张悬念式标题词（真相来了/你怎么看/看完惊呆等，平台认定为套路模板化发文）
+  P-原创: 与素材原文的10字连续重合率≤25%（防洗稿/大篇幅引用，平台认定为非原创）
+  P-罗列: 禁信息罗列式段落（顿号枚举≥4项且无完整句，平台认定为低成本创作）
+  P-批标题: 批内标题禁共用相同句段（平台认定的固定化格式发文）
+- 撰写纪律：须有个人观点/分析段落（非纯事件复述）；事实细节只取素材内信息，禁捏造；
+  选题源已限1天内发布（满足平台"首发时效"要求）
 - 任一项不过关 → 打印失败明细并退出，不产出 manifest，不进入上传
 - 上传保存以服务端响应为准（XHR 捕获 article/publish 返回 code==0），
   并在浏览器关闭后用 draft_list API 复核，不再无条件报成功
@@ -313,6 +320,24 @@ OPENING_PATTERNS = [
 ]
 PARALLEL_PATTERNS = [r"不仅.{2,20}更是", r"是.{2,15}也是.{2,15}更是", r"不仅.{2,20}而且.{2,20}还"]
 
+# 头条「首发激励计划」：套路模板化发文禁"夸张悬念式标题"等固定化格式
+TITLE_CLICKBAIT = ["真相来了", "你怎么看", "你怎么想", "怎么回事", "看完惊呆", "惊呆了",
+                   "太吓人", "不敢相信", "网友炸锅", "全网沸腾", "惊人一幕", "太离谱",
+                   "细思极恐", "大揭秘", "内幕曝光", "太不可思议", "全网震惊"]
+SHINGLE_LEN = 10          # 洗稿检测的连续字串长度
+SHINGLE_MAX_RATIO = 0.25  # 与素材重合率上限（超过即大篇幅引用/洗稿风险）
+
+
+def _shingle_ratio(article, material):
+    """正文与素材的 n 字连续重合率（标点空白归一后），防洗稿/大篇幅引用"""
+    norm = lambda s: re.sub(r"[\s，。！？、；：""''（）,.:;!?\"'()\-—…《》]", "", s or "")
+    a, m = norm(article), norm(material)
+    if len(a) < SHINGLE_LEN or len(m) < SHINGLE_LEN:
+        return 0.0
+    m_set = {m[i:i + SHINGLE_LEN] for i in range(len(m) - SHINGLE_LEN + 1)}
+    hits = sum(1 for i in range(len(a) - SHINGLE_LEN + 1) if a[i:i + SHINGLE_LEN] in m_set)
+    return hits / (len(a) - SHINGLE_LEN + 1)
+
 
 def check_title(title):
     fails = []
@@ -320,22 +345,29 @@ def check_title(title):
         fails.append("A-标题: 非三段式（须恰好两个逗号）")
     if len(title) > 30:
         fails.append(f"A-标题: 超30字（{len(title)}字）")
+    if len(title) < 20:
+        fails.append(f"A-标题: 不足20字（{len(title)}字），需填满事件+人物+悬念三要素")
     segs = [s for s in title.split("，") if s.strip()]
     if any(len(s) > 10 for s in segs):
         fails.append(f"A-标题: 某段超10字 {[len(s) for s in segs]}")
+    for w in TITLE_CLICKBAIT:
+        if w in title:
+            fails.append(f"P-标题: 夸张悬念式标题词「{w}」（平台认定套路模板化发文）")
     return fails
 
 
-def check_article(idx, title, article):
-    """代码级自检（开头A/润色B维度），返回失败明细列表"""
+def check_article(idx, title, article, material_text=""):
+    """代码级自检（开头A/润色B/平台合规P维度），返回失败明细列表"""
     fails = check_title(title)
     text = article.strip()
     chars = len(re.sub(r"\s", "", text))
-    if chars <= 600:
-        fails.append(f"B-字数: 正文{chars}字，未过600硬线")
+    if chars < 650:
+        fails.append(f"B-字数: 正文{chars}字，低于650字下限（要求650-750）")
+    if chars > 750:
+        fails.append(f"B-字数: 正文{chars}字，超750字上限（要求650-750）")
     paras = [p.strip() for p in text.split("\n") if p.strip()]
-    if not (6 <= len(paras) <= 9):
-        fails.append(f"B-段落: {len(paras)}段，须6-9段")
+    if not (6 <= len(paras) <= 8):
+        fails.append(f"B-段落: {len(paras)}段，须6-8段")
     # 开头检查
     first = paras[0] if paras else ""
     for pat in OPENING_PATTERNS:
@@ -367,13 +399,24 @@ def check_article(idx, title, article):
     if re.search(r"[。！？]$", last) is None:
         fails.append("B-结尾: 末段未以句号收束")
     # 段落长度
-    long_paras = [i + 1 for i, p in enumerate(paras) if len(p) > 200]
+    long_paras = [i + 1 for i, p in enumerate(paras) if len(p) > 150]
     if long_paras:
-        fails.append(f"B-段落: 第{long_paras}段超200字（建议每段≤150字）")
+        fails.append(f"B-段落: 第{long_paras}段超150字")
     # 儿化音
     cleaned = ttw.clean_erhua(text)
     if cleaned != text:
         fails.append("B-儿化音: clean_erhua 后有变化（应提交前自行清洗）")
+    # 平台合规：洗稿/大篇幅引用（与素材10字重合率）
+    if material_text:
+        ratio = _shingle_ratio(text, material_text)
+        if ratio > SHINGLE_MAX_RATIO:
+            fails.append(f"P-原创: 与素材重合率 {ratio:.0%} > {SHINGLE_MAX_RATIO:.0%}"
+                         "（洗稿/大篇幅引用风险，平台认定非原创）")
+    # 平台合规：信息罗列式段落（顿号枚举≥4项且无完整句）
+    for i, p in enumerate(paras, 1):
+        if p.count("、") >= 4 and len(re.findall(r"[。！？]", p)) <= 1:
+            fails.append(f"P-罗列: 第{i}段为信息罗列（平台认定低成本创作）")
+            break
     return fails
 
 
@@ -390,6 +433,15 @@ def check_batch(articles):
     qs = sum(1 for a in articles if a["article"].strip().split("\n")[-1].rstrip().endswith("？"))
     if qs > 1:
         fails.append(f"批-结尾: 开放提问式结尾出现{qs}次（全批最多1次）")
+    # 平台合规：批内标题禁共用句段（固定化格式发文）
+    for i in range(len(articles)):
+        for j in range(i + 1, len(articles)):
+            seg_i = {s.strip() for s in articles[i]["title"].split("，") if s.strip()}
+            seg_j = {s.strip() for s in articles[j]["title"].split("，") if s.strip()}
+            common = seg_i & seg_j
+            if common:
+                fails.append(f"批-标题: 第{i+1}与第{j+1}篇共用句段「{'、'.join(common)}」"
+                             "（平台认定套路模板化发文）")
     return fails
 
 
@@ -422,20 +474,25 @@ def cmd_generate():
             raise KeyError(f"文章 keyword「{a.get('keyword')}」不在已确认选题中")
 
     print("=" * 60)
-    print("[4] 自检（标题/开头/文风/结尾/字数/段落/儿化音）")
+    print("[4] 自检（标题/开头/文风/结尾/字数/段落/儿化音/平台合规）")
     print("=" * 60)
+    material_text = ""
+    if os.path.exists(MATERIAL_MD):
+        with open(MATERIAL_MD, "r", encoding="utf-8") as f:
+            material_text = f.read()
     all_fail = False
     for i, a in enumerate(articles, 1):
         a["title"] = ttw.clean_erhua(a["title"])
         a["article"] = ttw.clean_erhua(a["article"])
-        fails = check_article(i, a["title"], a["article"])
+        fails = check_article(i, a["title"], a["article"], material_text)
+        overlap = _shingle_ratio(a["article"], material_text)
         if fails:
             all_fail = True
             print(f"\n[{i}] {a['title'][:30]} —— 未过关:")
             for f_ in fails:
                 print(f"    × {f_}")
         else:
-            print(f"[{i}] {a['title'][:30]} —— 通过 ({len(re.sub(r'(?m)^$', '', a['article'].strip()))}字)")
+            print(f"[{i}] {a['title'][:30]} —— 通过 ({len(re.sub(r'(?m)^$', '', a['article'].strip()))}字, 素材重合率{overlap:.0%})")
     batch_fails = check_batch(articles)
     for f_ in batch_fails:
         all_fail = True

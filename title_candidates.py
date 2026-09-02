@@ -65,6 +65,8 @@ def sanitize_candidate(title):
         return None, "非三段式（须恰好两个逗号）"
     if len(title) > 30:
         return None, f"超30字（{len(title)}字）"
+    if len(title) < 20:
+        return None, f"不足20字（{len(title)}字），需填满事件+人物+悬念三要素"
     return title, None
 
 
