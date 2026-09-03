@@ -10,7 +10,7 @@
 - 发布时间 = 1天内（startTime/endTime 传 "YYYY-MM-DD HH:MM:SS" 字符串；
   页面 UI 选项"1天内"即 24 小时窗口，对应 candidate 接口 publishTimeLimits 毫秒区间拆成两字段）
 - 按阅读(播放)量从高到低（sortBy=1）
-内容领域: 娱乐 / 体育 / 时政社会（"时政社会"对外映射为"社会"）
+内容领域: 娱乐 / 体育（按用户要求 2026-09-03 起去掉时政社会领域，不再抓取社会类）
 
 无需账号登录。早期版本以为接口需要浏览器上下文携带 ttwid cookie，用
 DrissionPage 在页面内 fetch；实测纯 requests 直调同样放行（无 cookie
@@ -124,12 +124,12 @@ def _fetch_one(session, czgts_cat, limit, within_hours=24):
     return data.get("list") or []
 
 
-def fetch_czgts_low_fans(categories=("娱乐", "体育", "社会"), per_category_limit=30,
+def fetch_czgts_low_fans(categories=("娱乐", "体育"), per_category_limit=30,
                          page=None, headless=False, within_hours=24):
     """抓取创作罐头低粉爆款文章（今日头条/文章/粉丝<1万/发布时间1天内/阅读量降序）
 
     Args:
-        categories: 内部分类列表，取值 娱乐/体育/社会
+        categories: 内部分类列表，取值 娱乐/体育
         per_category_limit: 每个领域拉取条数（按阅读量降序截取）
         page: 已废弃，保留仅为兼容旧调用方签名（原 DrissionPage 页面对象）
         headless: 已废弃，保留仅为兼容旧调用方签名

@@ -134,19 +134,8 @@ def open_page():
 
 
 # ===== [1] 选题 =====
-# 时政/两岸/纪检类关键词（"时政社会"领域里的时政内容，按用户要求不进社会类候选）
-POLITICAL_KEYWORDS = [
-    "纪委", "纪检", "中央纪委", "反腐", "双开", "落马", "移送司法", "通报批评",
-    "国民党", "民进党", "台独", "台湾", "赖清德", "郑丽文", "蒋万安", "柯志恩",
-    "朱立伦", "两岸", "统一", "岛内", "台海", "高雄", "国安", "间谍", "国家安全部",
-    "政协", "人大", "党代会", "组织部", "州委书记", "正厅级", "正厅", "罢免",
-    "选举", "参选", "败选", "当选", "请辞", "党政", "公选", "托关系", "征兵",
-]
-
-
-def is_political(title, keywords):
-    text = (title or "") + " " + " ".join(keywords or [])
-    return any(k in text for k in POLITICAL_KEYWORDS)
+# 按用户要求 2026-09-03 起只抓娱乐/体育，不再获取时政社会类话题
+FETCH_CATEGORIES = ("娱乐", "体育")
 
 
 def fetch_topics(per_category=3):
@@ -155,22 +144,19 @@ def fetch_topics(per_category=3):
     try:
         import czgts_source
         czgts_lists = czgts_source.fetch_czgts_low_fans()
-        for cat in ("娱乐", "体育", "社会"):
-            items = [t for t in (czgts_lists.get(cat) or [])
-                     if not (cat == "社会" and is_political(t.get("title", ""), t.get("keywords")))]
-            picked = pick_distinct(items, per_category)
+        for cat in FETCH_CATEGORIES:
+            picked = pick_distinct(czgts_lists.get(cat) or [], per_category)
             topics.extend(picked)
         if not topics:
             raise RuntimeError("创作罐头无可用选题")
         print("  选题来源: 创作罐头·低粉爆款（今日头条/文章/粉丝<1万/发布时间1天内/阅读量降序）")
-        print("  社会类已过滤时政内容（纪委/两岸/选举/纪检等）")
+        print("  类别: 娱乐/体育（时政社会类不抓取）")
     except Exception as e:
         print(f"  创作罐头失败({str(e)[:100]})，回退头条热榜")
         hot_list = ttw.get_toutiao_hot_board(session)
         print(f"  共获取 {len(hot_list)} 条热榜")
-        for cat in ("娱乐", "体育", "社会"):
-            cat_items = [t for t in hot_list if ttw.classify_tt_topic(t) == cat
-                         and not (cat == "社会" and is_political(t.get("word", ""), []))]
+        for cat in FETCH_CATEGORIES:
+            cat_items = [t for t in hot_list if ttw.classify_tt_topic(t) == cat]
             topics.extend(pick_distinct(cat_items, per_category))
     return topics
 

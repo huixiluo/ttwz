@@ -1,18 +1,18 @@
 ---
 name: "toutiao-hotspot-writer"
-description: "Fetches Toutiao hot-board topics, classifies into entertainment/sports/society via keyword rules, fetches Toutiao article/comment text as source material, rewrites them into 650-750-char articles with three-part click-worthy titles (20-30 chars) via DeepSeek or direct editor authoring, polishes with a human-editor pass, generates 10 candidate titles per finalized article for manual selection, fetches images via a 5-layer pipeline (original article body images via DrissionPage -> Toutiao hot-board thumbnail -> Toutiao topic page body images -> Weibo topic post images -> Baidu Images fallback), and outputs HTML files. Supports batch generation and Toutiao draft upload."
+description: "Fetches Toutiao hot-board topics, classifies into entertainment/sports via keyword rules, fetches Toutiao article/comment text as source material, rewrites them into 650-750-char articles with three-part click-worthy titles (20-30 chars) via DeepSeek or direct editor authoring, polishes with a human-editor pass, generates 10 candidate titles per finalized article for manual selection, fetches images via a 5-layer pipeline (original article body images via DrissionPage -> Toutiao hot-board thumbnail -> Toutiao topic page body images -> Weibo topic post images -> Baidu Images fallback), and outputs HTML files. Supports batch generation and Toutiao draft upload."
 ---
 
 # Toutiao Hotspot Writer
 
-This skill fetches Toutiao hot-board topics, classifies them into 娱乐/体育/社会 three categories via keyword rules, fetches Toutiao topic article/comment text as source material, rewrites them into polished articles (650-750 chars) with three-part titles, applies a human-editor polish pass, fetches images via a 5-layer priority pipeline (original article body images via DrissionPage -> Toutiao hot-board thumbnail -> Toutiao topic page images -> Weibo topic post images -> Baidu Images fallback), and outputs standalone HTML files. Supports batch generation and Toutiao draft upload.
+This skill fetches Toutiao hot-board topics, classifies them into 娱乐/体育 two categories via keyword rules (时政社会/society topics are NOT fetched per user mandate, 2026-09-03), fetches Toutiao topic article/comment text as source material, rewrites them into polished articles (650-750 chars) with three-part titles, applies a human-editor polish pass, fetches images via a 5-layer priority pipeline (original article body images via DrissionPage -> Toutiao hot-board thumbnail -> Toutiao topic page images -> Weibo topic post images -> Baidu Images fallback), and outputs standalone HTML files. Supports batch generation and Toutiao draft upload.
 
 ## When to Invoke
 
 **This is the DEFAULT skill for article generation.** When the user does not explicitly specify a platform (e.g. just says "生成文章", "批量生成上传草稿箱", "写几篇资讯"), this skill runs by default.
 
 - User asks to generate rewritten articles from Toutiao hot trends
-- User wants to produce entertainment/sports/society news content from current trends **without specifying a platform** (defaults to Toutiao hot-board)
+- User wants to produce entertainment/sports news content from current trends **without specifying a platform** (defaults to Toutiao hot-board; society/时政社会 topics are excluded)
 - User asks to batch-generate multiple articles and upload to Toutiao drafts
 - User explicitly mentions "头条" / "Toutiao"
 
@@ -20,7 +20,7 @@ This skill fetches Toutiao hot-board topics, classifies them into 娱乐/体育/
 
 The core pipeline has 9 steps:
 
-1. **Fetch news topics (czgts first, Toutiao hot-board fallback)**: The **primary source** is the 创作罐头 low-fans-viral board (`https://www.czgts.cn/v1/hots/popular`, "热门素材 → 低粉爆款"), fetched via `czgts_source.fetch_czgts_low_fans()`. Fixed filters: platform=今日头条, content type=文章, fans<10k (`fansLimits="0_10000"`), publish time within 1 day (24h window, `startTime`/`endTime` as `"YYYY-MM-DD HH:MM:SS"` strings — timestamps in ms/s are rejected with code 997 or match 0 rows; default `within_hours=24`, `None`/`0` disables), sorted by read/play count descending (`sortBy=1`, `postType=3`), categories 娱乐/体育/时政社会 ("时政社会" maps to internal 社会). Underlying API `POST /muse/content/api/v1/hots/search` is called with plain `requests` (no login, no cookies needed — verified by live test; the old DrissionPage-in-browser fetch was retired along with its lxml cp311 dependency). Each article's `keywords` (top-2 joined) become the search word. Falls back to the Toutiao PC hot-board API (`https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc`, ~50 topics, keyword-classified into 娱乐/体育/社会) when czgts fails or returns no usable topics.
+1. **Fetch news topics (czgts first, Toutiao hot-board fallback)**: The **primary source** is the 创作罐头 low-fans-viral board (`https://www.czgts.cn/v1/hots/popular`, "热门素材 → 低粉爆款"), fetched via `czgts_source.fetch_czgts_low_fans()`. Fixed filters: platform=今日头条, content type=文章, fans<10k (`fansLimits="0_10000"`), publish time within 1 day (24h window, `startTime`/`endTime` as `"YYYY-MM-DD HH:MM:SS"` strings — timestamps in ms/s are rejected with code 997 or match 0 rows; default `within_hours=24`, `None`/`0` disables), sorted by read/play count descending (`sortBy=1`, `postType=3`), categories 娱乐/体育 only (the czgts "时政社会" domain is NOT fetched — user mandate 2026-09-03; society topics are excluded entirely, no political-keyword filtering needed anymore). Underlying API `POST /muse/content/api/v1/hots/search` is called with plain `requests` (no login, no cookies needed — verified by live test; the old DrissionPage-in-browser fetch was retired along with its lxml cp311 dependency). Each article's `keywords` (top-2 joined) become the search word. Falls back to the Toutiao PC hot-board API (`https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc`, ~50 topics, keyword-classified, only 娱乐/体育 picked) when czgts fails or returns no usable topics.
 2. **List & confirm topics (MANDATORY pause)**: After fetching, the skill **must** list all candidate topics with their title, rank, heat value, and assigned category, then **stop and wait for user confirmation** before proceeding. The skill must NOT automatically start article generation. The user may approve the list as-is, remove specific topics, swap topics, or adjust category assignments. Only after the user explicitly confirms does the skill proceed to step 3. This is a hard gate — no downstream step (text fetch, authoring, images, HTML) may run before confirmation.
 3. **Fetch Toutiao topic article/comment text**: For each confirmed topic, scrapes the Toutiao trending topic page (or related article URLs) to fetch up to 8 article snippets / hot comments as source material for article rewriting. Saved to `_toutiao_posts_raw.json`. This ensures article content is based on real Toutiao discussions, not fabricated.
 4. **Article authoring (DeepSeek or direct editor)**: Two modes supported:
@@ -39,14 +39,15 @@ The core pipeline has 9 steps:
 ```bash
 python toutiao_hot_writer.py 娱乐   # Entertainment
 python toutiao_hot_writer.py 体育   # Sports
-python toutiao_hot_writer.py 社会   # Society
 ```
+
+(Society/社会 single-article mode is retired — 时政社会 topics are not fetched per user mandate.)
 
 ### Preview & confirm hot-board topics (MANDATORY before any generation)
 
 ```bash
-python _preview_tt.py      # 9 topics (3 per category)
-python _preview6_tt.py     # 6 topics (2 per category)
+python _preview_tt.py      # 6 topics (3 per category, 娱乐+体育)
+python _preview6_tt.py     # 4 topics (2 per category, 娱乐+体育)
 ```
 
 Lists topics, skipping previously used ones. The skill prints each topic's index, category, title, rank, and heat value, then **stops and waits for user confirmation**. The user can:
@@ -93,7 +94,7 @@ python batch_n_tt_pipeline.py upload          # [6] upload with server-response 
 ```
 
 Key rules enforced in code:
-- `topics` lists **3 candidates per category** (9 total). Society candidates are pre-filtered: czgts "时政社会" domain items matching political keywords (纪委/国民党/民进党/台湾/选举/罢免/征兵...) are excluded, so only civic/livelihood topics (tourism disputes, scams, accidents, community news) enter the society candidate list.
+- `topics` lists **3 candidates per category** (6 total: 娱乐 + 体育). The czgts "时政社会" domain is NOT fetched at all (user mandate 2026-09-03) — no society candidates, and the old political-keyword pre-filter (POLITICAL_KEYWORDS/is_political) has been removed as dead code.
 - `material`/`generate`/`upload` refuse to run before `confirm` (state file `_pipeline_state.json` tracks the stage); `upload` refuses if `output/title_candidates.json` is missing (title gate).
 - `generate` self-check: three-part title (two commas, 20-30 chars, each segment <=10, packing 事件+人物+悬念), 650-750 chars (whitespace-stripped), 6-8 paragraphs, each paragraph <=150 chars, banned openings (刷到/看到/点开+热搜, 近日, single-sentence first paragraph), banned connectors (首先/其次/最后/总之/然而/但是/同时...), banned parallel stacking, banned ending templates (评论区聊聊 etc.), erhua-clean, adjacent articles must not share opening/ending. Any failure → detailed report + exit 1, NO manifest, NO upload.
 - Articles are authored by the assistant (editor mode) from the REAL extracted material (`_pipeline_material.md`), not from templates. Format: `_pipeline_articles.json` = `[{"category", "keyword", "title", "article"}]`, keyword must match the confirmed topic's word.
@@ -288,7 +289,7 @@ Toutiao provides an official PC hot-board endpoint (no login required, direct HT
 |-----|---------|
 | 综合热榜 (Unified Hot Board) | `https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc` |
 
-Returns a JSON array under `data` with ~50 items. Each item contains: `Rank` (rank), `Title` (title), `HotValue` (heat value), `Url` (topic detail URL), `Image` (thumbnail), `ClusterId` (topic ID), `cluster_type`, etc. `_parse_tt_hot_list()` normalizes them and classifies each item into 娱乐/体育/社会 via two-layer strategy:
+Returns a JSON array under `data` with ~50 items. Each item contains: `Rank` (rank), `Title` (title), `HotValue` (heat value), `Url` (topic detail URL), `Image` (thumbnail), `ClusterId` (topic ID), `cluster_type`, etc. `_parse_tt_hot_list()` normalizes them and classifies each item via two-layer strategy (internal classifier still knows 娱乐/体育/社会, but the pipeline's fallback only ever picks 娱乐/体育 — society topics are excluded per user mandate 2026-09-03):
 
 1. **Primary**: keyword matching against CATEGORY_KEYWORDS (entertainment/sports/society keyword groups, long-match-first, score-based classification, highest-score category wins).
 2. **Fallback**: map `cluster_type` / URL `category_name` params to category when keyword match is ambiguous or ties.
