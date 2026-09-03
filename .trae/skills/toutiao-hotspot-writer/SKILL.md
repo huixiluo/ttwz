@@ -141,6 +141,12 @@ Field defaults (used when key absent): `model`=`deepseek-chat`, `api_url`=`https
 
 ### Title - Three-part structure (20-30 chars, strictly enforced)
 
+**标题规则速查（中文）**：
+- **两种结构**：A（事件+细节+悬念）：适合有戏剧性细节的话题；B（现象+冲突+提问）：适合有争议/反差的话题
+- **节奏**：每段≤10字，干脆、口语化
+- **吸引力**：制造悬念/冲突/反差，可用数字、对比、情绪词，但不做欺骗性标题党
+- **真实中立**：标题与内容匹配，不捏造；不站队、不点名攻击
+
 1. **Must be three-part**: title consists of three short phrases separated by Chinese commas. Exactly two commas, three segments. Example: "明星哭穷上热搜，网友不买账，这届观众清醒了". Single-segment or two-segment titles are rejected.
 2. 20-30 chars (including punctuation), no less than 20 chars — semantically complete, no half-sentences. **Each title must pack all three elements: 事件 (what happened), 人物 (who is involved), 悬念 (why click)**. Thin titles that only carry one or two elements are rejected even if formally valid — fill the elements to make the title substantial;
 3. Choose from two structures based on the topic content:
