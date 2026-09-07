@@ -1,6 +1,6 @@
 ---
 name: "weibo-hotspot-writer"
-description: "Fetches Weibo trending topics by category (entertainment/sports/society), fetches Weibo original post text as source material, rewrites them into >600-word articles with three-part click-worthy titles (<=30 chars) via DeepSeek or direct editor authoring, polishes with a human-editor pass, generates 10 candidate titles per finalized article for manual selection, fetches images from Weibo original posts (Baidu fallback), and outputs HTML files. Supports batch generation and Toutiao draft upload."
+description: "Fetches Weibo trending topics by category (entertainment/sports), fetches Weibo original post text as source material, rewrites them into >600-word articles with three-part click-worthy titles (<=30 chars) via DeepSeek or direct editor authoring, polishes with a human-editor pass, generates 10 candidate titles per finalized article for manual selection, fetches images from Weibo original posts (Baidu fallback), and outputs HTML files. Supports batch generation and Toutiao draft upload."
 ---
 
 # Weibo Hotspot Writer
@@ -13,13 +13,13 @@ This skill fetches Weibo category hot searches, fetches original post text as so
 
 - User explicitly asks to generate rewritten articles from **Weibo** hot trends
 - User explicitly mentions "微博" / "Weibo" as the data source
-- User wants to produce entertainment/sports/society news content from **Weibo** trends (not generic "trends" — that defaults to Toutiao)
+- User wants to produce entertainment/sports news content from **Weibo** trends (not generic "trends" — that defaults to Toutiao; society category is no longer fetched per 2026-09-03 policy)
 
 ## How It Works
 
 The core pipeline has 8 steps:
 
-1. **Fetch news topics (czgts first, Weibo hot search fallback)**: The **primary source** is the 创作罐头 low-fans-viral board (`https://www.czgts.cn/v1/hots/popular`, "热门素材 → 低粉爆款"), fetched via `czgts_source.fetch_czgts_low_fans()`. Fixed filters: platform=今日头条, content type=文章, fans<10k (`fansLimits="0_10000"`), publish time within 1 day (24h window, `startTime`/`endTime` as `"YYYY-MM-DD HH:MM:SS"` strings — timestamps in ms/s are rejected with code 997 or match 0 rows; default `within_hours=24`, `None`/`0` disables), sorted by read/play count descending (`sortBy=1`, `postType=3`), categories 娱乐/体育/时政社会 ("时政社会" maps to internal 社会). Underlying API `POST /muse/content/api/v1/hots/search` is called with plain `requests` (no login, no cookies needed — verified by live test; the old DrissionPage-in-browser fetch was retired along with its lxml cp311 dependency). Each article's `keywords` (top-2 joined) become the Weibo search word. Falls back to Weibo category hot search (visitor SUB cookie + `/ajax/statuses/entertainment` / `sport` / `social`, 50 topics per category) when czgts fails or returns no usable topics.
+1. **Fetch news topics (czgts first, Weibo hot search fallback)**: The **primary source** is the 创作罐头 low-fans-viral board (`https://www.czgts.cn/v1/hots/popular`, "热门素材 → 低粉爆款"), fetched via `czgts_source.fetch_czgts_low_fans()`. Fixed filters: platform=今日头条, content type=文章, fans<10k (`fansLimits="0_10000"`), publish time within 1 day (24h window, `startTime`/`endTime` as `"YYYY-MM-DD HH:MM:SS"` strings — timestamps in ms/s are rejected with code 997 or match 0 rows; default `within_hours=24`, `None`/`0` disables), sorted by read/play count descending (`sortBy=1`, `postType=3`), categories 娱乐/体育 only (时政社会/society is NOT fetched since 2026-09-03). Underlying API `POST /muse/content/api/v1/hots/search` is called with plain `requests` (no login, no cookies needed — verified by live test; the old DrissionPage-in-browser fetch was retired along with its lxml cp311 dependency). Each article's `keywords` (top-2 joined) become the Weibo search word. Falls back to Weibo category hot search (visitor SUB cookie + `/ajax/statuses/entertainment` / `sport`, 50 topics per category; the `social` endpoint exists but is not used since 2026-09-03) when czgts fails or returns no usable topics. Topic preview lists **8 candidates per category** by default (`_preview.py`, `per_category=8`).
 2. **Fetch Weibo original post text**: Calls `/ajax/statuses/search` API to fetch original post text (up to 8 posts per topic, searched by the topic word — czgts articles use their top-2 keywords) as source material for article rewriting. Saved to `_weibo_posts_raw.json`. This ensures article content is based on real Weibo posts, not fabricated.
 3. **Article authoring (DeepSeek or direct editor)**: Two modes supported:
    - **DeepSeek mode**: Calls DeepSeek API to generate a three-part title (<=30 chars, two commas splitting three segments) + >600-word article based on the fetched post text. Prompt enforces: diverse openings (7 techniques), no AI flavor, no mechanical/transition connectors (including 然而/但是), colloquial tone, neutral stance. Title is validated for three-part structure and retried if non-compliant.
@@ -37,14 +37,12 @@ The core pipeline has 8 steps:
 ```bash
 python hot_news_writer.py 娱乐   # Entertainment
 python hot_news_writer.py 体育   # Sports
-python hot_news_writer.py 社会   # Society
 ```
 
 ### Preview category hot searches (no generation)
 
 ```bash
-python _preview.py      # 9 topics (3 per category)
-python _preview6.py     # 6 topics (2 per category)
+python _preview.py      # 16 topics (8 per category, 娱乐+体育 only)
 ```
 
 Lists topics, skipping previously used ones. User confirms before generation.
@@ -236,7 +234,8 @@ Weibo provides official category hot search endpoints (no login required, access
 |----------|-------------|
 | 娱乐 (Entertainment) | `https://weibo.com/ajax/statuses/entertainment` |
 | 体育 (Sports) | `https://weibo.com/ajax/statuses/sport` |
-| 社会 (Society) | `https://weibo.com/ajax/statuses/social` |
+
+(Society endpoint `https://weibo.com/ajax/statuses/social` exists but is no longer used since 2026-09-03 — only 娱乐/体育 are fetched.)
 
 Each returns `data.band_list` with ~50 items. `_parse_band_list()` normalizes them (skips ads, extracts word/rank/num/category). Cross-category deduplication via `used_titles` set ensures no duplicate topics across categories.
 

@@ -84,7 +84,7 @@ Each article goes through: post text fetch (optional) -> authoring (DeepSeek or 
 The end-to-end pipeline `batch_n_tt_pipeline.py` is **stage-based with TWO mandatory human-confirmation gates** (mirrors the 9-step flow; the old auto-run-through mode was removed because it skipped both gates and used a template author):
 
 ```bash
-python batch_n_tt_pipeline.py topics [K]      # [1] fetch czgts topics (1-day window), list K=3 candidates PER CATEGORY (9 total), STOP
+python batch_n_tt_pipeline.py topics [K]      # [1] fetch czgts topics (1-day window), list K=8 candidates PER CATEGORY (16 total), STOP
 python batch_n_tt_pipeline.py confirm 1,4,7   # gate 1: record user's topic picks by index, one per category typically (or "all")
 python batch_n_tt_pipeline.py material        # [2] open each original article page in Edge, extract real body text -> _pipeline_material.md (thin material <500 chars only prints a warning; NO auto-swap — user's confirmed topic selection is final)
 python batch_n_tt_pipeline.py generate        # [4] validate _pipeline_articles.json (assistant-authored from the material) via code-level self-check; then images (original-page quota 3 + weibo fill + baidu fallback), HTML, covers, manifest
@@ -94,7 +94,7 @@ python batch_n_tt_pipeline.py upload          # [6] upload with server-response 
 ```
 
 Key rules enforced in code:
-- `topics` lists **3 candidates per category** (6 total: 娱乐 + 体育). The czgts "时政社会" domain is NOT fetched at all (user mandate 2026-09-03) — no society candidates, and the old political-keyword pre-filter (POLITICAL_KEYWORDS/is_political) has been removed as dead code.
+- `topics` lists **8 candidates per category** by default (16 total: 娱乐 + 体育; `per_category=8` default since 2026-09-07, overridable via `topics N`). The czgts "时政社会" domain is NOT fetched at all (user mandate 2026-09-03) — no society candidates, and the old political-keyword pre-filter (POLITICAL_KEYWORDS/is_political) has been removed as dead code.
 - `material`/`generate`/`upload` refuse to run before `confirm` (state file `_pipeline_state.json` tracks the stage); `upload` refuses if `output/title_candidates.json` is missing (title gate).
 - `generate` self-check: three-part title (two commas, 20-30 chars, each segment <=10, packing 事件+人物+悬念), 650-750 chars (whitespace-stripped), 6-8 paragraphs, each paragraph <=150 chars, banned openings (刷到/看到/点开+热搜, 近日, single-sentence first paragraph), banned connectors (首先/其次/最后/总之/然而/但是/同时...), banned parallel stacking, banned ending templates (评论区聊聊 etc.), erhua-clean, adjacent articles must not share opening/ending. Any failure → detailed report + exit 1, NO manifest, NO upload.
 - Articles are authored by the assistant (editor mode) from the REAL extracted material (`_pipeline_material.md`), not from templates. Format: `_pipeline_articles.json` = `[{"category", "keyword", "title", "article"}]`, keyword must match the confirmed topic's word.

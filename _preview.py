@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""预览：获取微博热搜并按分类展示9条资讯（3娱乐+3体育+3社会），跳过上次已用，不生成文章"""
+"""预览：获取微博热搜并按分类展示资讯（每类8条，娱乐+体育），跳过上次已用，不生成文章"""
 import json
 import hot_news_writer as hnw
 
@@ -18,13 +18,13 @@ LAST_USED = {
 }
 
 print("=" * 60)
-print("获取微博分类热搜（文娱/体育/社会），跳过上次已用...")
+print("获取微博分类热搜（文娱/体育），跳过上次已用...")
 print("=" * 60)
 
 session = hnw.get_visitor_session()
 
-categories = ["娱乐", "体育", "社会"]
-per_category = 3
+categories = ["娱乐", "体育"]
+per_category = 8
 used_titles = set(LAST_USED)  # 跨类别去重，包含上次已用
 preview = {}
 

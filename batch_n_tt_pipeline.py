@@ -8,7 +8,7 @@
                    挑选 apply，upload 阶段检测到候选流程未走完会拒绝上传
 
 用法:
-  python batch_n_tt_pipeline.py topics [每类条数]  # [1] 抓创作罐头选题，每类列出3条候选（默认）
+  python batch_n_tt_pipeline.py topics [每类条数]  # [1] 抓创作罐头选题，每类列出8条候选（默认）
   python batch_n_tt_pipeline.py confirm 1,4,7     # [关卡1] 用户按序号确认选题（all=全部）
   python batch_n_tt_pipeline.py material        # [2] 打开原文页提取真实素材（浏览器）
   python batch_n_tt_pipeline.py generate        # [4] 校验 _pipeline_articles.json →
@@ -138,7 +138,7 @@ def open_page():
 FETCH_CATEGORIES = ("娱乐", "体育")
 
 
-def fetch_topics(per_category=3):
+def fetch_topics(per_category=8):
     session = ttw.get_tt_session()
     topics = []
     try:
@@ -161,7 +161,7 @@ def fetch_topics(per_category=3):
     return topics
 
 
-def cmd_topics(per_category=3):
+def cmd_topics(per_category=8):
     print("=" * 60)
     print(f"[1] 获取资讯选题（创作罐头低粉爆款，每类 {per_category} 条候选）")
     print("=" * 60)
@@ -935,7 +935,7 @@ def main():
         return
     cmd = args[0]
     if cmd == "topics":
-        cmd_topics(int(args[1]) if len(args) > 1 else 3)
+        cmd_topics(int(args[1]) if len(args) > 1 else 8)
     elif cmd == "confirm":
         if len(args) < 2:
             raise ValueError("用法: python batch_n_tt_pipeline.py confirm 1,2,3（或 all）")
