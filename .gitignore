@@ -109,3 +109,32 @@ _article_raw.txt
 _commit_msg.txt
 covers/
 .libs/
+
+# 2026-09批次临时脚本与数据（素材抓取/文章生成/自检/轮次辅助）
+_fetch_jiangkun.py
+_fetch_liweikang.py
+_fetch_round_extra.py
+_fetch_round_extra2.py
+_fetch_round_material.py
+_fetch_source.py
+_fetch_two_topics.py
+_fetch_zhangyimou.py
+_gen_jiangkun.py
+_gen_round3.py
+_gen_round4.py
+_gen_round5.py
+_gen_zhangyimou.py
+_new_round.py
+_new_round_topics.json
+_round_material.json
+_round_material_extra.json
+_round_material_extra2.json
+_run_generate_2.py
+_selfcheck_batch.py
+
+# 登录凭据（不入库）
+toutiao_cookies.json
+toutiao_cookies_backup.json
+
+# 标题候选运行产物
+output/title_candidates.json
