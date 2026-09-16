@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="refresh" content="5">
+<title>头条号扫码登录（自动刷新）</title>
+<style>
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+display:flex;flex-direction:column;align-items:center;justify-content:center;
+min-height:100vh;margin:0;background:#f5f5f5;}
+.card{background:#fff;padding:30px 40px;border-radius:16px;
+box-shadow:0 4px 24px rgba(0,0,0,0.08);text-align:center;}
+h2{color:#1a1a1a;margin:0 0 8px;font-size:22px;}
+.tip{color:#666;font-size:14px;margin-bottom:20px;}
+img{width:280px;height:280px;display:block;margin:0 auto;}
+.warn{color:#f56c6c;font-size:13px;margin-top:16px;}
+.hint{color:#999;font-size:12px;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>头条号登录</h2>
+<div class="tip">请使用 <b>今日头条 APP</b> 或 <b>抖音 APP</b> 扫描下方二维码</div>
+<img src="toutiao_qr.png?_t=__TIMESTAMP__" alt="登录二维码"
+     onerror="this.style.display='none';document.getElementById('err').style.display='block';">
+<div id="err" style="display:none;color:#f56c6c;">二维码加载失败，稍后自动重试</div>
+<div class="warn">扫码后在手机上点击「确认登录」</div>
+<div class="hint">页面每5秒自动刷新，二维码过期会自动换新，随时扫都有效</div>
+</div>
+</body>
+</html>
